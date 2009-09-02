@@ -1,0 +1,133 @@
+Questionmark Perception connector for Blackboard 9
+Written at the University of Southampton by Bart Nagel (bjn@ecs.soton.ac.uk) and 
+Alex Frazer (ajf06r@ecs.soton.ac.uk) in 2009 for Questionmark
+Licenced under the Apache Software License, see LICENSE.txt for details.
+
+INSTALLATION
+
+1. Pip file
+	First, install the Blackboard Pip file. To do this, copy the 
+	pip/blackboard.pip file to pip directory (for instance C:\Program 
+	Files\Questionmark\Perception4\server\pip) on the server running Perception.
+2. Profiles
+	Next, log into Perception Enterprise Manager and set up two new 
+	administrator profiles, "Blackboard Instructor" and "Blackboard TA" for 
+	instructors and teaching assistants, respectively. You may already have 
+	these set up from earlier versions of the connector. If not, they need to 
+	have suitable permissions for the operations you want people in these roles 
+	to be able to perform.
+3. Perception settings
+	Certain settings must be set correctly in the Perception configuration. They 
+	can be set in Enterprise Manager (administration -> server management -> 
+	server settings) or manually in the perceptionv4.ini file (usually in 
+	C:\Program Files\Questionmark\Perception4\server). The required settings are 
+	as follows:
+	-	Redirection method = 4
+	-	TrustRequire = 0
+	-	SecurityRequire = 1 (not required but recommended)
+	-	Enable exlogin = 1 (required if instructors are to be able to log in to 
+		Enterprise Manager)
+	-	Allow external EM entry (required if instructors are to be able to log 
+		in to Enterprise Manager)
+4. Reset Perception DLLs
+	After changing Perception configuration the Perception DLLs must be reset. 
+	This is done in Enterprise Manager by going to administration -> server 
+	management -> reset Perception server DLLs.
+5. Reset QMWise
+	After getting to this point you must reload the QMWise configuration, for 
+	instance by invoking the SetConfiguration method via the QMWise Test 
+	Harness.
+6. Install Building Block
+	Follow the standard procedure for installing a Blackboard Building Block:
+	1.	Log in to Blackboard as an administrator
+	2.	Go to system admin -> building blocks -> installed tools -> upload 
+		building blocks
+	3.	Click "browse"
+	4.	Locate and choose the PerceptionPlugin.war file
+	5.	Click "submit"
+	6.	Activate the plugin by finding its entry on the installed tools list and 
+		choosing available from the dropdown menu
+	7.	Approve the privileges the connector requires
+
+CONFIGURATION
+
+The connector is configured by clicking "settings" on the connector's row of the 
+installed tools list.
+
+The only required settings are the Perception server details. If Perception is 
+running on the same host as Blackboard the default settings may be fine. If you 
+have switched SecurityRequire on in Perception's settings, security must be 
+enabled for the connector.
+
+Once the settings have been configured as desired, click "submit" to save them. 
+To then test the connection to Perception, click "OK". A success message means 
+everything should be working as expected; a failure message means you should 
+double check your settings.
+
+USAGE
+
+The connector is accessed by both instructors and course participants by logging 
+in to Blackboard and, from a course page, then clicking "tools" and then 
+"Questionmark Perception Connector".
+
+Instructors and teaching assistants have buttons to synchronize users and 
+scheduled assessments with Perception and log into Enterprise Manager. 
+Synchronization of participants and groups (courses) is one way: changes in 
+Blackboard are reflected in Perception and not the other way around. On the 
+other hand, if a schedule is set up in Enterprise Manager and assigned to the 
+course group it will appear in Blackboard.
+After these buttons there follows a list of assessments scheduled to the course, 
+a list of results and a form to schedule an assessment.
+In order for results to appear in the Blackboard gradebook, assessments must be 
+scheduled from this form, a unique schedule name must be chosen and the "store 
+results in gradebook" checkbox must be checked.
+
+Course participants instead see a list of assessments which have been scheduled 
+with links to take them.
+
+UNINSTALLATION
+
+To uninstall the connector:
+1.	Log in to Blackboard as an administrator
+2.	Go to system admin -> building blocks -> installed tools
+3.	Click "delete" on the connector's row of the installed tools list and 
+	confirm the dialog
+
+Uninstallation is functionally complete at this point but configuration files 
+and the Pip file remain.
+The Pip file can simply be deleted from the pip directory on the Perception 
+server.
+The configuration files are stored on the Blackboard server at 
+<Blackboarddir>/content/vi/bb_bb60/plugins/qm-qmpp/config and can be simply 
+deleted (along with the parent directory qm-qmpp). They can alternatively be 
+harmlessly left in place in case the connector is later reinstalled.
+
+BUILDING
+
+Before you can build the connector you must obtain copies of the required
+libraries and copy them from your Blackboard installation to the 'external'
+directory.  For a list of required files please refer to the external/README.txt
+file.
+
+Building the plugin has been tested in Linux and Mac OS X environments. To 
+build, change to the root (e.g., trunk) directory and run
+./make.sh
+
+To package to a War file, from the same directory run
+./package.sh
+
+The output is the file PerceptionPlugin.war in the same directory.
+
+During development, the script install.sh was used for a speedy installation to 
+the testing server. This requires the "Starting Block" building block, available 
+from Blackboard. The install.sh script would also need to be edited to point to 
+the relevant server.
+
+NOTES
+
+A user "bb-phantom" is created and assigned to every Perception group the
+connector produces (one for each course). This is to enable the use of
+individual schedules, for example when limiting attempts.  This user should
+simply be ignored: it MUST NOT be deleted.
+
+vi:set ts=4 sts=4 sw=4 tw=80 fo=crqwnlta nojs spl=en_gb:

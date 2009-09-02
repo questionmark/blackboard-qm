@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest>
+	<plugin>
+		<name value="Questionmark Perception"/>
+		<description value="Plugin to connect Blackboard to the Questionmark Perception assessment platform"/>
+		<handle value="qmpp"/>
+		<version value="9.0.5"/>
+		<requires>
+			<bbversion value="8.0.0"/>
+		</requires>
+		<vendor>
+			<id value="qm"/>
+			<name value="Questionmark"/>
+			<url value="http://www.questionmark.com"/>
+			<description value=""/>
+		</vendor>
+		<http-actions>
+			<config value="admin/config.jsp"/>
+			<remove value= ""/>
+		</http-actions>
+		<application-defs>
+			<application
+				handle="qmppStaff"
+				type="course"
+				use-ssl="false"
+				name="Questionmark Perception"
+				can-allow-guest="false"
+				small-icon=""
+				large-icon="">
+				<description lang="en_US">
+					Plugin to connect Blackboard to the Questionmark Perception assessment platform
+				</description>
+				<links>
+					<link>
+						<type value="course_tool"/>
+						<name value="Questionmark Perception Connector"/>
+						<url value="links/main.jsp"/>
+						<description value="Questionmark Perception plugin" />
+					</link>
+				</links>
+			</application>
+			<application
+				handle="qmppStudent"
+				type="course"
+				use-ssl="false"
+				name="Questionmark Perception"
+				can-allow-guest="false"
+				small-icon=""
+				large-icon="">
+				<description lang="en_US">
+					Plugin to connect Blackboard to the Questionmark Perception assessment platform
+				</description>
+				<links>
+					<link>
+						<type value="tool"/>
+						<name value="Questionmark Perception Connector"/>
+						<url value="links/main.jsp"/>
+						<description value="Connect to the Questionmark Perception assessment system." />
+						<icons>
+							<listitem value="images/qm.gif"/>
+						</icons>
+					</link>
+				</links>
+			</application>
+		</application-defs>
+		<permissions>
+			<permission type="persist" name="OutcomeDefinitionCategory" actions="create,modify" />
+			<permission type="persist" name="OutcomeDefinition" actions="create,modify,delete" />
+			<permission type="blackboard.persist.PersistPermission" name="Outcome" actions="create,modify,delete" />
+			<permission type="attribute" name ="user.authinfo" actions="get,set" />
+			<permission type="attribute" name ="user.personalinfo" actions="get,set" />
+			<permission type="persist" name="Group" actions="get,set,create,persist,modify,delete"/>
+			<permission type="persist" name="GroupMembership" actions="get,set,create,persist,modify,delete"/>
+			<permission type="runtime" name="db.connection.*" />
+			<permission type="java.io.FilePermission" name="-" actions="read,write"/>
+			<permission type="attribute" name="user.cardnumber" actions="get,set"/>
+			<permission type="java.lang.RuntimePermission" name="accessDeclaredMembers" actions="create,modify,delete"/>
+			<permission type="java.lang.reflect.ReflectPermission" name="suppressAccessChecks"/>
+			<permission type="java.lang.RuntimePermission" name="setContextClassLoader" />
+			<permission type="socket" name="*" actions="connect,resolve" />
+		</permissions>
+	</plugin>
+</manifest>
