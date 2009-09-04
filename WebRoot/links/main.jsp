@@ -292,28 +292,28 @@
 					%>
 					<table>
 						<tr>
-							<th>Assessment ID</th>
-							<th>Schedule name</th>
+							<!--<th>Assessment ID</th>-->
+							<!--<th>Schedule name</th> Requires QMWISe fix -->
 							<th>Maximum attempts</th>
 							<th>Start datetime</th>
 							<th>End datetime</th>
 							<th>Active?</th>
 							<th>URL</th>
-							<th>Group</th>
+							<!--<th>Group</th>-->
 						</tr>
 						<%
 						for(int i = 0; i < schedules.size(); i++) {
 							if(schedules.get(i) == null) continue;
 							%>
 							<tr>
-								<td><%=schedules.get(i).getAssessment_ID()%></td>
-								<td><%=schedules.get(i).getSchedule_Name()%></td>
+								<!--<td><%=schedules.get(i).getAssessment_ID()%></td>-->
+								<!--<td><%=schedules.get(i).getSchedule_Name()%></td> Requires QMWISe fix-->
 								<td><%=schedules.get(i).isRestrict_Attempts() ? schedules.get(i).getMax_Attempts() : "no limit"%></td>
 								<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).getSchedule_Starts().getTime().toString()%></td>
 								<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).getSchedule_Stops().getTime().toString()%></td>
 								<td><%=schedulesactive[i] ? "active" : "inactive"%></td>
 								<td><a href="<%=scheduleurls[i]%>" target="_blank">Test assessment</a></td>
-								<td><%=schedules.get(i).getGroup_ID()%></td>
+								<!--<td><%=schedules.get(i).getGroup_ID()%></td>-->
 							</tr>
 						<% } %>
 					</table>
@@ -376,7 +376,8 @@
 						</form>
 						<table>
 							<tr>
-								<th>Assessment ID</th>
+								<!--<th>Assessment ID</th>-->
+								<th>Schedule Name</th>
 								<th>Participant</th>
 								<th>Score</th>
 								<th>Time taken</th>
@@ -412,7 +413,8 @@
 								}
 								%>
 								<tr>
-									<td><%=results[i].getAssessment_ID()%></td>
+									<!--<td><%=results[i].getAssessment_ID()%></td>-->
+									<td><%=results[i].getSchedule_Name()%></td>
 									<td><%=results[i].getParticipant() + " (" + results[i].getSpecial_1() + " " + results[i].getSpecial_2() + ")"%></td>
 									<td><%=!results[i].isStill_Going() ? results[i].getTotal_Score() + "/" + results[i].getMax_Score() + " (" + results[i].getPercentage_Score() + "%)" : ""%></td>
 									<td><%=!results[i].isStill_Going() ? results[i].getTime_Taken() + "s" : ""%></td>
@@ -677,20 +679,20 @@
 					%>
 					<table>
 						<tr>
-							<th>Assessment ID</th>
+							<!--<th>Assessment ID</th>-->
 							<th>Schedule name</th>
 							<th>Remaining attempts</th>
 							<th>Start datetime</th>
 							<th>End datetime</th>
 							<th>Actions</th>
-							<th>Group</th>
+							<!--<th>Group</th>-->
 						</tr>
 						<%
 						for(int i = 0; i < schedules.size(); i++) {
 							if(schedules.get(i) == null) continue;
 							%>
 							<tr>
-								<td><%=schedules.get(i).getAssessment_ID()%></td>
+								<!--<td><%=schedules.get(i).getAssessment_ID()%></td>-->
 								<td><%=schedules.get(i).getSchedule_Name()%></td>
 								<td><%=schedules.get(i).isRestrict_Attempts() ? schedules.get(i).getMax_Attempts() : "no limit"%></td>
 								<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).getSchedule_Starts().getTime().toString()%></td>
@@ -706,7 +708,7 @@
 								<% } else { %>
 									inactive
 								<% } %></td>
-								<td><%=schedules.get(i).getGroup_ID()%></td>
+								<!--<td><%=schedules.get(i).getGroup_ID()%></td>-->
 							</tr>
 						<% } %>
 					</table>
