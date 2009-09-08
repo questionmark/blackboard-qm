@@ -279,7 +279,7 @@
 			<table>
 				<tr>
 					<!--<th>Assessment ID</th>-->
-					<!--<th>Schedule name</th> Requires QMWISe fix -->
+					<th>Schedule name</th>
 					<th>Maximum attempts</th>
 					<th>Start datetime</th>
 					<th>End datetime</th>
@@ -363,7 +363,7 @@
 				<table>
 					<tr>
 						<!--<th>Assessment ID</th>-->
-						<th>Schedule Name</th>
+						<!--<th>Schedule Name</th> requires QMWISe fix -->
 						<th>Participant</th>
 						<th>Score</th>
 						<th>Time taken</th>

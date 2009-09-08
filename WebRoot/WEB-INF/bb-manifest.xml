@@ -6,7 +6,7 @@
 		<handle value="qmpp"/>
 		<version value="9.0.7"/>
 		<requires>
-			<bbversion value="8.0.0"/>
+			<bbversion value="9.0.0"/>
 		</requires>
 		<vendor>
 			<id value="qm"/>
