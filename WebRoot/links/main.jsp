@@ -293,7 +293,7 @@
 					<table>
 						<tr>
 							<!--<th>Assessment ID</th>-->
-							<!--<th>Schedule name</th> Requires QMWISe fix -->
+							<th>Schedule name</th>
 							<th>Maximum attempts</th>
 							<th>Start datetime</th>
 							<th>End datetime</th>
@@ -307,7 +307,7 @@
 							%>
 							<tr>
 								<!--<td><%=schedules.get(i).getAssessment_ID()%></td>-->
-								<!--<td><%=schedules.get(i).getSchedule_Name()%></td> Requires QMWISe fix-->
+								<td><%=schedules.get(i).getSchedule_Name()%></td>
 								<td><%=schedules.get(i).isRestrict_Attempts() ? schedules.get(i).getMax_Attempts() : "no limit"%></td>
 								<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).getSchedule_Starts().getTime().toString()%></td>
 								<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).getSchedule_Stops().getTime().toString()%></td>
@@ -377,7 +377,7 @@
 						<table>
 							<tr>
 								<!--<th>Assessment ID</th>-->
-								<th>Schedule Name</th>
+								<!--<th>Schedule Name</th> requires QMWISe fix -->
 								<th>Participant</th>
 								<th>Score</th>
 								<th>Time taken</th>
@@ -414,7 +414,7 @@
 								%>
 								<tr>
 									<!--<td><%=results[i].getAssessment_ID()%></td>-->
-									<td><%=results[i].getSchedule_Name()%></td>
+									<!--<td><%=results[i].getSchedule_Name()%></td> Requires QMWISe fix -->
 									<td><%=results[i].getParticipant() + " (" + results[i].getSpecial_1() + " " + results[i].getSpecial_2() + ")"%></td>
 									<td><%=!results[i].isStill_Going() ? results[i].getTotal_Score() + "/" + results[i].getMax_Score() + " (" + results[i].getPercentage_Score() + "%)" : ""%></td>
 									<td><%=!results[i].isStill_Going() ? results[i].getTime_Taken() + "s" : ""%></td>
