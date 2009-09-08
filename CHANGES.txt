@@ -1,0 +1,22 @@
+Version 9.0.7
+-------------
+
+Includes fixes for:
+
+[#213] Course menu now visible in instructor and student views
+
+[#211] Partial fix: IDs removed from administrator view
+
+[#210] Removed IDs from student view of schedules
+
+
+Version 9.0.6
+-------------
+
+Not released
+
+
+Version 9.0.5
+-------------
+
+First public release
