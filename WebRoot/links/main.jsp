@@ -66,12 +66,24 @@
 			return;
 		}
 
+		//Retrieve the Db persistence manager from the persistence 
+		//service
+		BbPersistenceManager bbPm = BbServiceManager.getPersistenceService().getDbPersistenceManager();
+
+		// Generate a persistence framework course Id to be used for 
+		// loading the course
+		Id courseIdObject = bbPm.generateId(Course.COURSE_DATA_TYPE, courseId);
+
+		CourseDbLoader courseLoader = (CourseDbLoader) bbPm.getLoader(CourseDbLoader.TYPE);
+		Course course = courseLoader.loadById(courseIdObject);
+
+		PropertiesBean pb = new PropertiesBean();
+
 		//-----------------------------------------------------------------------
 		//synchronization
 		//-----------------------------------------------------------------------
 
 		//read in synchronization period
-		PropertiesBean pb = new PropertiesBean();
 		String syncperiod = pb.getProperty("perception.syncperiod");
 		String syncusers = pb.getProperty("perception.syncusers");
 		if(syncperiod == null) syncperiod = "60";
@@ -96,18 +108,7 @@
 				}
 			}
 		}
-
-		//Retrieve the Db persistence manager from the persistence 
-		//service
-		BbPersistenceManager bbPm = BbServiceManager.getPersistenceService().getDbPersistenceManager();
 		
-		// Generate a persistence framework course Id to be used for 
-		// loading the course
-		Id courseIdObject = bbPm.generateId(Course.COURSE_DATA_TYPE, courseId);
-
-		CourseDbLoader courseLoader = (CourseDbLoader) bbPm.getLoader(CourseDbLoader.TYPE);
-		Course course = courseLoader.loadById(courseIdObject);
-
 		//get Perception group id
 		int perceptiongroupid;
 		try {
@@ -185,6 +186,9 @@
 				<ul id="nav" class="nav clearfix">
 					<li class="mainButton" nowrap="nowrap">
 						<a href='<%=path+"/links/forcesync.jsp?course_id="+courseId%>'>Synchronize users now</a>
+					</li>
+					<li class="mainButton" nowrap="nowrap">
+						<a href='<%=path+"/links/viewresults.jsp?course_id="+courseId%>'>View results</a>
 					</li>
 					<%
 					if(pb.getProperty("perception.singlesignon") != null) {
@@ -303,134 +307,6 @@
 					</tr>
 				<% } %>
 			</table>
-			<bbUI:spacer height="20" />
-
-			<%
-			//-----------------------------------------------------------------------
-			// Results
-			//-----------------------------------------------------------------------
-			Result[] results;
-			try {
-				results = qmwise.getStub().getResultListByGroup(course.getBatchUid());
-			} catch(Exception e) {
-				QMWiseException qe = new QMWiseException(e);
-				%>
-				<bbUI:receipt type="FAIL" title="Error getting results list">
-					<%=qe.getMessage()%>
-				</bbUI:receipt>
-				<%
-				return;
-			}
-			//sort results by date
-			Arrays.sort(results, new ResultComparator());
-
-			//get report for each result
-			String[] reports = new String[results.length];
-			try {
-				for(int i = 0; i < results.length; i++) {
-					reports[i] = qmwise.getStub().getAccessReport(results[i].getResult_ID());
-				}
-			} catch(Exception e) {
-				QMWiseException qe = new QMWiseException(e);
-				%>
-				<bbUI:receipt type="FAIL" title="Error getting coaching report">
-					<%=qe.getMessage()%>
-				</bbUI:receipt>
-				<%
-				return;
-			}
-
-			//date format
-			DateFormat pdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-
-			int resultsPerPage;
-			if(request.getParameter("resultsPerPage") != null)
-				resultsPerPage = new Integer(request.getParameter("resultsPerPage")).intValue();
-			else
-				resultsPerPage = 10;
-			
-			if(resultsPerPage < 10) resultsPerPage = 10;
-			%>
-			<h1 id="Results">Results</h1>
-			<% if (results.length == 0) { %>
-				<p>There are not yet results for this course.</p>
-			<% } else { %>
-				<form action='<%=path+"/links/main.jsp#Results"%>' method="GET" >
-					<input type="hidden" name="course_id" value="<%=courseId%>" />
-					Results to show per page: <input type="text" size="4" name="resultsPerPage" value="<%=resultsPerPage %>" />
-					<input type="submit" value="Update table" />
-				</form>
-				<table>
-					<tr>
-						<!--<th>Assessment ID</th>-->
-						<!--<th>Schedule Name</th> requires QMWISe fix -->
-						<th>Participant</th>
-						<th>Score</th>
-						<th>Time taken</th>
-						<th>Started</th>
-						<th>Finished</th>
-						<th>Report</th>
-					</tr>
-					<%
-					int listStart;
-					
-					if(request.getParameter("resultPage") != null)
-						listStart = (new Integer(request.getParameter("resultPage")) -1 ) * new Integer(resultsPerPage);
-					else
-						listStart = 0;
-					if(listStart < 0)
-						listStart = 0;
-					
-					for(int i = listStart; i < results.length && i < listStart+resultsPerPage; i++) {
-						Date started = null;
-						Date finished = null;
-						try {
-							started = pdf.parse(results[i].getWhen_Started());
-							if(!results[i].isStill_Going()) {
-								finished = pdf.parse(results[i].getWhen_Finished());
-							}
-						} catch(ParseException e) {
-							%>
-							<bbUI:receipt type="FAIL" title="Error parsing date from Perception">
-								<%=e.getMessage()%>
-							</bbUI:receipt>
-							<%
-							return;
-						}
-						%>
-						<tr>
-							<!--<td><%=results[i].getAssessment_ID()%></td>-->
-							<!--<td><%=results[i].getSchedule_Name()%></td> Requires QMWISe fix-->
-							<td><%=results[i].getParticipant() + " (" + results[i].getSpecial_1() + " " + results[i].getSpecial_2() + ")"%></td>
-							<td><%=!results[i].isStill_Going() ? results[i].getTotal_Score() + "/" + results[i].getMax_Score() + " (" + results[i].getPercentage_Score() + "%)" : ""%></td>
-							<td><%=!results[i].isStill_Going() ? results[i].getTime_Taken() + "s" : ""%></td>
-							<td><%=started.toString()%></td>
-							<td><%=!results[i].isStill_Going() ? finished.toString() : "Unfinished"%></td>
-							<td><a href="<%=reports[i]%>" target="_blank">View report</a></td>
-						</tr>
-					<% } %>
-				</table>
-				<%
-				
-				int numPages = new Double(Math.ceil(results.length/new Double(resultsPerPage))).intValue();
-				
-				out.println("<p>Page: ");
-				
-				for(int i = 1; i <= numPages; i++) {
-					if(request.getParameter("resultPage") != null && new Integer(request.getParameter("resultPage")).intValue() == i) {
-						out.println("<strong>" + i + "</strong> ");
-					} else {
-						out.println("<a href=\""+path+"/links/main.jsp?course_id=" + courseId + 
-							"&amp;resultPage=" + i +
-							"&amp;resultsPerPage=" + resultsPerPage +
-							"#Results\">" + i + "</a> ");
-					}
-				}
-				
-				out.println("</p>");
-			
-				%>
-			<% } //fi results %>
 			<bbUI:spacer height="20" />
 
 			<%
