@@ -4,6 +4,7 @@
 	import="
 		java.util.*,
 		java.text.*,
+		java.net.*,
 		blackboard.platform.*,
 		blackboard.base.*,
 		blackboard.platform.session.*,
@@ -269,10 +270,10 @@
 				Long schedule_start = schedules.get(i).getSchedule_Starts().getTime().getTime();
 				Long schedule_stop = schedules.get(i).getSchedule_Stops().getTime().getTime();
 				Long now = new Date().getTime();
-				if(
+				if (schedules.get(i).isRestrict_Times() && (
 					schedule_start > now //not started yet
 					|| schedule_stop >= 0 && schedule_stop < now //stop time is set (not 0001 AD) && already finished
-				) {
+				)) {
 					schedulesactive[i] = false;
 				} else {
 					schedulesactive[i] = true;
@@ -281,6 +282,12 @@
 
 			%>
 			<table>
+				<script  type="text/javascript">
+				function showhideScheduleURL(box,rowID) {
+					var row = document.getElementById(rowID) 
+					row.style.display = box.checked? "table-row":"none"
+					}
+				</script>
 				<tr>
 					<!--<th>Assessment ID</th>-->
 					<th>Schedule name</th>
@@ -288,11 +295,13 @@
 					<th>Start datetime</th>
 					<th>End datetime</th>
 					<th>Active?</th>
-					<th>URL</th>
+					<th>Try Out</th>
+					<th>Show URL</th>
 					<!--<th>Group</th>-->
 				</tr>
 				<%
 				for(int i = 0; i < schedules.size(); i++) {
+					String idStr="scheduleURL_"+Integer.toString(i);
 					if(schedules.get(i) == null) continue;
 					%>
 					<tr>
@@ -303,7 +312,12 @@
 						<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).getSchedule_Stops().getTime().toString()%></td>
 						<td><%=schedulesactive[i] ? "active" : "inactive"%></td>
 						<td><a href="<%=scheduleurls[i]%>" target="_blank">Test assessment</a></td>
+						<td><input type="checkbox" name="switchBox" onClick="showhideScheduleURL(this,'<%=idStr%>')" /></td>
 						<!--<td><%=schedules.get(i).getGroup_ID()%></td>-->
+					</tr>
+					<tr id='<%=idStr%>' style="display:none;">
+						<td><i>URL:</i></td>
+						<td colspan="6"><code><%=basePath+"/links/main.jsp?course_id="+courseId+"&amp;schedule_name="+URLEncoder.encode(schedules.get(i).getSchedule_Name())%></code></td>
 					</tr>
 				<% } %>
 			</table>
@@ -483,7 +497,8 @@
 
 			String[] scheduleurls = new String[schedules.size()];
 			boolean[] schedulesactive = new boolean[schedules.size()];
-
+			String showOnlySchedule = request.getParameter("schedule_name");
+			
 			for(int i = 0; i < schedules.size(); i++) {
 				//if the schedule is currently active get a URL to 
 				//launch it
@@ -552,6 +567,7 @@
 				<%
 				for(int i = 0; i < schedules.size(); i++) {
 					if(schedules.get(i) == null) continue;
+					if(showOnlySchedule!=null && showOnlySchedule.length()>0 && !showOnlySchedule.equals(schedules.get(i).getSchedule_Name())) continue;
 					%>
 					<tr>
 						<!--<td><%=schedules.get(i).getAssessment_ID()%></td>-->
