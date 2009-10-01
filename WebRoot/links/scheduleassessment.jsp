@@ -51,7 +51,8 @@
 			<%
 			QMWise qmwise;
 			int groupId;
-			Boolean perParticipant, limitAttempts, setAccessPeriod, useGradebook;
+			Boolean perParticipant, limitAttempts, setAccessPeriod;
+			String useGradebook;
 
 			try {
 				qmwise = new QMWise();
@@ -87,8 +88,8 @@
 			// check whether the "separate schedule for each user" box has been ticked
 			setAccessPeriod = request.getParameter("set_access_period") != null;
 
-			// check whether the "store results in gradebook" box has been ticked
-			useGradebook = request.getParameter("use_gradebook") != null;
+			// read the value of the "store results in gradebook" select menu
+			useGradebook = request.getParameter("use_gradebook");
 
 			// create a "Schedule" object for the current user, from the data provided
 			ScheduleV42 schedule = new ScheduleV42();
@@ -158,7 +159,7 @@
 			}
 
 			// if required, add a gradebook listitem
-			if(useGradebook) try {
+			if(!useGradebook.equals("no")) try {
 				//Retrieve the Db persistence manager from the persistence service
 				BbPersistenceManager bbPm = BbServiceManager.getPersistenceService().getDbPersistenceManager();
 
@@ -183,7 +184,9 @@
 				lineitem.setIsAvailable(true);
 				lineitem.setType("Questionmark Perception assessment");
 				lineitem.validate();
-
+				if (useGradebook.equals("percent")) {
+					lineitem.setPointsPossible(100f);
+				}
 				lineitemdbpersister.persist(lineitem);
 			} catch(Exception e) {
 				QMWiseException qe = new QMWiseException(e);
