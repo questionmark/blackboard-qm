@@ -1,3 +1,31 @@
+Version 9.0.8
+-------------
+
+Includes fixes for:
+
+[#212] Compatibility with adaptive release
+
+Instructors can now hide the list of schedules from the student view, the
+schedules can still be accessed by the student using a schedule specific URL
+that can be copied from the instructor's view and pasted into content items.
+
+Note that schedules are NOT securely hidden, determined students can view their
+own schedule if they know the schedule name.  Permission to take the assessment
+is of course controlled by the schedule settings and is not affected.
+
+[#219] Reporting of percentage scores
+
+Added a three way option to support percentage, point scores or no gradebook
+entry at all.  By default, percentage is chosen.
+
+Note that a schedule may be retrospectively converted to percentage format by
+changing the "Points Possible" in the grade centre to 100.  Existing scores are
+NOT converted so do not change this setting unless it is set to 0, indicating
+that no results have been received yet.
+
+[#208] Moved results view to a separate page
+
+
 Version 9.0.7
 -------------
 
