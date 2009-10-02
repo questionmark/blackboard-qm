@@ -52,7 +52,9 @@
 		//create a ConfigFileReader, to check whether this course needs 
 		//to sync its members and to show date last synchronized
 		ConfigFileReader configReader = new ConfigFileReader(courseId);
-
+		//load the courseSettings file too...
+		CourseSettings courseSettings = new CourseSettings(courseId);
+		
 		//connect to QMWise
 		QMWise qmwise;
 		try {
@@ -207,6 +209,24 @@
 			<p>Users of this course were last synchronized <%=new Date(configReader.getCourseSyncDate()).toString()%></p>
 			<bbUI:spacer height="20" />
 
+			<h1 id="CourseSettings">Course Settings</h1>			
+			<form name="cousre_settings" action='<%=path+"/links/coursesettings.jsp"%>' method="post">
+				<bbUI:step title="Enter Information" number="1">
+					<bbUI:dataElement label="Hide all schedules from students?">						 
+						<% if (courseSettings.getProperty("hide_schedules","0").equals("1")) { %>
+							<input type="checkbox" id="hide_schedules" name="hide_schedules" value="true" checked="checked" />
+						<% } 
+						else {
+						%>
+							<input type="checkbox" id="hide_schedules" name="hide_schedules" value="false" />
+						<% } %>
+						<p><i>Hidden schedules can still be accessed using the schedule's URL available below.</i></p>
+					</bbUI:dataElement>
+					<input type="hidden" name="course_id" value="<%=courseId%>" />
+				</bbUI:step>
+				<bbUI:stepSubmit title="Submit" number="2" />
+			</form>
+			
 			<h1 id="Schedules">Schedules</h1>
 			<%
 			ScheduleV42[] schedulesarray;
@@ -317,7 +337,7 @@
 					</tr>
 					<tr id='<%=idStr%>' style="display:none;">
 						<td><i>URL:</i></td>
-						<td colspan="6"><code><%=basePath+"/links/main.jsp?course_id="+courseId+"&amp;schedule_name="+URLEncoder.encode(schedules.get(i).getSchedule_Name())%></code></td>
+						<td colspan="6"><code><%=basePath+"links/main.jsp?course_id="+courseId+"&amp;schedule_name="+URLEncoder.encode(schedules.get(i).getSchedule_Name())%></code></td>
 					</tr>
 				<% } %>
 			</table>
@@ -502,6 +522,10 @@
 			String[] scheduleurls = new String[schedules.size()];
 			boolean[] schedulesactive = new boolean[schedules.size()];
 			String showOnlySchedule = request.getParameter("schedule_name");
+			if ((showOnlySchedule == null || showOnlySchedule.length()==0) && 
+				courseSettings.getProperty("hide_schedules","0").equals("1")) {
+				showOnlySchedule="HIDE_ALL_SCHEDULES";
+			}
 			
 			for(int i = 0; i < schedules.size(); i++) {
 				//if the schedule is currently active get a URL to 
@@ -558,6 +582,8 @@
 			}
 
 			%>
+			<p>These are the assessments that are scheduled for you, if the list is empty there are no
+			assessments scheduled at the current time.</p>
 			<table>
 				<tr>
 					<!--<th>Assessment ID</th>-->
