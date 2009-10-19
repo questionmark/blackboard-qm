@@ -1,5 +1,5 @@
 #!/bin/bash
 rm PerceptionPlugin.war
-cd WebRoot
+cd WebContent
 zip -r ../PerceptionPlugin.war * -x "*/*.svn/*"
 cd ..
