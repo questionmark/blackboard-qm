@@ -39,7 +39,7 @@ try {
 }
 
 try {
-	lineitem = lineitemLoader.loadByCourseIdAndLineitemName(course.getId(), request.getParameter("bb_schedulename")).get(0);
+	lineitem = (Lineitem) lineitemLoader.loadByCourseIdAndLineitemName(course.getId(), request.getParameter("bb_schedulename")).get(0);
 } catch(java.lang.IndexOutOfBoundsException e) {
 	//lineitem doesn't exist yet -- "use gradebook" box was not checked 
 	//otherwise it would exist already. so we ignore this callback.
