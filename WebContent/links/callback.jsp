@@ -6,6 +6,7 @@
 		blackboard.platform.*,
 		blackboard.base.*,
 		blackboard.platform.session.*,
+		blackboard.platform.persistence.*,
 		blackboard.data.user.*,
 		blackboard.persist.* ,
 		blackboard.persist.user.*,
@@ -18,7 +19,7 @@
 
 <%
 //Retrieve the Db persistence manager from the persistence service
-BbPersistenceManager bbPm = BbServiceManager.getPersistenceService().getDbPersistenceManager();
+BbPersistenceManager bbPm = PersistenceServiceFactory.getInstance().getDbPersistenceManager();
 
 // Generate a persistence framework course Id to be used for 
 // loading the course

@@ -18,6 +18,32 @@
 			<config value="admin/config.jsp"/>
 			<remove value= ""/>
 		</http-actions>
+		
+		<!--  Custom content types defined by this extension -->
+		<content-handlers>
+
+			<content-handler>
+
+				<name value="Questionmark Assessment 'Content' "></name>
+			
+				<handle value="qm/x-qm-samplecontent"></handle>
+
+				<http-actions>
+                    <view value="content/view_content_schedules.jsp"/>
+                    <create value="content/mainCreate.jsp"/>
+                    <modify value="content/mainCreate.jsp"/>
+                    <remove value="content/remove.jsp"/>
+                    <can-copy value="false"/>
+				</http-actions>
+
+				<icons>
+					<toolbar value="images/qm.gif" />
+					<listitem value="images/qm.gif" />
+				</icons>
+
+			</content-handler>
+		</content-handlers>
+				
 		<application-defs>
 			<application
 				handle="qmppStaff"
@@ -63,21 +89,26 @@
 				</links>
 			</application>
 		</application-defs>
-		<permissions>
-			<permission type="persist" name="OutcomeDefinitionCategory" actions="create,modify" />
-			<permission type="persist" name="OutcomeDefinition" actions="create,modify,delete" />
-			<permission type="blackboard.persist.PersistPermission" name="Outcome" actions="create,modify,delete" />
+		<permissions>		
+			<permission type="runtime" name="db.connection.*" />		
+			<permission type="socket" name="*" actions="connect,resolve" />			
+
 			<permission type="attribute" name ="user.authinfo" actions="get,set" />
 			<permission type="attribute" name ="user.personalinfo" actions="get,set" />
+			
+			<permission type="persist" name="OutcomeDefinitionCategory" actions="create,modify" />
+			<permission type="persist" name="OutcomeDefinition" actions="create,modify,delete" />
+			<permission type="persist" name="Content" actions="create,modify,delete"/>			
 			<permission type="persist" name="Group" actions="get,set,create,persist,modify,delete"/>
-			<permission type="persist" name="GroupMembership" actions="get,set,create,persist,modify,delete"/>
-			<permission type="runtime" name="db.connection.*" />
+			<permission type="persist" name="GroupMembership" actions="get,set,create,persist,modify,delete"/>	
+			<permission type="blackboard.persist.PersistPermission" name="Outcome" actions="create,modify,delete" />
+
 			<permission type="java.io.FilePermission" name="-" actions="read,write"/>
 			<permission type="attribute" name="user.cardnumber" actions="get,set"/>
 			<permission type="java.lang.RuntimePermission" name="accessDeclaredMembers" actions="create,modify,delete"/>
 			<permission type="java.lang.reflect.ReflectPermission" name="suppressAccessChecks"/>
 			<permission type="java.lang.RuntimePermission" name="setContextClassLoader" />
-			<permission type="socket" name="*" actions="connect,resolve" />
+
 		</permissions>
 	</plugin>
 </manifest>

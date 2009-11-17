@@ -7,6 +7,7 @@
 		blackboard.platform.*,
 		blackboard.base.*,
 		blackboard.platform.session.*,
+		blackboard.platform.persistence.*,
 		blackboard.data.user.*,
 		blackboard.persist.* ,
 		blackboard.persist.user.*,
@@ -62,13 +63,13 @@
 			return;
 		}
 
-		//Retrieve the Db persistence manager from the persistence 
-		//service
-		BbPersistenceManager bbPm = BbServiceManager.getPersistenceService().getDbPersistenceManager();
+		//Retrieve the Db persistence manager from the persistence service
+		BbPersistenceManager bbPm = PersistenceServiceFactory.getInstance().getDbPersistenceManager();
+
 
 		// Generate a persistence framework course Id to be used for 
 		// loading the course
-		Id courseIdObject = bbPm.generateId(Course.COURSE_DATA_TYPE, courseId);
+		Id courseIdObject = bbPm.generateId(Course.DATA_TYPE, courseId);
 
 		CourseDbLoader courseLoader = (CourseDbLoader) bbPm.getLoader(CourseDbLoader.TYPE);
 		Course course = courseLoader.loadById(courseIdObject);

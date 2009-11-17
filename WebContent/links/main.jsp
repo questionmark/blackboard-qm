@@ -75,7 +75,7 @@
 
 		// Generate a persistence framework course Id to be used for 
 		// loading the course
-		Id courseIdObject = bbPm.generateId(Course.COURSE_DATA_TYPE, courseId);
+		Id courseIdObject = bbPm.generateId(Course.DATA_TYPE, courseId);
 
 		CourseDbLoader courseLoader = (CourseDbLoader) bbPm.getLoader(CourseDbLoader.TYPE);
 		Course course = courseLoader.loadById(courseIdObject);
@@ -382,7 +382,7 @@
 			}
 
 			if(assessments.length == 0) { %>
-				<p>There are no assessments defined in Perception so you cannot schedule an assessment.<p>
+				<p>There are no assessments defined in Perception so you cannot schedule an assessment.</p>
 			<% } else { %>
 				<script type="text/javascript">
 					function disable_set_access() {
