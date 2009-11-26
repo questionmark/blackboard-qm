@@ -1,3 +1,13 @@
+<!-- 
+////////////////////////////
+
+// Filename		: content/createscheduleproc.jsp
+// Description	: 'createproc' for createscheduleform.jsp, does the content 
+//				  item object initialisation and creation of schedule
+				  attached to the content item for use by students and staff.
+////////////////////////////
+-->
+
 <%@ page
 	language="java"
 	pageEncoding="UTF-8"
@@ -32,6 +42,7 @@
 
 <%@ taglib uri="/bbUI" prefix="bbUI" %>
 <%@ taglib uri="/bbData" prefix="bbData" %>
+<%@ taglib uri="/bbNG" prefix="bbNG" %>
 <%
 	String path = request.getContextPath();
 	String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+path+"/";
@@ -53,31 +64,17 @@
 	User user;
 %>
 
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 
 <bbData:context id="ctx">
-<html>
-	<head>
-		<base href="<%=basePath%>">
 
-		<title>Questionmark Perception connector</title>
-		<meta http-equiv="pragma" content="no-cache">
-		<meta http-equiv="cache-control" content="no-cache">
-		<meta http-equiv="expires" content="0">
-		<meta http-equiv="keywords" content="questionmark perception,questionmark,perception,assessment,connector">
-		<meta http-equiv="description" content="Questionmark Perception connector for Blackboard">
-		<!--
-			<link rel="stylesheet" type="text/css" href="styles.css">
-		-->
-	</head>
 	
 	<bbUI:breadcrumbBar environment="COURSE" handle="control_panel" isContent="true">
 	
-		<bbUI:breadcrumb>QUESTIONMARK SCHEDULE CREATED</bbUI:breadcrumb>
+		<bbUI:breadcrumb>QUESTIONMARK PERCEPTION SCHEDULE CREATED</bbUI:breadcrumb>
 	
 	</bbUI:breadcrumbBar>	
 	
-	<!--put in variables to display right here, for debugging-->
+	<!--put in variables to display right here, DEBUGGING CODE
 	<p>
 	<%
 			
@@ -86,8 +83,9 @@
 			out.println("Persisted QM Schedule name from form: " + schedule_name);
 	%>
 	</p>
+	-->
 
-	<body>
+
 		<bbUI:docTemplate>
 			<%
 			QMWise qmwise;
@@ -255,12 +253,17 @@
 				//title of the content item tied in with the Questionmark Created Scheduled name...
 				courseDoc.setTitle(schedule_name);
 				
+				//set description of content item, in this case, perception schedule..
+				FormattedText text = new FormattedText("Questionmark Perception Scheduled Assessment", FormattedText.Type.HTML);
+	
+				courseDoc.setBody(text);
+				
 				//made it unconditionally available to all, can change depending on user story.
 				courseDoc.setIsAvailable(true);		
 			
 				//set content resource type(Set content handler)
 				
-				courseDoc.setContentHandler("qm/x-qm-samplecontent");	//NB Must match the entry in bb-manifest!!
+				courseDoc.setContentHandler("qm/schedule-link");	//NB Must match the entry in bb-manifest!!
 				
 				//set parent id
 				courseDoc.setParentId(parentId);
@@ -280,7 +283,7 @@
 				persister.persist(courseDoc);
 				
 				//out.println("<p>" + user.getGivenName() + "," + "\n"); 
-				out.println("content creation was a success </p>");
+				//out.println("content creation was a success </p>");
 				
 				user = ctx.getUser();
 				
@@ -291,15 +294,18 @@
 						+ course_id
 						+ "&amp;mode=quick";				
 				%>
-				
-					<p>Congratulations <%=user.getGivenName()%> ,<br> 
-						your content item was created successfully
+				<bbUI:receipt type="pass" title="Questionmark Perception" recallUrl="<%=okUrl %>" buttonAlt="OK" buttonName="okButton">
+					<p>
+						<i>Schedule creation was successful.</i>						
 					</p>
-					
-				<br>
-				    <div align=right>
-				        <bbUI:button action="LINK" alt="ok" name="ok" type="FORM_ACTION" targetUrl="<%=okUrl%>"/>
-				    </div>
+				</bbUI:receipt>
+				<%	
+				// <br>
+				  //  <div align=right>
+				//        <bbUI:button action="LINK" alt="ok" name="ok" type="FORM_ACTION" targetUrl="<%=okUrl%//"/>
+				//	    </div>
+				//		 
+				%>
 				<%
 			
 			}
@@ -307,20 +313,17 @@
 		//		out.println("null pointer exception " + npe.getCause() + npe.getMessage()); 
 		//	}
 			catch(PersistenceException pE){	
-			
-				
+							
 				%>
 				<bbUI:receipt type="FAIL" title="content item creation unsuccessful" recallUrl="" buttonName="failOk" buttonAlt="OK">
 					Sorry but there was a problem creating this content item, see below:<br>
 					<%out.println("Persistence Exception caught, Message: " + pE.getMessage());%>
 				</bbUI:receipt>
-				<%
+				<%	
 			}
-			%>			
+			%>						
 		
-
 		</bbUI:docTemplate>
-	</body>
-</html>
+
 </bbData:context>
 

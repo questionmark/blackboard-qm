@@ -1,6 +1,4 @@
-<%@ page
-	language="java"
-	pageEncoding="UTF-8"
+<%@ page language="java" pageEncoding="UTF-8"
 	import="
 		java.util.*,
 		java.text.*,
@@ -9,6 +7,7 @@
 		blackboard.base.*,
 		blackboard.platform.session.*,
 		blackboard.data.user.*,
+		blackboard.platform.persistence.PersistenceServiceFactory,
 		blackboard.persist.* ,
 		blackboard.persist.user.*,
 		blackboard.data.course.*,
@@ -17,23 +16,24 @@
 		java.rmi.RemoteException,
 		javax.xml.namespace.QName,
 		com.questionmark.*,
-		com.questionmark.QMWISe.*
-	"
+		com.questionmark.QMWISe.*"
 %>
 
-<%@ taglib uri="/bbUI" prefix="bbUI" %> 
-<%@ taglib uri="/bbData" prefix="bbData" %>
-<%@ taglib uri="/bbNG" prefix="bbNG" %>
+<%@ taglib uri="/bbUI" prefix="bbUI"%>
+<%@ taglib uri="/bbData" prefix="bbData"%>
+<%@ taglib uri="/bbNG" prefix="bbNG"%>
 <%
 	String path = request.getContextPath();
 	String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+path+"/";
+	String schedule_name = request.getParameter("schedule_name");
 %>
 
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 
-<bbNG:learningSystemPage ctxId="ctx" title="Questionmark Perception connector" onLoad="disable_set_access()">
+<bbNG:learningSystemPage ctxId="ctx"
+	title="Questionmark Perception connector" onLoad="disable_set_access()">
 	<bbNG:pageHeader>
-		<bbNG:pageTitleBar iconUrl='<%=path+"/images/qm.gif"%>' title="Questionmark Perception connector"/>
+		<bbNG:pageTitleBar iconUrl='<%=path+"/images/qm.gif"%>'
+			title="Questionmark Perception connector" />
 	</bbNG:pageHeader>
 
 	<%
@@ -41,11 +41,11 @@
 		String courseId = request.getParameter("course_id");
 
 		if(courseId == null) {
-			%>
-			<bbUI:receipt type="FAIL" title="No course ID was given">
+	%>
+	<bbUI:receipt type="FAIL" title="No course ID was given">
 				No course ID was given with the request
 			</bbUI:receipt>
-			<%
+	<%
 			return;
 		}
 
@@ -62,16 +62,15 @@
 		} catch(Exception e) {
 			QMWiseException qe = new QMWiseException(e);
 			%>
-			<bbUI:receipt type="FAIL" title="Error connecting to Perception server">
-				<%=qe.getMessage()%>
-			</bbUI:receipt>
-			<%
+	<bbUI:receipt type="FAIL" title="Error connecting to Perception server">
+		<%=qe.getMessage()%>
+	</bbUI:receipt>
+	<%
 			return;
 		}
 
-		//Retrieve the Db persistence manager from the persistence 
-		//service
-		BbPersistenceManager bbPm = BbServiceManager.getPersistenceService().getDbPersistenceManager();
+		//Retrieve the Db persistence manager from the persistence service
+		BbPersistenceManager bbPm = PersistenceServiceFactory.getInstance().getDbPersistenceManager();
 
 		// Generate a persistence framework course Id to be used for 
 		// loading the course
@@ -103,10 +102,11 @@
 				} catch (Exception e) {
 					System.out.println("Perception: course " + courseId + ": synchronization failed: " + e.getMessage());
 					%>
-					<bbUI:receipt type="FAIL" title="Error synchronizing course users with Perception">
-						<%=e.getMessage()%>
-					</bbUI:receipt>
-					<%
+	<bbUI:receipt type="FAIL"
+		title="Error synchronizing course users with Perception">
+		<%=e.getMessage()%>
+	</bbUI:receipt>
+	<%
 					return;
 				}
 			}
@@ -130,18 +130,20 @@
 				} catch (Exception ne) {
 					System.out.println("Perception: course " + courseId + ": synchronization failed: " + ne.getMessage());
 					%>
-					<bbUI:receipt type="FAIL" title="Error synchronizing course users with Perception">
-						<%=ne.getMessage()%>
-					</bbUI:receipt>
-					<%
+	<bbUI:receipt type="FAIL"
+		title="Error synchronizing course users with Perception">
+		<%=ne.getMessage()%>
+	</bbUI:receipt>
+	<%
 					return;
 				}
 			} else {
 				%>
-				<bbUI:receipt type="FAIL" title="Error retrieving course group from Perception">
-					<%=qe.getMessage()%>
-				</bbUI:receipt>
-				<%
+	<bbUI:receipt type="FAIL"
+		title="Error retrieving course group from Perception">
+		<%=qe.getMessage()%>
+	</bbUI:receipt>
+	<%
 				return;
 			}
 		}
@@ -163,18 +165,18 @@
 		} catch (KeyNotFoundException e) {
 			// There is no membership record.
 			%>
-			<bbUI:receipt type="FAIL" title="You don't have a role on this course">
-				<%=e.getMessage()%>
-			</bbUI:receipt>
-			<%
+	<bbUI:receipt type="FAIL" title="You don't have a role on this course">
+		<%=e.getMessage()%>
+	</bbUI:receipt>
+	<%
 			return;
 		} catch (PersistenceException pe) {
 			// There is no membership record.
 			%>
-			<bbUI:receipt type="FAIL" title="Error loading the current user">
-				<%=pe.getMessage()%>
-			</bbUI:receipt>
-			<%
+	<bbUI:receipt type="FAIL" title="Error loading the current user">
+		<%=pe.getMessage()%>
+	</bbUI:receipt>
+	<%
 			return;
 		}
 
@@ -185,60 +187,63 @@
 			//-----------------------------------------------------------------------
 
 			%>
-			<div id="actionbar" class="actionBar clearfix editmode">
-				<ul id="nav" class="nav clearfix">
-					<li class="mainButton" nowrap="nowrap">
-						<a href='<%=path+"/links/forcesync.jsp?course_id="+courseId%>'>Synchronize users now</a>
-					</li>
-					<li class="mainButton" nowrap="nowrap">
-						<a href='<%=path+"/links/viewresults.jsp?course_id="+courseId%>'>View results</a>
-					</li>
-					<%
-					if(pb.getProperty("perception.singlesignon") != null) {
-						%>
-						<li class="mainButton" nowrap="nowrap">
-							<a href='<%=path+"/links/enterprisemanager.jsp"%>' target="_blank">Log in to Enterprise Manager</a>
-						</li>
-						<%
-					}
-					%>
-				</ul>
-			</div>
+			
+	<bbNG:actionControlBar showWhenEmpty="true">	
 
-			<h1 id="Syncdetails">Synchronization details</h1>
-			<p>Users of this course were last synchronized <%=new Date(configReader.getCourseSyncDate()).toString()%></p>
-			<bbUI:spacer height="20" />
+		<bbNG:actionButton  url='<%=path+"/links/forcesync.jsp?course_id="+courseId%>' title="Synchronize
+		users now"/>		
 
-			<h1 id="CourseSettings">Course Settings</h1>			
-			<form name="cousre_settings" action='<%=path+"/links/coursesettings.jsp"%>' method="post">
-				<bbUI:step title="Enter Information" number="1">
-					<bbUI:dataElement label="Hide all schedules from students?">						 
-						<% if (courseSettings.getProperty("hide_schedules","0").equals("1")) { %>
-							<input type="checkbox" id="hide_schedules" name="hide_schedules" value="true" checked="checked" />
-						<% } 
+		<bbNG:actionButton url='<%=path+"/links/viewresults.jsp?course_id="+courseId%>' title="View
+		results"/>		
+
+	<%
+		if(pb.getProperty("perception.singlesignon") != null) {
+	%>
+		<bbNG:actionButton url='<%=path+"/links/enterprisemanager.jsp"%>' 
+			title="Log in to Enterprise Manager" target="_blank"/>
+	<%
+		}
+	%>
+	
+	</bbNG:actionControlBar>
+
+	<h1 id="Syncdetails">Synchronization details</h1>
+	<p>Users of this course were last synchronized <%=new Date(configReader.getCourseSyncDate()).toString()%></p>
+	<bbUI:spacer height="20" />
+
+	<h1 id="CourseSettings">Course Settings</h1>
+	<form name="course_settings"
+		action='<%=path+"/links/coursesettings.jsp"%>' method="post"><bbUI:step
+		title="Enter Information" number="1">
+		<bbUI:dataElement label="Hide schedules from students in Course Tool view?">
+			<% if (courseSettings.getProperty("hide_schedules","0").equals("1")) { %>
+			<input type="checkbox" id="hide_schedules" name="hide_schedules"
+				value="true" checked="checked" />
+			<% } 
 						else {
 						%>
-							<input type="checkbox" id="hide_schedules" name="hide_schedules" value="false" />
-						<% } %>
-						<p><i>Hidden schedules can still be accessed using the schedule's URL available below.</i></p>
-					</bbUI:dataElement>
-					<input type="hidden" name="course_id" value="<%=courseId%>" />
-				</bbUI:step>
-				<bbUI:stepSubmit title="Submit" number="2" />
-			</form>
-			
-			<h1 id="Schedules">Schedules</h1>
-			<%
+			<input type="checkbox" id="hide_schedules" name="hide_schedules"
+				value="false" />
+			<% } %>
+			<p><i>Use this option if you are creating schedules using content items to prevent students from seeing the schedule list in the Course Tool 
+			view of the connector. <br/>
+			Hidden schedules can still be accessed individually using the schedule's URL below.</i></p>
+		</bbUI:dataElement>
+		<input type="hidden" name="course_id" value="<%=courseId%>" />
+	</bbUI:step> <bbUI:stepSubmit title="Submit" number="2" /></form>
+
+	<h1 id="Schedules">Schedules</h1>
+	<%
 			ScheduleV42[] schedulesarray;
 			try {
 				schedulesarray = qmwise.getStub().getScheduleListByParticipantV42(new Integer(UserSynchronizer.getPhantomUserId()).intValue());
 			} catch(Exception e) {
 				QMWiseException qe = new QMWiseException(e);
 				%>
-				<bbUI:receipt type="FAIL" title="Error getting group schedule list">
-					<%=qe.getMessage()%>
-				</bbUI:receipt>
-				<%
+	<bbUI:receipt type="FAIL" title="Error getting group schedule list">
+		<%=qe.getMessage()%>
+	</bbUI:receipt>
+	<%
 				return;
 			}
 
@@ -255,10 +260,10 @@
 			} catch(Exception e) {
 				QMWiseException qe = new QMWiseException(e);
 				%>
-				<bbUI:receipt type="FAIL" title="Error getting zero user schedule list">
-					<%=qe.getMessage()%>
-				</bbUI:receipt>
-				<%
+	<bbUI:receipt type="FAIL" title="Error getting zero user schedule list">
+		<%=qe.getMessage()%>
+	</bbUI:receipt>
+	<%
 				return;
 			}
 
@@ -280,10 +285,10 @@
 				} catch(Exception e) {
 					QMWiseException qe = new QMWiseException(e);
 					%>
-					<bbUI:receipt type="FAIL" title="Error getting assessment URL">
-						<%=qe.getMessage()%>
-					</bbUI:receipt>
-					<%
+	<bbUI:receipt type="FAIL" title="Error getting assessment URL">
+		<%=qe.getMessage()%>
+	</bbUI:receipt>
+	<%
 					return;
 				}
 
@@ -301,55 +306,57 @@
 			}
 
 			%>
-			<table>
-				<script  type="text/javascript">
+	<table border="2" cellpadding="1">
+		<script type="text/javascript">
 				function showhideScheduleURL(box,rowID) {
 					var row = document.getElementById(rowID) 
 					row.style.display = box.checked? "table-row":"none"
 					}
 				</script>
-				<tr>
-					<!--<th>Assessment ID</th>-->
-					<th>Schedule name</th>
-					<th>Maximum attempts</th>
-					<th>Start datetime</th>
-					<th>End datetime</th>
-					<th>Active?</th>
-					<th>Try Out</th>
-					<th>Show URL</th>
-					<!--<th>Group</th>-->
-				</tr>
-				<%
+		<tr>
+			<!--<th>Assessment ID</th>-->
+			<th>Schedule name</th>
+			<th>Maximum attempts</th>
+			<th>Start datetime</th>
+			<th>End datetime</th>
+			<th>Active?</th>
+			<th>Try Out</th>
+			<th>Show URL</th>
+			<!--<th>Group</th>-->
+		</tr>
+		<%
 				for(int i = 0; i < schedules.size(); i++) {
 					String idStr="scheduleURL_"+Integer.toString(i);
 					if(schedules.get(i) == null) continue;
 					%>
-					<tr>
-						<!--<td><%=schedules.get(i).getAssessment_ID()%></td>-->
-						<td><%=schedules.get(i).getSchedule_Name()%></td>
-						<td><%=schedules.get(i).isRestrict_Attempts() ? schedules.get(i).getMax_Attempts() : "no limit"%></td>
-						<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).getSchedule_Starts().getTime().toString()%></td>
-						<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).getSchedule_Stops().getTime().toString()%></td>
-						<td><%=schedulesactive[i] ? "active" : "inactive"%></td>
-						<td><a href="<%=scheduleurls[i]%>" target="_blank">Test assessment</a></td>
-						<td><input type="checkbox" name="switchBox" onClick="showhideScheduleURL(this,'<%=idStr%>')" /></td>
-						<!--<td><%=schedules.get(i).getGroup_ID()%></td>-->
-					</tr>
-					<tr id='<%=idStr%>' style="display:none;">
-						<td><i>URL:</i></td>
-						<td colspan="6"><code><%=basePath+"links/main.jsp?course_id="+courseId+"&amp;schedule_name="+URLEncoder.encode(schedules.get(i).getSchedule_Name())%></code></td>
-					</tr>
-				<% } %>
-			</table>
-			<bbUI:spacer height="20" />
+		<tr>
+			<!--<td><%=schedules.get(i).getAssessment_ID()%></td>-->
+			<td><%=schedules.get(i).getSchedule_Name()%></td>
+			<td><%=schedules.get(i).isRestrict_Attempts() ? schedules.get(i).getMax_Attempts() : "no limit"%></td>
+			<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).getSchedule_Starts().getTime().toString()%></td>
+			<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).getSchedule_Stops().getTime().toString()%></td>
+			<td><%=schedulesactive[i] ? "active" : "inactive"%></td>
+			<td><a href="<%=scheduleurls[i]%>" target="_blank">Test
+			assessment</a></td>
+			<td><input type="checkbox" name="switchBox"
+				onClick="showhideScheduleURL(this,'<%=idStr%>')" /></td>
+			<!--<td><%=schedules.get(i).getGroup_ID()%></td>-->
+		</tr>
+		<tr id='<%=idStr%>' style="display: none;">
+			<td><i>URL:</i></td>
+			<td colspan="6"><code><%=basePath+"links/main.jsp?course_id="+courseId+"&amp;schedule_name="+URLEncoder.encode(schedules.get(i).getSchedule_Name())%></code></td>
+		</tr>
+		<% } %>
+	</table>
+	<bbUI:spacer height="20" />
 
-			<%
+	<%
 			//-----------------------------------------------------------------------
 			// Schedule-authoring form
 			//-----------------------------------------------------------------------
 			%>
-			<h1 id="Scheduleform">Schedule an Assessment</h1>
-			<%
+	<h1 id="Scheduleform">Schedule an Assessment</h1>
+	<%
 
 			Calendar startdate = Calendar.getInstance();
 			Calendar enddate = Calendar.getInstance();
@@ -361,10 +368,11 @@
 			} catch(Exception e) {
 				QMWiseException qe = new QMWiseException(e);
 				%>
-				<bbUI:receipt type="FAIL" title="Error getting Perception administrator ID">
-					<%=qe.getMessage()%>
-				</bbUI:receipt>
-				<%
+	<bbUI:receipt type="FAIL"
+		title="Error getting Perception administrator ID">
+		<%=qe.getMessage()%>
+	</bbUI:receipt>
+	<%
 				return;
 			}
 
@@ -374,17 +382,19 @@
 			} catch(Exception e) {
 				QMWiseException qe = new QMWiseException(e);
 				%>
-				<bbUI:receipt type="FAIL" title="Error getting list of available assessments">
-					<%=qe.getMessage()%>
-				</bbUI:receipt>
-				<%
+	<bbUI:receipt type="FAIL"
+		title="Error getting list of available assessments">
+		<%=qe.getMessage()%>
+	</bbUI:receipt>
+	<%
 				return;
 			}
 
 			if(assessments.length == 0) { %>
-				<p>There are no assessments defined in Perception so you cannot schedule an assessment.</p>
-			<% } else { %>
-				<script type="text/javascript">
+	<p>There are no assessments defined in Perception so you cannot
+	schedule an assessment.</p>
+	<% } else { %>
+	<script type="text/javascript">
 					function disable_set_access() {
 						if(document.getElementById('set_access_period')) {
 							var disabled = !document.getElementById('set_access_period').checked;
@@ -410,57 +420,71 @@
 					}
 				</script>
 
-				<form name="schedule_assessment" action='<%=path+"/links/scheduleassessment.jsp"%>' method="post">
-					<bbUI:step title="Enter Information" number="1">
-						<bbUI:dataElement label="Schedule name">
-							<input type="text" name="schedule" /><br />
+	<form name="schedule_assessment"
+		action='<%=path+"/links/scheduleassessment.jsp"%>' method="post">
+	<bbUI:step title="Enter Information" number="1">
+		<bbUI:dataElement label="Schedule name">
+			<input type="text" name="schedule" />
+			<br />
 							The schedule name must be unique if results are to be stored in the gradebook
 						</bbUI:dataElement>
-						<bbUI:dataElement label="Store results in gradebook?">
-							<select name="use_gradebook">
-								<option value="percent" selected="selected">as percentage scores</option>
-								<option value="point">as point scores</option>
-								<option value="no">do not store results in gradebook</option>
-							</select>
-						</bbUI:dataElement>
-						<bbUI:dataElement label="Assessment name">
-							<select name="assessment">
-								<% for(int i = 0; i < assessments.length; i++) { %>
-									<option value="<%=assessments[i].getAssessment_ID()%>"><%=assessments[i].getSession_Name()%></option>
-								<% } %>
-							</select>
-						</bbUI:dataElement>
-						<bbUI:dataElement label="Limit attempts?">
-							<input type="checkbox" id="limit_attempts" name="limit_attempts" value="true" onclick="disable_limit_attempts()" />
-							<input type="text" id="limit" name="limit" size="4" disabled value="1" />
-						</bbUI:dataElement>
-						<bbUI:dataElement label="Create schedule for each group participant?">
-							<input type="checkbox" id="per_participant" name="per_participant" value="true" onclick="set_limit_attempts_hidden()" />
-							<input type="hidden" id="per_participant_hidden" name="per_participant_hidden" value="0" />
-						</bbUI:dataElement>
-						<bbUI:dataElement label="Set access period?">
-							<input type="checkbox" id="set_access_period" name="set_access_period" value="true" onclick="disable_set_access()" />
-							<bbUI:dataElement label="Start date">
-								<bbUI:datePicker startDate="<%=startdate%>" formName="schedule_assessment" startCaption="Start" startDateField="start" />
-							</bbUI:dataElement>
-							<bbUI:dataElement label="Start time (24-hour HH:MM)">
-								<input type="text" id="start_hour" name="start_hour" size="2" disabled value="09" /> :
-								<input type="text" id="start_minute" name="start_minute" size="2" disabled value="00" />
-							</bbUI:dataElement>
-							<bbUI:dataElement label="End date">
-								<bbUI:datePicker startDate="<%=enddate%>" formName="schedule_assessment" startCaption="End" startDateField="end" />
-							</bbUI:dataElement>
-							<bbUI:dataElement label="End time (24-hour HH:MM)">
-								<input type="text" id="end_hour" name="end_hour" size="2" disabled value="17" /> :
-								<input type="text" id="end_minute" name="end_minute" size="2" disabled value="00" />
-							</bbUI:dataElement>
-						</bbUI:dataElement>
-						<input type="hidden" name="group" value="<%=course.getBatchUid()%>" />
-						<input type="hidden" name="course_id" value="<%=courseId%>" />
-					</bbUI:step>
-					<bbUI:stepSubmit title="Submit" number="2" />
-				</form>
-			<% }
+		<bbUI:dataElement label="Store results in gradebook?">
+			<select name="use_gradebook">
+				<option value="percent" selected="selected">as percentage
+				scores</option>
+				<option value="point">as point scores</option>
+				<option value="no">do not store results in gradebook</option>
+			</select>
+		</bbUI:dataElement>
+		<bbUI:dataElement label="Assessment name">
+			<select name="assessment">
+				<% for(int i = 0; i < assessments.length; i++) { %>
+				<option value="<%=assessments[i].getAssessment_ID()%>"><%=assessments[i].getSession_Name()%></option>
+				<% } %>
+			</select>
+		</bbUI:dataElement>
+		<bbUI:dataElement label="Limit attempts?">
+			<input type="checkbox" id="limit_attempts" name="limit_attempts"
+				value="true" onclick="disable_limit_attempts()" />
+			<input type="text" id="limit" name="limit" size="4" disabled
+				value="1" />
+		</bbUI:dataElement>
+		<bbUI:dataElement label="Create schedule for each group participant?">
+			<input type="checkbox" id="per_participant" name="per_participant"
+				value="true" onclick="set_limit_attempts_hidden()" />
+			<input type="hidden" id="per_participant_hidden"
+				name="per_participant_hidden" value="0" />
+		</bbUI:dataElement>
+		<bbUI:dataElement label="Set access period?">
+			<input type="checkbox" id="set_access_period"
+				name="set_access_period" value="true" onclick="disable_set_access()" />
+			<bbUI:dataElement label="Start date">
+				<bbUI:datePicker startDate="<%=startdate%>"
+					formName="schedule_assessment" startCaption="Start"
+					startDateField="start" />
+			</bbUI:dataElement>
+			<bbUI:dataElement label="Start time (24-hour HH:MM)">
+				<input type="text" id="start_hour" name="start_hour" size="2"
+					disabled value="09" /> :
+								<input type="text" id="start_minute" name="start_minute"
+					size="2" disabled value="00" />
+			</bbUI:dataElement>
+			<bbUI:dataElement label="End date">
+				<bbUI:datePicker startDate="<%=enddate%>"
+					formName="schedule_assessment" startCaption="End"
+					startDateField="end" />
+			</bbUI:dataElement>
+			<bbUI:dataElement label="End time (24-hour HH:MM)">
+				<input type="text" id="end_hour" name="end_hour" size="2" disabled
+					value="17" /> :
+								<input type="text" id="end_minute" name="end_minute" size="2"
+					disabled value="00" />
+			</bbUI:dataElement>
+		</bbUI:dataElement>
+		<input type="hidden" name="group" value="<%=course.getBatchUid()%>" />
+		<input type="hidden" name="course_id" value="<%=courseId%>" />
+	</bbUI:step> <bbUI:stepSubmit title="Submit" number="2" /></form>
+	<% }
 
 		} else {
 			//-----------------------------------------------------------------------
@@ -474,10 +498,11 @@
 			} catch(Exception e) {
 				QMWiseException qe = new QMWiseException(e);
 				%>
-				<bbUI:receipt type="FAIL" title="Error retrieving participant from Perception">
-					<%=qe.getMessage()%>
-				</bbUI:receipt>
-				<%
+	<bbUI:receipt type="FAIL"
+		title="Error retrieving participant from Perception">
+		<%=qe.getMessage()%>
+	</bbUI:receipt>
+	<%
 				return;
 			}
 
@@ -487,10 +512,11 @@
 			} catch(Exception e) {
 				QMWiseException qe = new QMWiseException(e);
 				%>
-				<bbUI:receipt type="FAIL" title="Error getting participant schedule list">
-					<%=qe.getMessage()%>
-				</bbUI:receipt>
-				<%
+	<bbUI:receipt type="FAIL"
+		title="Error getting participant schedule list">
+		<%=qe.getMessage()%>
+	</bbUI:receipt>
+	<%
 				return;
 			}
 
@@ -507,10 +533,10 @@
 			} catch(Exception e) {
 				QMWiseException qe = new QMWiseException(e);
 				%>
-				<bbUI:receipt type="FAIL" title="Error getting zero user schedule list">
-					<%=qe.getMessage()%>
-				</bbUI:receipt>
-				<%
+	<bbUI:receipt type="FAIL" title="Error getting zero user schedule list">
+		<%=qe.getMessage()%>
+	</bbUI:receipt>
+	<%
 				return;
 			}
 
@@ -521,10 +547,10 @@
 
 			String[] scheduleurls = new String[schedules.size()];
 			boolean[] schedulesactive = new boolean[schedules.size()];
-			String showOnlySchedule = request.getParameter("schedule_name");
-			if ((showOnlySchedule == null || showOnlySchedule.length()==0) && 
+			
+			if ((schedule_name == null || schedule_name.length()==0) && 
 				courseSettings.getProperty("hide_schedules","0").equals("1")) {
-				showOnlySchedule="HIDE_ALL_SCHEDULES";
+				schedule_name="HIDE_ALL_SCHEDULES";
 			}
 			
 			for(int i = 0; i < schedules.size(); i++) {
@@ -572,55 +598,54 @@
 					} catch(Exception e) {
 						QMWiseException qe = new QMWiseException(e);
 						%>
-						<bbUI:receipt type="FAIL" title="Error getting assessment URL">
-							<%=qe.getMessage()%>
-						</bbUI:receipt>
-						<%
+	<bbUI:receipt type="FAIL" title="Error getting assessment URL">
+		<%=qe.getMessage()%>
+	</bbUI:receipt>
+	<%
 						return;
 					}
 				}
 			}
 
-			%>
-			<p>These are the assessments that are scheduled for you, if the list is empty there are no
-			assessments scheduled at the current time.</p>
-			<table>
-				<tr>
-					<!--<th>Assessment ID</th>-->
-					<th>Schedule name</th>
-					<th>Remaining attempts</th>
-					<th>Start datetime</th>
-					<th>End datetime</th>
-					<th>Actions</th>
-					<!--<th>Group</th>-->
-				</tr>
-				<%
-				for(int i = 0; i < schedules.size(); i++) {
-					if(schedules.get(i) == null) continue;
-					if(showOnlySchedule!=null && showOnlySchedule.length()>0 && !showOnlySchedule.equals(schedules.get(i).getSchedule_Name())) continue;
+	%>
+
+	<table border="2" cellpadding="1">
+		<tr>
+			<!--<th>Assessment ID</th>-->
+			<th>Schedule name</th>
+			<th>Remaining attempts</th>
+			<th>Start datetime</th>
+			<th>End datetime</th>
+			<th>Actions</th>
+			<!--<th>Group</th>-->
+		</tr>
+		<%
+				for(int i = 0; i < schedules.size(); i++) {	
+					if(schedules.get(i) == null) continue;												
+					if(schedulesactive[i] == false) continue;
+					if(schedule_name!=null && schedule_name.length()>0 && 
+							!schedule_name.equals(schedules.get(i).getSchedule_Name())) continue;						
+							//this is what is different in the content item view. Want to see 
+							//just the schedule created through the content item creation form.					
 					%>
-					<tr>
-						<!--<td><%=schedules.get(i).getAssessment_ID()%></td>-->
-						<td><%=schedules.get(i).getSchedule_Name()%></td>
-						<td><%=schedules.get(i).isRestrict_Attempts() ? schedules.get(i).getMax_Attempts() : "no limit"%></td>
-						<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).getSchedule_Starts().getTime().toString()%></td>
-						<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).getSchedule_Stops().getTime().toString()%></td>
-						<td><% if(schedulesactive[i]) { %>
-							<% if(scheduleurls[i] == null) { %>
-								No attempts remaining
-							<% } else { %>
-								<form>
-									<input type="button" value="Take assessment" onclick="window.open('<%=scheduleurls[i]%>');">
-								</form>
-							<% } %>
-						<% } else { %>
-							inactive
-						<% } %></td>
-						<!--<td><%=schedules.get(i).getGroup_ID()%></td>-->
-					</tr>
-				<% } %>
-			</table>
-			<%
+		<tr>
+			<!--<td><%=schedules.get(i).getAssessment_ID()%></td>-->
+			<td><%=schedules.get(i).getSchedule_Name()%></td>
+			<td><%=schedules.get(i).isRestrict_Attempts() ? schedules.get(i).getMax_Attempts() : "no limit"%></td>
+			<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).getSchedule_Starts().getTime().toString()%></td>
+			<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).getSchedule_Stops().getTime().toString()%></td>
+			<td>
+			<% if(schedulesactive[i]) { %> <% if(scheduleurls[i] == null) { %> No
+			attempts remaining <% } else { %>
+			<form><input type="button" value="Take assessment"
+				onclick="window.open('<%=scheduleurls[i]%>');"></form>
+			<% } %> <% } else { %> inactive <% } %>
+			</td>
+			<!--<td><%=schedules.get(i).getGroup_ID()%></td>-->
+		</tr>
+		<% } %>
+	</table>
+	<%
 		}
 	%>
 </bbNG:learningSystemPage>
