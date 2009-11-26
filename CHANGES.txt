@@ -1,3 +1,21 @@
+Version 9.0.9
+-------------
+
+Includes fixes for:
+
+[#233] Add support for adding an assessment using a content handler
+[#212] Schedules used in combination with adaptive release in Blackboard
+
+Instructors can now use a content item to create and display a Perception
+assessment schedule directly.  These content items are fully compatible with the
+adaptive release feature of Blackboard.
+
+The user interface of the connector has been re-organized to split the Control
+Panel/CourseTool view (for Instructors) and the main Tool view (for Students).
+
+[#232] Re-organized the code to improve usability in Eclipse
+
+
 Version 9.0.8
 -------------
 
