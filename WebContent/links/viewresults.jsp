@@ -29,7 +29,6 @@
 	String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+path+"/";
 %>
 
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 
 <bbNG:learningSystemPage ctxId="ctx" title="Questionmark Perception connector" onLoad="disable_set_access()">
 	<bbNG:pageHeader>
@@ -115,23 +114,21 @@
 			//-----------------------------------------------------------------------
 
 			%>
-			<div id="actionbar" class="actionBar clearfix editmode">
-				<ul id="nav" class="nav clearfix">
-					<li class="mainButton" nowrap="nowrap">
-						<a href='<%=path+"/links/main.jsp?course_id="+courseId%>'>View schedules</a>
-					</li>
-					<%
-					if(pb.getProperty("perception.singlesignon") != null) {
-						%>
-						<li class="mainButton" nowrap="nowrap">
-							<a href='<%=path+"/links/enterprisemanager.jsp"%>' target="_blank">Log in to Enterprise Manager</a>
-						</li>
-						<%
-					}
-					%>
-				</ul>
-			</div>
-
+		<bbNG:actionControlBar showWhenEmpty="true">		
+	
+			<bbNG:actionButton url='<%=path+"/links/viewresults.jsp?course_id="+courseId%>' title="View
+			results"/>		
+	
+		<%
+			if(pb.getProperty("perception.singlesignon") != null) {
+		%>
+			<bbNG:actionButton url='<%=path+"/links/enterprisemanager.jsp"%>' 
+				title="Log in to Enterprise Manager" target="_blank"/>
+		<%
+			}
+		%>
+	
+		</bbNG:actionControlBar>
 			<%
 			//-----------------------------------------------------------------------
 			// Results
@@ -187,7 +184,7 @@
 					Results to show per page: <input type="text" size="4" name="resultsPerPage" value="<%=resultsPerPage %>" />
 					<input type="submit" value="Update table" />
 				</form>
-				<table>
+				<table border="2" cellpadding="1">
 					<tr>
 						<!--<th>Assessment ID</th>-->
 						<!--<th>Schedule Name</th> requires QMWISe fix -->
