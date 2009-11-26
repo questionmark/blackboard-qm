@@ -116,8 +116,8 @@
 			%>
 		<bbNG:actionControlBar showWhenEmpty="true">		
 	
-			<bbNG:actionButton url='<%=path+"/links/viewresults.jsp?course_id="+courseId%>' title="View
-			results"/>		
+			<bbNG:actionButton url='<%=path+"/links/main.jsp?course_id="+courseId%>' title="View
+			Schedules"/>		
 	
 		<%
 			if(pb.getProperty("perception.singlesignon") != null) {
