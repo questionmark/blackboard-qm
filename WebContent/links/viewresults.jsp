@@ -92,17 +92,17 @@
 		} catch (KeyNotFoundException e) {
 			// There is no membership record.
 			%>
-			<bbUI:receipt type="FAIL" title="You don't have a role on this course">
+			<bbNG:receipt type="FAIL" title="You don't have a role on this course">
 				<%=e.getMessage()%>
-			</bbUI:receipt>
+			</bbNG:receipt>
 			<%
 			return;
 		} catch (PersistenceException pe) {
 			// There is no membership record.
 			%>
-			<bbUI:receipt type="FAIL" title="Error loading the current user">
+			<bbNG:receipt type="FAIL" title="Error loading the current user">
 				<%=pe.getMessage()%>
-			</bbUI:receipt>
+			</bbNG:receipt>
 			<%
 			return;
 		}
@@ -129,6 +129,8 @@
 		%>
 	
 		</bbNG:actionControlBar>
+		
+		
 			<%
 			//-----------------------------------------------------------------------
 			// Results
@@ -139,9 +141,9 @@
 			} catch(Exception e) {
 				QMWiseException qe = new QMWiseException(e);
 				%>
-				<bbUI:receipt type="FAIL" title="Error getting results list">
+				<bbNG:receipt type="FAIL" title="Error getting results list">
 					<%=qe.getMessage()%>
-				</bbUI:receipt>
+				</bbNG:receipt>
 				<%
 				return;
 			}
@@ -157,9 +159,9 @@
 			} catch(Exception e) {
 				QMWiseException qe = new QMWiseException(e);
 				%>
-				<bbUI:receipt type="FAIL" title="Error getting coaching report">
+				<bbNG:receipt type="FAIL" title="Error getting coaching report">
 					<%=qe.getMessage()%>
-				</bbUI:receipt>
+				</bbNG:receipt>
 				<%
 				return;
 			}
@@ -176,89 +178,97 @@
 			if(resultsPerPage < 10) resultsPerPage = 10;
 			%>
 			<h1 id="Results">Results</h1>
-			<% if (results.length == 0) { %>
+	<% 		if (results.length == 0) { %>
 				<p>There are not yet results for this course.</p>
-			<% } else { %>
-				<form action='<%=path+"/links/main.jsp#Results"%>' method="GET" >
-					<input type="hidden" name="course_id" value="<%=courseId%>" />
-					Results to show per page: <input type="text" size="4" name="resultsPerPage" value="<%=resultsPerPage %>" />
-					<input type="submit" value="Update table" />
-				</form>
-				<table border="2" cellpadding="1">
-					<tr>
-						<!--<th>Assessment ID</th>-->
-						<!--<th>Schedule Name</th> requires QMWISe fix -->
-						<th>Participant</th>
-						<th>Score</th>
-						<th>Time taken</th>
-						<th>Started</th>
-						<th>Finished</th>
-						<th>Report</th>
-					</tr>
+	<% 
+			}
+			else 
+			{ 
+	%>
+		
+		<form action='<%=path+"/links/main.jsp#Results"%>' method="GET" >
+			<input type="hidden" name="course_id" value="<%=courseId%>" />
+			Results to show per page: <input type="text" size="4" name="resultsPerPage" value="<%=resultsPerPage %>" />
+			<input type="submit" value="Update table" />
+		</form>
+		
+		<table border="2" cellpadding="1">
+			<tr>
+				<!--<th>Assessment ID</th>-->
+				<!--<th>Schedule Name</th> requires QMWISe fix -->
+				<th>Participant</th>
+				<th>Score</th>
+				<th>Time taken</th>
+				<th>Started</th>
+				<th>Finished</th>
+				<th>Report</th>
+			</tr>
+	<%
+			int listStart;
+			
+			if(request.getParameter("resultPage") != null)
+				listStart = (new Integer(request.getParameter("resultPage")) -1 ) * new Integer(resultsPerPage);
+			else
+				listStart = 0;
+			if(listStart < 0)
+				listStart = 0;
+			
+			for(int i = listStart; i < results.length && i < listStart+resultsPerPage; i++) {
+				Date started = null;
+				Date finished = null;
+				try {
+					started = pdf.parse(results[i].getWhen_Started());
+					if(!results[i].isStill_Going()) {
+						finished = pdf.parse(results[i].getWhen_Finished());
+					}
+				} catch(ParseException e) {
+					%>
+					<bbNG:receipt type="FAIL" title="Error parsing date from Perception">
+						<%=e.getMessage()%>
+					</bbNG:receipt>
 					<%
-					int listStart;
-					
-					if(request.getParameter("resultPage") != null)
-						listStart = (new Integer(request.getParameter("resultPage")) -1 ) * new Integer(resultsPerPage);
-					else
-						listStart = 0;
-					if(listStart < 0)
-						listStart = 0;
-					
-					for(int i = listStart; i < results.length && i < listStart+resultsPerPage; i++) {
-						Date started = null;
-						Date finished = null;
-						try {
-							started = pdf.parse(results[i].getWhen_Started());
-							if(!results[i].isStill_Going()) {
-								finished = pdf.parse(results[i].getWhen_Finished());
-							}
-						} catch(ParseException e) {
-							%>
-							<bbUI:receipt type="FAIL" title="Error parsing date from Perception">
-								<%=e.getMessage()%>
-							</bbUI:receipt>
-							<%
-							return;
-						}
-						%>
-						<tr>
-							<!--<td><%=results[i].getAssessment_ID()%></td>-->
-							<!--<td><%=results[i].getSchedule_Name()%></td> Requires QMWISe fix-->
-							<td><%=results[i].getParticipant() + " (" + results[i].getSpecial_1() + " " + results[i].getSpecial_2() + ")"%></td>
-							<td><%=!results[i].isStill_Going() ? results[i].getTotal_Score() + "/" + results[i].getMax_Score() + " (" + results[i].getPercentage_Score() + "%)" : ""%></td>
-							<td><%=!results[i].isStill_Going() ? results[i].getTime_Taken() + "s" : ""%></td>
-							<td><%=started.toString()%></td>
-							<td><%=!results[i].isStill_Going() ? finished.toString() : "Unfinished"%></td>
-							<td><a href="<%=reports[i]%>" target="_blank">View report</a></td>
-						</tr>
-					<% } %>
-				</table>
-				<%
+					return;
+				}
+	%>
+			<tr>
+				<!--<td><%=results[i].getAssessment_ID()%></td>-->
+				<!--<td><%=results[i].getSchedule_Name()%></td> Requires QMWISe fix-->
+				<td><%=results[i].getParticipant() + " (" + results[i].getSpecial_1() + " " + results[i].getSpecial_2() + ")"%></td>
+				<td><%=!results[i].isStill_Going() ? results[i].getTotal_Score() + "/" + results[i].getMax_Score() + " (" + results[i].getPercentage_Score() + "%)" : ""%></td>
+				<td><%=!results[i].isStill_Going() ? results[i].getTime_Taken() + "s" : ""%></td>
+				<td><%=started.toString()%></td>
+				<td><%=!results[i].isStill_Going() ? finished.toString() : "Unfinished"%></td>
+				<td><a href="<%=reports[i]%>" target="_blank">View report</a></td>
+			</tr>
+	<%	 	}
+	%>
+	</table>
+	<%
 				
 				int numPages = new Double(Math.ceil(results.length/new Double(resultsPerPage))).intValue();
 				
 				out.println("<p>Page: ");
 				
-				for(int i = 1; i <= numPages; i++) {
-					if(request.getParameter("resultPage") != null && new Integer(request.getParameter("resultPage")).intValue() == i) {
-						out.println("<strong>" + i + "</strong> ");
-					} else {
-						out.println("<a href=\""+path+"/links/main.jsp?course_id=" + courseId + 
-							"&amp;resultPage=" + i +
-							"&amp;resultsPerPage=" + resultsPerPage +
-							"#Results\">" + i + "</a> ");
+					for(int i = 1; i <= numPages; i++) {
+						if(request.getParameter("resultPage") != null && new Integer(request.getParameter("resultPage")).intValue() == i) {
+							out.println("<strong>" + i + "</strong> ");
+						} else {
+							out.println("<a href=\""+path+"/links/main.jsp?course_id=" + courseId + 
+								"&amp;resultPage=" + i +
+								"&amp;resultsPerPage=" + resultsPerPage +
+								"#Results\">" + i + "</a> ");
+						}
 					}
-				}
 				
 				out.println("</p>");
-			
-				%>
-			<% } //fi results %>
+			 	
+				} //fi results 
+	
+	%>
 			<bbUI:spacer height="20" />
 
 
-		<% } else {
+	<% 	} else {
 			//-----------------------------------------------------------------------
 			//Student
 			//-----------------------------------------------------------------------
@@ -270,23 +280,21 @@
 			} catch(Exception e) {
 				QMWiseException qe = new QMWiseException(e);
 				%>
-				<bbUI:receipt type="FAIL" title="Error retrieving participant from Perception">
+				<bbNG:receipt type="FAIL" title="Error retrieving participant from Perception">
 					<%=qe.getMessage()%>
-				</bbUI:receipt>
+				</bbNG:receipt>
 				<%
 				return;
 			}
-			%>
-			<div id="actionbar" class="actionBar clearfix editmode">
-				<ul id="nav" class="nav clearfix">
-					<li class="mainButton" nowrap="nowrap">
-						<a href='<%=path+"/links/main.jsp?course_id="+courseId%>'>Return to schedules</a>
-					</li>
-				</ul>
-			</div>
-
+	%>			
+			<bbNG:actionControlBar showWhenEmpty="true">		
+		
+				<bbNG:actionButton url='<%=path+"/links/main.jsp?course_id="+courseId%>' title="Return to schedules"/>		
+	
+			</bbNG:actionControlBar>			
+			
 			<p>Results information is not available to Students using this tool.</p>			
-			<%
+	<%
 		}
 	%>
 </bbNG:learningSystemPage>

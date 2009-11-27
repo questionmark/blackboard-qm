@@ -42,9 +42,9 @@
 
 		if(courseId == null) {
 	%>
-	<bbUI:receipt type="FAIL" title="No course ID was given">
+	<bbNG:receipt type="FAIL" title="No course ID was given">
 				No course ID was given with the request
-			</bbUI:receipt>
+	</bbNG:receipt>
 	<%
 			return;
 		}
@@ -62,9 +62,9 @@
 		} catch(Exception e) {
 			QMWiseException qe = new QMWiseException(e);
 			%>
-	<bbUI:receipt type="FAIL" title="Error connecting to Perception server">
+	<bbNG:receipt type="FAIL" title="Error connecting to Perception server">
 		<%=qe.getMessage()%>
-	</bbUI:receipt>
+	</bbNG:receipt>
 	<%
 			return;
 		}
@@ -102,10 +102,10 @@
 				} catch (Exception e) {
 					System.out.println("Perception: course " + courseId + ": synchronization failed: " + e.getMessage());
 					%>
-	<bbUI:receipt type="FAIL"
+	<bbNG:receipt type="FAIL"
 		title="Error synchronizing course users with Perception">
 		<%=e.getMessage()%>
-	</bbUI:receipt>
+	</bbNG:receipt>
 	<%
 					return;
 				}
@@ -130,19 +130,19 @@
 				} catch (Exception ne) {
 					System.out.println("Perception: course " + courseId + ": synchronization failed: " + ne.getMessage());
 					%>
-	<bbUI:receipt type="FAIL"
+	<bbNG:receipt type="FAIL"
 		title="Error synchronizing course users with Perception">
 		<%=ne.getMessage()%>
-	</bbUI:receipt>
+	</bbNG:receipt>
 	<%
 					return;
 				}
 			} else {
 				%>
-	<bbUI:receipt type="FAIL"
+	<bbNG:receipt type="FAIL"
 		title="Error retrieving course group from Perception">
 		<%=qe.getMessage()%>
-	</bbUI:receipt>
+	</bbNG:receipt>
 	<%
 				return;
 			}
@@ -165,17 +165,17 @@
 		} catch (KeyNotFoundException e) {
 			// There is no membership record.
 			%>
-	<bbUI:receipt type="FAIL" title="You don't have a role on this course">
+	<bbNG:receipt type="FAIL" title="You don't have a role on this course">
 		<%=e.getMessage()%>
-	</bbUI:receipt>
+	</bbNG:receipt>
 	<%
 			return;
 		} catch (PersistenceException pe) {
 			// There is no membership record.
 			%>
-	<bbUI:receipt type="FAIL" title="Error loading the current user">
+	<bbNG:receipt type="FAIL" title="Error loading the current user">
 		<%=pe.getMessage()%>
-	</bbUI:receipt>
+	</bbNG:receipt>
 	<%
 			return;
 		}
@@ -240,9 +240,9 @@
 			} catch(Exception e) {
 				QMWiseException qe = new QMWiseException(e);
 				%>
-	<bbUI:receipt type="FAIL" title="Error getting group schedule list">
+	<bbNG:receipt type="FAIL" title="Error getting group schedule list">
 		<%=qe.getMessage()%>
-	</bbUI:receipt>
+	</bbNG:receipt>
 	<%
 				return;
 			}
@@ -260,9 +260,9 @@
 			} catch(Exception e) {
 				QMWiseException qe = new QMWiseException(e);
 				%>
-	<bbUI:receipt type="FAIL" title="Error getting zero user schedule list">
+	<bbNG:receipt type="FAIL" title="Error getting zero user schedule list">
 		<%=qe.getMessage()%>
-	</bbUI:receipt>
+	</bbNG:receipt>
 	<%
 				return;
 			}
@@ -285,9 +285,9 @@
 				} catch(Exception e) {
 					QMWiseException qe = new QMWiseException(e);
 					%>
-	<bbUI:receipt type="FAIL" title="Error getting assessment URL">
+	<bbNG:receipt type="FAIL" title="Error getting assessment URL">
 		<%=qe.getMessage()%>
-	</bbUI:receipt>
+	</bbNG:receipt>
 	<%
 					return;
 				}
@@ -348,6 +348,7 @@
 		</tr>
 		<% } %>
 	</table>
+	
 	<bbUI:spacer height="20" />
 
 	<%
@@ -368,10 +369,10 @@
 			} catch(Exception e) {
 				QMWiseException qe = new QMWiseException(e);
 				%>
-	<bbUI:receipt type="FAIL"
+	<bbNG:receipt type="FAIL"
 		title="Error getting Perception administrator ID">
 		<%=qe.getMessage()%>
-	</bbUI:receipt>
+	</bbNG:receipt>
 	<%
 				return;
 			}
@@ -382,10 +383,10 @@
 			} catch(Exception e) {
 				QMWiseException qe = new QMWiseException(e);
 				%>
-	<bbUI:receipt type="FAIL"
+	<bbNG:receipt type="FAIL"
 		title="Error getting list of available assessments">
 		<%=qe.getMessage()%>
-	</bbUI:receipt>
+	</bbNG:receipt>
 	<%
 				return;
 			}
@@ -498,10 +499,10 @@
 			} catch(Exception e) {
 				QMWiseException qe = new QMWiseException(e);
 				%>
-	<bbUI:receipt type="FAIL"
+	<bbNG:receipt type="FAIL"
 		title="Error retrieving participant from Perception">
 		<%=qe.getMessage()%>
-	</bbUI:receipt>
+	</bbNG:receipt>
 	<%
 				return;
 			}
@@ -512,10 +513,10 @@
 			} catch(Exception e) {
 				QMWiseException qe = new QMWiseException(e);
 				%>
-	<bbUI:receipt type="FAIL"
+	<bbNG:receipt type="FAIL"
 		title="Error getting participant schedule list">
 		<%=qe.getMessage()%>
-	</bbUI:receipt>
+	</bbNG:receipt>
 	<%
 				return;
 			}
@@ -533,9 +534,9 @@
 			} catch(Exception e) {
 				QMWiseException qe = new QMWiseException(e);
 				%>
-	<bbUI:receipt type="FAIL" title="Error getting zero user schedule list">
+	<bbNG:receipt type="FAIL" title="Error getting zero user schedule list">
 		<%=qe.getMessage()%>
-	</bbUI:receipt>
+	</bbNG:receipt>
 	<%
 				return;
 			}
@@ -598,9 +599,9 @@
 					} catch(Exception e) {
 						QMWiseException qe = new QMWiseException(e);
 						%>
-	<bbUI:receipt type="FAIL" title="Error getting assessment URL">
+	<bbNG:receipt type="FAIL" title="Error getting assessment URL">
 		<%=qe.getMessage()%>
-	</bbUI:receipt>
+	</bbNG:receipt>
 	<%
 						return;
 					}

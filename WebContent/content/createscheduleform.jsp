@@ -103,8 +103,6 @@
 		//-----------------------------------------------------------------------
 		//No synchronization feature available in content view.
 		//-----------------------------------------------------------------------
-
-
 		
 		//get Perception group id
 		int perceptiongroupid;

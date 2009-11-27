@@ -29,25 +29,9 @@
 	String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+path+"/";
 %>
 
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 
 <bbData:context id="ctx">
-<html>
-	<head>
-		<base href="<%=basePath%>">
 
-		<title>Questionmark Perception connector</title>
-		<meta http-equiv="pragma" content="no-cache">
-		<meta http-equiv="cache-control" content="no-cache">
-		<meta http-equiv="expires" content="0">
-		<meta http-equiv="keywords" content="questionmark perception,questionmark,perception,assessment,connector">
-		<meta http-equiv="description" content="Questionmark Perception connector for Blackboard">
-		<!--
-			<link rel="stylesheet" type="text/css" href="styles.css">
-		-->
-	</head>
-
-	<body>
 		<bbUI:docTemplate>
 			<%
 
@@ -80,7 +64,6 @@
 			</bbUI:receipt>
 
 		</bbUI:docTemplate>
-	</body>
-</html>
+
 </bbData:context>
 
