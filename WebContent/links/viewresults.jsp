@@ -152,19 +152,6 @@
 
 			//get report for each result
 			String[] reports = new String[results.length];
-			try {
-				for(int i = 0; i < results.length; i++) {
-					reports[i] = qmwise.getStub().getAccessReport(results[i].getResult_ID());
-				}
-			} catch(Exception e) {
-				QMWiseException qe = new QMWiseException(e);
-				%>
-				<bbNG:receipt type="FAIL" title="Error getting coaching report">
-					<%=qe.getMessage()%>
-				</bbNG:receipt>
-				<%
-				return;
-			}
 
 			//date format
 			DateFormat pdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
@@ -229,6 +216,15 @@
 					<%
 					return;
 				}
+				try {
+					if (reports[i] == null) {
+						reports[i] = qmwise.getStub().getAccessReport(results[i].getResult_ID());
+					}
+				} catch(Exception e) {
+					QMWiseException qe = new QMWiseException(e);
+					reports[i]="error: "+ qe.getMessage();
+				}
+				
 	%>
 			<tr>
 				<!--<td><%=results[i].getAssessment_ID()%></td>-->
@@ -238,7 +234,15 @@
 				<td><%=!results[i].isStill_Going() ? results[i].getTime_Taken() + "s" : ""%></td>
 				<td><%=started.toString()%></td>
 				<td><%=!results[i].isStill_Going() ? finished.toString() : "Unfinished"%></td>
+				<% 
+				if (reports[i].startsWith("error:")) { %>
+				<td>No report available (<%=reports[i]%>)</td>
+				<% }
+				else {
+				%>
 				<td><a href="<%=reports[i]%>" target="_blank">View report</a></td>
+				<% }
+				%>
 			</tr>
 	<%	 	}
 	%>
