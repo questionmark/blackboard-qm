@@ -28,185 +28,165 @@
 	String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+path+"/";
 %>
 
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-
 <bbData:context id="ctx">
-<html>
-	<head>
-		<base href="<%=basePath%>">
+	<bbUI:docTemplate>
+		<%
+		QMWise qmwise;
+		int groupId;
+		Boolean perParticipant, limitAttempts, setAccessPeriod;
+		String useGradebook;
 
-		<title>Questionmark Perception connector</title>
-		<meta http-equiv="pragma" content="no-cache">
-		<meta http-equiv="cache-control" content="no-cache">
-		<meta http-equiv="expires" content="0">
-		<meta http-equiv="keywords" content="questionmark perception,questionmark,perception,assessment,connector">
-		<meta http-equiv="description" content="Questionmark Perception connector for Blackboard">
-		<!--
-			<link rel="stylesheet" type="text/css" href="styles.css">
-		-->
-	</head>
-
-	<body>
-		<bbUI:docTemplate>
-			<%
-			QMWise qmwise;
-			int groupId;
-			Boolean perParticipant, limitAttempts, setAccessPeriod;
-			String useGradebook;
-
-			try {
-				qmwise = new QMWise();
-			} catch(Exception e) {
-				QMWiseException qe = new QMWiseException(e);
-				%>
-				<bbUI:receipt type="FAIL" title="Error connecting to Perception server">
-					<%=qe.getMessage()%>
-				</bbUI:receipt>
-				<%
-				return;
-			}
-
-			// get the group ID, using the supplied group name
-			try {
-				groupId = new Integer(qmwise.getStub().getGroupByName(request.getParameter("group")).getGroup_ID()).intValue();
-			} catch(Exception e) {
-				QMWiseException qe = new QMWiseException(e);
-				%>
-				<bbUI:receipt type="FAIL" title="Error getting group ID">
-					<%=qe.getMessage()%>
-				</bbUI:receipt>
-				<%
-				return;
-			}
-
-			// check whether the "separate schedule for each user" box has been ticked
-			perParticipant = request.getParameter("per_participant") != null || request.getParameter("per_participant_hidden").equals("1");
-
-			// check whether the "separate schedule for each user" box has been ticked
-			limitAttempts = request.getParameter("limit_attempts") != null;
-
-			// check whether the "separate schedule for each user" box has been ticked
-			setAccessPeriod = request.getParameter("set_access_period") != null;
-
-			// read the value of the "store results in gradebook" select menu
-			useGradebook = request.getParameter("use_gradebook");
-
-			// create a "Schedule" object for the current user, from the data provided
-			ScheduleV42 schedule = new ScheduleV42();
-			try {
-				schedule.setSchedule_Name(request.getParameter("schedule"));
-				schedule.setAssessment_ID(request.getParameter("assessment"));
-
-				schedule.setRestrict_Attempts(limitAttempts);
-				if(limitAttempts) {
-					if(!request.getParameter("limit").matches("[1-9][0-9]*"))
-						throw new Exception("Attempt limit must be a positive integer");
-					schedule.setMax_Attempts(new Integer(request.getParameter("limit")).intValue());
-				}
-
-				schedule.setRestrict_Times(setAccessPeriod);
-
-				Calendar startCal = Calendar.getInstance();
-				Calendar endCal = Calendar.getInstance();
-				if(setAccessPeriod) {
-					String regexhour = "[0-1][0-9]|2[0-3]";
-					String regexmin = "[0-5][0-9]";
-					//check times make sense
-					if(!(request.getParameter("start_hour").matches(regexhour) && request.getParameter("start_minute").matches(regexmin) && request.getParameter("end_hour").matches(regexhour) && request.getParameter("end_minute").matches(regexmin)))
-						throw new Exception("Times must be in 24-hour HH:MM format");
-
-					DateFormat df = new SimpleDateFormat("yyyy-MM-dd' 0:0:00'");
-
-					startCal.setTime(df.parse(request.getParameter("start_0")));
-					startCal.set(Calendar.HOUR_OF_DAY, new Integer(request.getParameter("start_hour")).intValue());
-					startCal.set(Calendar.MINUTE, new Integer(request.getParameter("start_minute")).intValue());
-
-					endCal.setTime(df.parse(request.getParameter("end_1")));
-					endCal.set(Calendar.HOUR_OF_DAY, new Integer(request.getParameter("end_hour")).intValue());
-					endCal.set(Calendar.MINUTE, new Integer(request.getParameter("end_minute")).intValue());
-
-					if(endCal.before(startCal) || endCal.equals(startCal))
-						throw new Exception("The end date must be after the start date");
-				}
-				schedule.setSchedule_Starts(startCal);
-				schedule.setSchedule_Stops(endCal);
-
-				schedule.setGroup_ID(groupId);
-				schedule.setGroup_Tree_ID(groupId); //required. 0 is not accepted so needs to be the same as group id
-				schedule.setWeb_Delivery(true); //required, otherwise the test is not takable via the web
-			
-			} catch(Exception e) {
-				QMWiseException qe = new QMWiseException(e);
-				%>
-				<bbUI:receipt type="FAIL" title="Error setting schedule parameters">
-					<%=qe.getMessage()%>
-				</bbUI:receipt>
-				<%
-				return;
-			}
-
-			// createScheduleParticipantV42() this schedule
-			try {
-				String[] scheduleids = qmwise.getStub().createScheduleGroupV42(schedule, perParticipant);
-			} catch(Exception e) {
-				QMWiseException qe = new QMWiseException(e);
-				%>
-				<bbUI:receipt type="FAIL" title="Error creating group schedule">
-					<%=qe.getMessage()%>
-				</bbUI:receipt>
-				<%
-				return;
-			}
-
-			// if required, add a gradebook listitem
-			if(!useGradebook.equals("no")) try {
-				//Retrieve the Db persistence manager from the persistence service
-				BbPersistenceManager bbPm = BbServiceManager.getPersistenceService().getDbPersistenceManager();
-
-				//load course by short course name to get its Blackboard ID
-				CourseDbLoader courseLoader = (CourseDbLoader) bbPm.getLoader(CourseDbLoader.TYPE);
-				Course course;
-				try {
-					course = courseLoader.loadByBatchUid(((String) request.getParameter("group")));
-				} catch(KeyNotFoundException e) {
-					%>
-					<bbUI:receipt type="FAIL" title="Error getting Blackboard course details">
-						<%=e.getMessage()%>
-					</bbUI:receipt>
-					<%
-					return;
-				}
-
-				LineitemDbPersister lineitemdbpersister = (LineitemDbPersister) bbPm.getPersister(LineitemDbPersister.TYPE);
-				Lineitem lineitem = new Lineitem();
-				lineitem.setName(request.getParameter("schedule"));
-				lineitem.setCourseId(course.getId());
-				lineitem.setIsAvailable(true);
-				lineitem.setType("Questionmark Perception assessment");
-				lineitem.validate();
-				if (useGradebook.equals("percent")) {
-					lineitem.setPointsPossible(100f);
-				}
-				lineitemdbpersister.persist(lineitem);
-			} catch(Exception e) {
-				QMWiseException qe = new QMWiseException(e);
-				%>
-				<bbUI:receipt type="FAIL" title="Error creating gradebook Lineitem">
-					<%=qe.getMessage()%>
-				</bbUI:receipt>
-				<%
-				return;
-			}
-
-			String recallurl = "links/main.jsp?course_id=" + request.getParameter("course_id") + "#Schedules";
+		try {
+			qmwise = new QMWise();
+		} catch(Exception e) {
+			QMWiseException qe = new QMWiseException(e);
 			%>
-
-			<bbUI:receipt type="SUCCESS" title="Success" recallUrl="<%=recallurl%>">
-				The schedule was successfully created
+			<bbUI:receipt type="FAIL" title="Error connecting to Perception server">
+				<%=qe.getMessage()%>
 			</bbUI:receipt>
+			<%
+			return;
+		}
 
-		</bbUI:docTemplate>
-	</body>
-</html>
+		// get the group ID, using the supplied group name
+		try {
+			groupId = new Integer(qmwise.getStub().getGroupByName(request.getParameter("group")).getGroup_ID()).intValue();
+		} catch(Exception e) {
+			QMWiseException qe = new QMWiseException(e);
+			%>
+			<bbUI:receipt type="FAIL" title="Error getting group ID">
+				<%=qe.getMessage()%>
+			</bbUI:receipt>
+			<%
+			return;
+		}
+
+		// check whether the "separate schedule for each user" box has been ticked
+		perParticipant = request.getParameter("per_participant") != null || request.getParameter("per_participant_hidden").equals("1");
+
+		// check whether the "separate schedule for each user" box has been ticked
+		limitAttempts = request.getParameter("limit_attempts") != null;
+
+		// check whether the "separate schedule for each user" box has been ticked
+		setAccessPeriod = request.getParameter("set_access_period") != null;
+
+		// read the value of the "store results in gradebook" select menu
+		useGradebook = request.getParameter("use_gradebook");
+
+		// create a "Schedule" object for the current user, from the data provided
+		ScheduleV42 schedule = new ScheduleV42();
+		try {
+			schedule.setSchedule_Name(request.getParameter("schedule"));
+			schedule.setAssessment_ID(request.getParameter("assessment"));
+
+			schedule.setRestrict_Attempts(limitAttempts);
+			if(limitAttempts) {
+				if(!request.getParameter("limit").matches("[1-9][0-9]*"))
+					throw new Exception("Attempt limit must be a positive integer");
+				schedule.setMax_Attempts(new Integer(request.getParameter("limit")).intValue());
+			}
+
+			schedule.setRestrict_Times(setAccessPeriod);
+
+			Calendar startCal = Calendar.getInstance();
+			Calendar endCal = Calendar.getInstance();
+			if(setAccessPeriod) {
+				String regexhour = "[0-1][0-9]|2[0-3]";
+				String regexmin = "[0-5][0-9]";
+				//check times make sense
+				if(!(request.getParameter("start_hour").matches(regexhour) && request.getParameter("start_minute").matches(regexmin) && request.getParameter("end_hour").matches(regexhour) && request.getParameter("end_minute").matches(regexmin)))
+					throw new Exception("Times must be in 24-hour HH:MM format");
+
+				DateFormat df = new SimpleDateFormat("yyyy-MM-dd' 0:0:00'");
+
+				startCal.setTime(df.parse(request.getParameter("start_0")));
+				startCal.set(Calendar.HOUR_OF_DAY, new Integer(request.getParameter("start_hour")).intValue());
+				startCal.set(Calendar.MINUTE, new Integer(request.getParameter("start_minute")).intValue());
+
+				endCal.setTime(df.parse(request.getParameter("end_1")));
+				endCal.set(Calendar.HOUR_OF_DAY, new Integer(request.getParameter("end_hour")).intValue());
+				endCal.set(Calendar.MINUTE, new Integer(request.getParameter("end_minute")).intValue());
+
+				if(endCal.before(startCal) || endCal.equals(startCal))
+					throw new Exception("The end date must be after the start date");
+			}
+			schedule.setSchedule_Starts(startCal);
+			schedule.setSchedule_Stops(endCal);
+
+			schedule.setGroup_ID(groupId);
+			schedule.setGroup_Tree_ID(groupId); //required. 0 is not accepted so needs to be the same as group id
+			schedule.setWeb_Delivery(true); //required, otherwise the test is not takable via the web
+		
+		} catch(Exception e) {
+			QMWiseException qe = new QMWiseException(e);
+			%>
+			<bbUI:receipt type="FAIL" title="Error setting schedule parameters">
+				<%=qe.getMessage()%>
+			</bbUI:receipt>
+			<%
+			return;
+		}
+
+		// createScheduleParticipantV42() this schedule
+		try {
+			String[] scheduleids = qmwise.getStub().createScheduleGroupV42(schedule, perParticipant);
+		} catch(Exception e) {
+			QMWiseException qe = new QMWiseException(e);
+			%>
+			<bbUI:receipt type="FAIL" title="Error creating group schedule">
+				<%=qe.getMessage()%>
+			</bbUI:receipt>
+			<%
+			return;
+		}
+
+		// if required, add a gradebook listitem
+		if(!useGradebook.equals("no")) try {
+			//Retrieve the Db persistence manager from the persistence service
+			BbPersistenceManager bbPm = BbServiceManager.getPersistenceService().getDbPersistenceManager();
+
+			//load course by short course name to get its Blackboard ID
+			CourseDbLoader courseLoader = (CourseDbLoader) bbPm.getLoader(CourseDbLoader.TYPE);
+			Course course;
+			try {
+				course = courseLoader.loadByBatchUid(((String) request.getParameter("group")));
+			} catch(KeyNotFoundException e) {
+				%>
+				<bbUI:receipt type="FAIL" title="Error getting Blackboard course details">
+					<%=e.getMessage()%>
+				</bbUI:receipt>
+				<%
+				return;
+			}
+
+			LineitemDbPersister lineitemdbpersister = (LineitemDbPersister) bbPm.getPersister(LineitemDbPersister.TYPE);
+			Lineitem lineitem = new Lineitem();
+			lineitem.setName(request.getParameter("schedule"));
+			lineitem.setCourseId(course.getId());
+			lineitem.setIsAvailable(true);
+			lineitem.setType("Questionmark Perception assessment");
+			lineitem.validate();
+			if (useGradebook.equals("percent")) {
+				lineitem.setPointsPossible(100f);
+			}
+			lineitemdbpersister.persist(lineitem);
+		} catch(Exception e) {
+			QMWiseException qe = new QMWiseException(e);
+			%>
+			<bbUI:receipt type="FAIL" title="Error creating gradebook Lineitem">
+				<%=qe.getMessage()%>
+			</bbUI:receipt>
+			<%
+			return;
+		}
+
+		String recallurl = "main.jsp?course_id=" + request.getParameter("course_id") + "#Schedules";
+		%>
+
+		<bbUI:receipt type="SUCCESS" title="Success" recallUrl="<%=recallurl%>">
+			The schedule was successfully created
+		</bbUI:receipt>
+
+	</bbUI:docTemplate>
 </bbData:context>
 

@@ -56,7 +56,7 @@
 				return;
 			}
 
-			String recallurl = "links/main.jsp?course_id=" + request.getParameter("course_id");
+			String recallurl = "main.jsp?course_id=" + request.getParameter("course_id");
 			%>
 
 			<bbUI:receipt type="SUCCESS" title="Success" recallUrl="<%=recallurl%>">
