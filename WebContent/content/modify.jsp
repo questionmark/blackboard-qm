@@ -9,7 +9,7 @@
 -->
 
                               
-<%@ page language="java" contentType="text/html; charset=ISO-8859-1" 
+<% /* @ page language="java" contentType="text/html; charset=ISO-8859-1" 
 	import="java.util.*,
 	blackboard.platform.*,
 	blackboard.platform.session.*,
@@ -26,7 +26,9 @@
 	blackboard.persist.Id,
 	blackboard.base.*"
 	pageEncoding="ISO-8859-1"
-	%>
+	
+	*/
+%>
 	
     
 <%@ taglib uri="/bbNG" prefix="bbNG" %>

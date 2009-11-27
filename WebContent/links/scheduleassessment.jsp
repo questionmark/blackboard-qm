@@ -6,6 +6,7 @@
 		java.text.*,
 		blackboard.platform.*,
 		blackboard.base.*,
+		blackboard.platform.persistence.PersistenceServiceFactory,
 		blackboard.platform.session.*,
 		blackboard.data.user.*,
 		blackboard.persist.* ,
@@ -29,7 +30,9 @@
 %>
 
 <bbData:context id="ctx">
+	<bbUI:docTemplateHead title="Questionmark Perception connector" />	
 	<bbUI:docTemplate>
+		<bbUI:titleBar iconUrl="images/qm.gif">Schedule Creation Successful</bbUI:titleBar>
 		<%
 		QMWise qmwise;
 		int groupId;
@@ -143,7 +146,7 @@
 		// if required, add a gradebook listitem
 		if(!useGradebook.equals("no")) try {
 			//Retrieve the Db persistence manager from the persistence service
-			BbPersistenceManager bbPm = BbServiceManager.getPersistenceService().getDbPersistenceManager();
+			BbPersistenceManager bbPm = PersistenceServiceFactory.getInstance().getDbPersistenceManager();
 
 			//load course by short course name to get its Blackboard ID
 			CourseDbLoader courseLoader = (CourseDbLoader) bbPm.getLoader(CourseDbLoader.TYPE);
