@@ -4,7 +4,7 @@
 		<name value="Questionmark Perception"/>
 		<description value="Plugin to connect Blackboard to the Questionmark Perception assessment platform"/>
 		<handle value="qmpp"/>
-		<version value="8.0.1"/>
+		<version value="8.0.2"/>
 		<requires>
 			<bbversion value="8.0.0"/>
 		</requires>
@@ -18,6 +18,35 @@
 			<config value="admin/config.jsp"/>
 			<remove value= ""/>
 		</http-actions>
+		
+		<!--  Custom content types defined by this extension -->
+		<content-handlers>
+
+			<content-handler>
+
+				<name value="Questionmark Perception Assessment Schedule "></name>
+			
+				<handle value="qm/schedule-link"></handle>
+
+				<http-actions>
+                    <view value="content/viewschedule.jsp"/>
+                    <create value="content/createscheduleform.jsp"/>
+                    <modify value="content/modify.jsp"/>
+                    <remove value="content/remove.jsp"/>
+                    <can-copy value="false"/>
+				</http-actions>
+
+				<icons>
+					<toolbar value="images/qm.gif" />
+					<listitem value="images/qm.gif" />
+				</icons>
+
+			</content-handler>
+
+		</content-handlers>
+		
+		
+		
 		<application-defs>
 			<application
 				handle="qmppStaff"
@@ -54,7 +83,7 @@
 					<link>
 						<type value="tool"/>
 						<name value="Questionmark Perception Connector"/>
-						<url value="links/main.jsp"/>
+						<url value="links/maintoolsview.jsp"/>
 						<description value="Connect to the Questionmark Perception assessment system." />
 						<icons>
 							<listitem value="images/qm.gif"/>
@@ -69,6 +98,8 @@
 			<permission type="blackboard.persist.PersistPermission" name="Outcome" actions="create,modify,delete" />
 			<permission type="attribute" name ="user.authinfo" actions="get,set" />
 			<permission type="attribute" name ="user.personalinfo" actions="get,set" />
+			<permission type="persist" name="Content" actions="create,modify,delete"/>
+            <permission type="persist" name="Group" actions="create,modify"/>		
 			<permission type="persist" name="Group" actions="get,set,create,persist,modify,delete"/>
 			<permission type="persist" name="GroupMembership" actions="get,set,create,persist,modify,delete"/>
 			<permission type="runtime" name="db.connection.*" />
@@ -78,6 +109,9 @@
 			<permission type="java.lang.reflect.ReflectPermission" name="suppressAccessChecks"/>
 			<permission type="java.lang.RuntimePermission" name="setContextClassLoader" />
 			<permission type="socket" name="*" actions="connect,resolve" />
+			
+        
+	
 		</permissions>
 	</plugin>
 </manifest>

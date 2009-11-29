@@ -28,26 +28,18 @@
 	String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+path+"/";
 %>
 
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-
 <bbData:context id="ctx">
-<html>
-	<head>
-		<base href="<%=basePath%>">
 
-		<title>Questionmark Perception connector</title>
-		<meta http-equiv="pragma" content="no-cache">
-		<meta http-equiv="cache-control" content="no-cache">
-		<meta http-equiv="expires" content="0">
-		<meta http-equiv="keywords" content="questionmark perception,questionmark,perception,assessment,connector">
-		<meta http-equiv="description" content="Questionmark Perception connector for Blackboard">
-		<!--
-			<link rel="stylesheet" type="text/css" href="styles.css">
-		-->
-	</head>
-
-	<body>
 		<bbUI:docTemplate>
+		
+			<bbUI:titleBar iconUrl="images/qm.gif" >
+				Questionmark Perception connector
+			</bbUI:titleBar>
+	
+			<bbUI:breadcrumbBar environment="COURSE" isContent="false">
+				<bbUI:breadcrumb>SCHEDULE CREATED</bbUI:breadcrumb>
+			</bbUI:breadcrumbBar>			
+		
 			<%
 			QMWise qmwise;
 			int groupId;
@@ -195,7 +187,7 @@
 				return;
 			}
 
-			String recallurl = "links/main.jsp?course_id=" + request.getParameter("course_id") + "#Schedules";
+			String recallurl = "main.jsp?course_id=" + request.getParameter("course_id") + "#Schedules";
 			%>
 
 			<bbUI:receipt type="SUCCESS" title="Success" recallUrl="<%=recallurl%>">
@@ -203,7 +195,6 @@
 			</bbUI:receipt>
 
 		</bbUI:docTemplate>
-	</body>
-</html>
+
 </bbData:context>
 
