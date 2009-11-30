@@ -43,47 +43,56 @@
 <%@ taglib uri="/bbUI" prefix="bbUI" %>
 <%@ taglib uri="/bbData" prefix="bbData" %>
 <%
+	if(!PlugInUtil.authorizeForCourseControlPanel(request, response)){
+	    return;
+	}   
 	String path = request.getContextPath();
 	String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+path+"/";
 	//Authenticate for use.	
-    if(!PlugInUtil.authorizeForCourseControlPanel(request, response)){
-        return;
-    }   
-		    		 
+
+	//get the required parameters beforehand.		    		 
 	String course_id = request.getParameter("course_id");
 	String parent_id = request.getParameter("parent_id"); //  id of the parent folder
 	String schedule_name = request.getParameter("schedule_name");
+	String group_id = request.getParameter("group");
 	
 	//Retrieve the Db persistence manager from the persistence service
 	BbPersistenceManager bbPm = PersistenceServiceFactory.getInstance().getDbPersistenceManager();
 
 	//load course by short course name to get its Blackboard ID
 	CourseDbLoader courseLoader = (CourseDbLoader) bbPm.getLoader(CourseDbLoader.TYPE);
-	Course course;	
-	User user;
+
 %>
 
 
 <bbData:context id="ctx">
-	
-	<bbUI:breadcrumbBar environment="COURSE" handle="control_panel" isContent="true">
-	
-		<bbUI:breadcrumb>QUESTIONMARK PERCEPTION SCHEDULE CREATED</bbUI:breadcrumb>
-	
-	</bbUI:breadcrumbBar>	
-	
+	<%
+	User user = ctx.getUser();
+	Course course = ctx.getCourse();
+	%>
+	<bbUI:docTemplate>	
+		<bbUI:breadcrumbBar environment="COURSE" handle="control_panel" isContent="true">
+		
+			<bbUI:breadcrumb>QUESTIONMARK PERCEPTION SCHEDULE CREATED</bbUI:breadcrumb>
+		
+		</bbUI:breadcrumbBar>	
+
+	<bbUI:coursePage courseId="<%=PlugInUtil.getCourseId(request)%>">	
+
 	<!--put in variables to display right here, DEBUGGING CODE
+	
 	<p>
 	<%
 			
-			out.println("Parent id, which is the content id of the maincreate page: " + parent_id);
+			out.println("Parent id, which is the content id of the create form: " + parent_id);
 			out.println("Course id: " + course_id);
 			out.println("Persisted QM Schedule name from form: " + schedule_name);
+			out.println("Group id = " + group_id);
 	%>
 	</p>
 	-->
 
-	<bbUI:docTemplate>
+
 		<%
 		QMWise qmwise;
 		int groupId;
@@ -104,7 +113,7 @@
 
 		// get the group ID, using the supplied group name
 		try {
-			groupId = new Integer(qmwise.getStub().getGroupByName(request.getParameter("group")).getGroup_ID()).intValue();
+			groupId = new Integer(qmwise.getStub().getGroupByName(group_id).getGroup_ID()).intValue();
 		} catch(Exception e) {
 			QMWiseException qe = new QMWiseException(e);
 			%>
@@ -250,16 +259,7 @@
 			//title of the content item tied in with the Questionmark Created Scheduled name...
 			courseDoc.setTitle(schedule_name);
 			
-			String viewUrl = "/webapps/blackboard/content/viewschedule.jsp?course_id="	+ course_id				
-				+ "&ampcontent_id=" + parent_id
-				+ "&amp;mode=quick";	
-				
-			//set description of content item, in this case, perception schedule..
-			FormattedText text = new FormattedText("Questionmark Perception Scheduled Assessment",
-				 FormattedText.Type.HTML);
-			
-			courseDoc.setUrl(viewUrl);
-			courseDoc.setBody(text);
+
 			
 			//made it unconditionally available to all, can change depending on user story.
 			courseDoc.setIsAvailable(true);		
@@ -272,7 +272,18 @@
 			courseDoc.setParentId(parentId);
 			
 			//set course id
-			courseDoc.setCourseId(courseId); //get the course id from the context of create page.
+			courseDoc.setCourseId(courseId); //get the course id from the context
+			
+			//add a url to view the created schedule, after the content object is fully created as above!
+			String viewUrl = path +"/content/viewschedule.jsp?course_id=" + course_id				
+				+ "&content_id=@X@content.pk_string@X@";	
+				
+			//set description of content item, in this case, perception schedule..
+			FormattedText text = new 
+				FormattedText("<p><a href='"+viewUrl+"'>Take Test</a></p>",
+				 FormattedText.Type.HTML);				
+			
+			courseDoc.setBody(text);			
 			
 			//here we have the option to set the order in which the child appears
 			//courseDoc.setPosition(numberOfChildren);
@@ -283,10 +294,10 @@
 			
 			//now to persist!
 			//save details of this item.
-			persister.persist(courseDoc);
+			persister.persist(courseDoc);	
+
 			
-			//out.println("<p>" + user.getGivenName() + "," + "\n"); 
-			//out.println("content creation was a success </p>");
+			//Success! Now we tell the user.
 			
 			user = ctx.getUser();
 			
@@ -301,20 +312,10 @@
 				<p>
 					<i>Schedule creation was successful.</i>						
 				</p>
-			</bbUI:receipt>
-			<%	
-			// <br>
-			  //  <div align=right>
-			//        <bbUI:button action="LINK" alt="ok" name="ok" type="FORM_ACTION" targetUrl="<%=okUrl%//"/>
-			//	    </div>
-			//		 
-			%>
+			</bbUI:receipt>			
 			<%
 		
 		}
-	//	catch(NullPointerException npe){
-	//		out.println("null pointer exception " + npe.getCause() + npe.getMessage()); 
-	//	}
 		catch(PersistenceException pE){	
 						
 			%>
@@ -325,7 +326,7 @@
 			<%	
 		}
 		%>						
-	
+		</bbUI:coursePage>	
 	</bbUI:docTemplate>
 
 </bbData:context>

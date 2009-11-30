@@ -43,29 +43,75 @@
 <bbData:context id="ctx">
 
 	<%	
-	if(!PlugInUtil.authorizeForCourseControlPanelContent(request, response))
-		return;	
-	String course_id = request.getParameter("course_id");
-	String content_id = request.getParameter("content_id");
-	
+
+
 	String path = request.getContextPath();
 	String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+path+"/";
+	
+	// Retrieve the course identifier from the URL
+	String course_id = request.getParameter("course_id");	
+	//null checks..
+	if(course_id == null) {
+	%>
+	
+		<bbUI:receipt type="FAIL" title="No course ID was given">
+			No course ID was given with the request
+		</bbUI:receipt>
+		
+	<%
+		return;
+	}
 
+	//Retreive the content identifier from the url
+	
+	String content_id = request.getParameter("content_id");
+	//null check..
+	if(content_id == null) {
+	%>
+	
+		<bbUI:receipt type="FAIL" title="No content ID was given">
+			No content ID was given with the request
+		</bbUI:receipt>
+		
+	<%
+		return;
+	}
+
+	
 	//Get a User , course membership details, and Course instance via context
 	User sessionUser = ctx.getUser();
 	Id sessionUserId = sessionUser.getId();
 	Course courseCtx = ctx.getCourse();	
 	CourseMembership cMembership = ctx.getCourseMembership(); // may be null if a SysAdmin!	
 	
+	//Retrieve the Db persistence manager from the persistence service
+	BbPersistenceManager bbPm = PersistenceServiceFactory.getInstance().getDbPersistenceManager();
 
+	// Generate a persistence framework course Id to be used for 
+	// loading the course
+	
+	Id courseIdObject = bbPm.generateId(Course.DATA_TYPE, course_id);
+	CourseDbLoader courseLoader = (CourseDbLoader) bbPm.getLoader(CourseDbLoader.TYPE);
+	Course course = courseLoader.loadById(courseIdObject);
+
+	PropertiesBean pb = new PropertiesBean();	//probably not needed
+		
+	//Now get the content id informataion
+	
 	Id contentId = Id.generateId(Content.DATA_TYPE, content_id);
 	ContentDbLoader courseDocumentLoader = ContentDbLoader.Default.getInstance();
 	Content courseDoc = courseDocumentLoader.loadById( contentId ); 
 
-	// can now query this...
-	String parent_id = courseDoc.getParentId().toExternalString();
-			
-	String schedule_name = courseDoc.getTitle();
+	// can now query this from the content item object reference...
+	
+	String handler = courseDoc.getContentHandler();
+	
+	String persistantParentId = courseDoc.getParentId().toExternalString();
+	Id parentId = bbPm.generateId(Content.DATA_TYPE, persistantParentId);
+	
+	
+	
+	String persistentScheduleName = courseDoc.getTitle();	
 	
 	%>
 
@@ -77,36 +123,39 @@
 		</bbUI:titleBar>
 		
 		<bbUI:breadcrumbBar environment="COURSE" isContent="true">
-			<bbUI:breadcrumb><%=schedule_name%></bbUI:breadcrumb>
+			<bbUI:breadcrumb><%=persistentScheduleName%></bbUI:breadcrumb>
 		</bbUI:breadcrumbBar>
 	
 	
-	<!--put in variables to display right here, DEBUGGING CODE	
+	<!--put in variables to display right here, DEBUGGING CODE
+	
 	<p>
-		<%out.println("Schedule name from form: " + schedule_name); 
-			out.println("Parent id: " + parent_id);		
+			
+		<%	
+			out.println("course id: from context:-  " + course_id + "\n");
+			out.println("content id: from context:-  " + content_id + "\n");
+
+			out.println("Parent id from persisted object: " + persistantParentId+ "\n");
+			
+			out.println("Schedule name from persisted object: " + persistentScheduleName + "\n");
+			
+			out.println("group name from context: " + request.getParameter("group") + "\n");
+
+			out.println("Content handler string from persisted object: "
+					+ handler + "\n");
+			
+			out.println("This is your system role user: " + sessionUser.getSystemRole().toExternalString());
 		%>
 	</p>
-	-->	
+	-->
 	
 	<%
-		// Retrieve the course identifier from the URL
-		String courseId = request.getParameter("course_id");
-
-		if(courseId == null) {
-	%>
-	<bbUI:receipt type="FAIL" title="No course ID was given">
-				No course ID was given with the request
-			</bbUI:receipt>
-	<%
-			return;
-		}
 
 		//create a ConfigFileReader, to check whether this course needs 
 		//to sync its members and to show date last synchronized
-		ConfigFileReader configReader = new ConfigFileReader(courseId);
+		ConfigFileReader configReader = new ConfigFileReader(course_id);
 		//load the courseSettings file too...
-		CourseSettings courseSettings = new CourseSettings(courseId);
+		CourseSettings courseSettings = new CourseSettings(course_id);
 		
 		//connect to QMWise
 		QMWise qmwise;
@@ -122,20 +171,10 @@
 			return;
 		}
 
-		//Retrieve the Db persistence manager from the persistence service
-		BbPersistenceManager bbPm = PersistenceServiceFactory.getInstance().getDbPersistenceManager();
-
-		// Generate a persistence framework course Id to be used for 
-		// loading the course
-		Id courseIdObject = bbPm.generateId(Course.DATA_TYPE, courseId);
-
-		CourseDbLoader courseLoader = (CourseDbLoader) bbPm.getLoader(CourseDbLoader.TYPE);
-		Course course = courseLoader.loadById(courseIdObject);
-
-		PropertiesBean pb = new PropertiesBean();
 
 		//-----------------------------------------------------------------------
-		//synchronization: No synching code needed for Tools view.
+		//synchronization: No Automatic or manual option for synching code needed 
+		//for Content item view. Only code for 'forced' sync if group not found:
 		//-----------------------------------------------------------------------
 		
 		//get Perception group id
@@ -146,18 +185,18 @@
 			QMWiseException qe = new QMWiseException(e);
 			if(qe.getQMErrorCode() == 1201) {
 				//group doesn't exist -- force sync
-				System.out.println("Perception: course " + courseId + 
+				System.out.println("Perception: course " + course_id + 
 					": Perception group doesn't exist -- forcing synchronization");
 				UserSynchronizer us = new UserSynchronizer();
 				try {
-					us.synchronizeCourse(courseId);
+					us.synchronizeCourse(course_id);
 					configReader.setCourseSyncDate();
 					//get fresh group					
 					perceptiongroupid = new Integer(qmwise.getStub().getGroupByName(
 						course.getBatchUid()).getGroup_ID()).intValue();
 						
 				} catch (Exception ne) {
-					System.out.println("Perception: course " + courseId + ": synchronization failed: " + ne.getMessage());
+					System.out.println("Perception: course " + course_id+ ": synchronization failed: " + ne.getMessage());
 	%>
 	<bbUI:receipt type="FAIL"
 		title="Error synchronizing course users with Perception">
@@ -179,6 +218,9 @@
 			}   //end of if(qe.getQMErrorCode...
 		} //end of large catch
 
+		
+		
+		
 		//-----------------------------------------------------------------------
 		//view (still) specific to current user, i.e. Student can only Take assessments
 		// and Staff can "Test Assessments"
@@ -186,7 +228,8 @@
 
 		
 		// get the membership data to determine the User's Role
-		CourseMembershipDbLoader crsMembershipLoader = (CourseMembershipDbLoader) bbPm.getLoader(CourseMembershipDbLoader.TYPE);
+		CourseMembershipDbLoader crsMembershipLoader = (CourseMembershipDbLoader) 
+			bbPm.getLoader(CourseMembershipDbLoader.TYPE);
 		CourseMembership crsMembership = null;
 
 		try {
@@ -207,15 +250,19 @@
 	</bbUI:receipt>
 	<%
 			return;
-		}
-		
+		}		
 
 			if(crsMembership.getRole() == CourseMembership.Role.INSTRUCTOR
-					|| crsMembership.getRole() == CourseMembership.Role.TEACHING_ASSISTANT) 
+					|| crsMembership.getRole() == CourseMembership.Role.TEACHING_ASSISTANT
+						|| sessionUser.getSystemRole() == sessionUser.getSystemRole().SYSTEM_ADMIN)
+					
 				{
 					//-----------------------------------------------------------------------
-					//Administrator or TA
+					//System Administrator or Instructor or Teaching Assistant 
+					// Can be altered upon code request, or through system admin control panel
 					//-----------------------------------------------------------------------
+				if(!PlugInUtil.authorizeForCourseControlPanelContent(request, response))
+				return;						
 
 	%>
 			
@@ -225,7 +272,7 @@
 	<%
 				if(pb.getProperty("perception.singlesignon") != null) {
 	%>
-					<li class="mainButton">
+					<li class="mainButton">						
 						<a href='<%=path+"/links/enterprisemanager.jsp"%>' target="_blank">Log in to Enterprise Manager</a>
 					</li>
 	<%
@@ -331,8 +378,8 @@
 						for(int i = 0; i < schedules.size(); i++) {
 							String idStr="scheduleURL_"+Integer.toString(i);
 							if(schedules.get(i) == null) continue;
-							if(schedule_name!=null && schedule_name.length()>0 && 
-									!schedule_name.equals(schedules.get(i).getSchedule_Name())) continue;						
+							if(persistentScheduleName!=null && persistentScheduleName.length()>0 && 
+									!persistentScheduleName.equals(schedules.get(i).getSchedule_Name())) continue;						
 									//this is what is different in the content item view. Want to see 
 									//just the schedule created through the content item creation form.	
 									
@@ -355,7 +402,7 @@
 				</tr>
 				<tr id='<%=idStr%>' style="display: none;">
 					<td><i>URL:</i></td>
-					<td colspan="6"><code><%=basePath+"links/main.jsp?course_id="+courseId+"&amp;schedule_name="+URLEncoder.encode(schedules.get(i).getSchedule_Name())%></code></td>
+					<td colspan="6"><code><%=basePath+"links/main.jsp?course_id="+course_id+"&amp;schedule_name="+URLEncoder.encode(schedules.get(i).getSchedule_Name())%></code></td>
 				</tr>
 	<%		 			}
 	%>
@@ -439,9 +486,9 @@
 					String[] scheduleurls = new String[schedules.size()];
 					boolean[] schedulesactive = new boolean[schedules.size()];
 					
-					if ((schedule_name == null || schedule_name.length()==0) && 
+					if ((persistentScheduleName == null || persistentScheduleName.length()==0) && 
 						courseSettings.getProperty("hide_schedules","0").equals("1")) {
-						schedule_name="HIDE_ALL_SCHEDULES";
+						persistentScheduleName="HIDE_ALL_SCHEDULES";
 					}
 					
 					for(int i = 0; i < schedules.size(); i++) {
@@ -517,8 +564,8 @@
 						//if(showOnlySchedule!=null && showOnlySchedule.length()>0 && 
 						//		!showOnlySchedule.equals(schedules.get(i).getSchedule_Name())) continue;
 						
-						if(schedule_name!=null && schedule_name.length()>0 && 
-								!schedule_name.equals(schedules.get(i).getSchedule_Name())) continue;						
+						if(persistentScheduleName!=null && persistentScheduleName.length()>0 && 
+								!persistentScheduleName.equals(schedules.get(i).getSchedule_Name())) continue;						
 								//this is what is different in the content item view. Want to see 
 								//just the schedule created through the content item creation form.						
 	%>
@@ -533,8 +580,8 @@
 							: schedules.get(i).getSchedule_Stops().getTime().toString()%></td>
 						<td>
 			
-	<%		 		if(schedulesactive[i]) { %> <% if(scheduleurls[i] == null) { 
-	%>		 			No attempts remaining 
+	<%		 		if(schedulesactive[i]) {  if(scheduleurls[i] == null) { %>
+			 			No attempts remaining 
 	<%		 		} else 
 					{ 
 	%>
@@ -559,6 +606,5 @@
 
 	%>			
 			
-
 	</bbUI:docTemplateBody>
 </bbData:context>	

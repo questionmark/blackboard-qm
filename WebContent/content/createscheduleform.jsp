@@ -66,16 +66,16 @@
 		</bbUI:breadcrumbBar>		
 		
 		<!--put in variables to display right here, for debugging	
-			
+		
 			<p>
 		
 		<%
-			out.println("Content id is: " +  parent_id);
+			out.println("Content id is in fact the parent id: " +  parent_id);		
 			out.println("Course id: " + course_id);
 		%>
 		
 		</p>
-		-->
+		-->	
 			
 		<%
 			//to sync its members and to show date last synchronized
