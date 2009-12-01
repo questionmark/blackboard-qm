@@ -405,6 +405,10 @@
 			<%
 			return;
 		}
+		
+		//sort assessments by Session_Name
+		Arrays.sort(assessments, new AssessmentComparator());
+		
 
 		if(assessments.length == 0) { %>
 			<p>There are no assessments defined in Perception so you cannot schedule an assessment.</p>
