@@ -294,7 +294,7 @@
 						+ course_id
 						+ "&amp;mode=quick";				
 				%>
-				<bbUI:receipt type="pass" title="Questionmark Perception" recallUrl="<%=okUrl %>" buttonAlt="OK" buttonName="okButton">
+				<bbUI:receipt type="pass" title="Questionmark Perception" recallUrl="<%=okUrl %>">
 					<p>
 						<i>Schedule creation was successful.</i>						
 					</p>

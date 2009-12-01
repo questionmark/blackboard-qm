@@ -631,7 +631,7 @@
 							!schedule_name.equals(schedules.get(i).getSchedule_Name())) continue;						
 							//this is what is different in the content item view. Want to see 
 							//just the schedule created through the content item creation form.					
-					%>
+		%>
 		<tr>
 			<!--<td><%=schedules.get(i).getAssessment_ID()%></td>-->
 			<td><%=schedules.get(i).getSchedule_Name()%></td>

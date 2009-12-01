@@ -1,5 +1,5 @@
 <!-- 
-// Filename		: content/view.jsp
+// Filename		: content/viewschedule.jsp
 // Description	: To view an existing Questionmark Schedule content item.
 //				: Features separate views for staff and students,i.e. user
 //				: 'role' specific options.				
@@ -68,7 +68,7 @@
 	
 	%>
 
-	<bbNG:pageHeader instructions="Available Schedules"> 
+	<bbNG:pageHeader instructions="View Schedule"> 
 	<bbNG:pageTitleBar iconUrl='<%=path+"/images/qm.gif"%>'
 			title="Questionmark Scheduled Assessment" />
 		<bbNG:breadcrumbBar environment="COURSE" isContent="true">

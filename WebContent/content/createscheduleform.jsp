@@ -312,7 +312,7 @@
 						<input type="hidden" name="group" value="<%=course.getBatchUid()%>" />
 						<input type="hidden" name="course_id" value="<%=course_id%>" />
 					</bbUI:step>
-					<bbUI:stepSubmit title="Submit" number="2" />
+					<bbUI:stepSubmit title="Submit" number="2"/>
 				</form>
 			<% }
 
