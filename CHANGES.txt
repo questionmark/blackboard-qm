@@ -1,0 +1,46 @@
+Version 8.0.1
+-------------
+
+Includes fixes for:
+
+The user interface of the connector has been re-organized to split the Control
+Panel/CourseTool view (for Instructors) and the main Tool view (for Students).
+
+[#233] Add support for adding an assessment using a content handler
+[#212] Schedules used in combination with adaptive release in Blackboard
+
+Instructors can now use a content item to create and display a Perception
+assessment schedule directly.  These content items are fully compatible with the
+adaptive release feature of Blackboard.
+
+Instructors can now hide the list of schedules from the student view, the
+schedules can be accessed by the student using a schedule specific URL
+that can be copied from the instructor's view and pasted into content items.
+
+Note that schedules are NOT securely hidden, determined students can view their
+own schedule if they know the schedule name.  Permission to take the assessment
+is of course controlled by the schedule settings and is not affected.
+
+[#219] Reporting of percentage scores
+
+Added a three way option to support percentage, point scores or no gradebook
+entry at all.  By default, percentage is chosen.
+
+Note that a schedule may be retrospectively converted to percentage format by
+changing the "Points Possible" in the grade centre to 100.  Existing scores are
+NOT converted so do not change this setting unless it is set to 0, indicating
+that no results have been received yet.
+
+
+[#208] Moved results view to a separate page
+
+[#211] Partial fix: IDs removed from administrator view
+
+[#210] Removed IDs from student view of schedules
+
+
+Version 8.0.0
+-------------
+
+First public release
+
