@@ -1,3 +1,6 @@
+---This documentation is being edited to have instructions for installing Blackboard
+	Connector 8----
+
 Questionmark Perception connector for Blackboard 9
 Written at the University of Southampton by Bart Nagel (bjn@ecs.soton.ac.uk) and 
 Alex Frazer (ajf06r@ecs.soton.ac.uk) in 2009 for Questionmark
