@@ -1,3 +1,14 @@
+Version 9.0.10
+--------------
+
+Includes a fix for:
+
+[#228] Assessment names now sorted alphabetically in drop-down menus
+[#247] Some minor UI improvements resulting from tag changes
+
+Also reduced the loading time of the view results page.
+
+
 Version 9.0.9
 -------------
 
