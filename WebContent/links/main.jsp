@@ -328,7 +328,11 @@
 				for(int i = 0; i < schedules.size(); i++) {
 					String idStr="scheduleURL_"+Integer.toString(i);
 					if(schedules.get(i) == null) continue;
-					%>
+					if(schedule_name != null && schedule_name.length() > 0){
+						if(!schedules.get(i).getSchedule_Name().equals(schedule_name)) continue;	
+					}
+					
+		%>
 		<tr>
 			<!--<td><%=schedules.get(i).getAssessment_ID()%></td>-->
 			<td><%=schedules.get(i).getSchedule_Name()%></td>
@@ -626,11 +630,11 @@
 		<%
 				for(int i = 0; i < schedules.size(); i++) {	
 					if(schedules.get(i) == null) continue;												
-					if(schedulesactive[i] == false) continue;
-					if(schedule_name!=null && schedule_name.length()>0 && 
-							!schedule_name.equals(schedules.get(i).getSchedule_Name())) continue;						
-							//this is what is different in the content item view. Want to see 
-							//just the schedule created through the content item creation form.					
+					if(schedulesactive[i] == false) continue;	//showing only active to students			
+					if(schedule_name != null && schedule_name.length() > 0){
+						if(!schedules.get(i).getSchedule_Name().equals(schedule_name)) continue;	
+					}
+																	
 		%>
 		<tr>
 			<!--<td><%=schedules.get(i).getAssessment_ID()%></td>-->
