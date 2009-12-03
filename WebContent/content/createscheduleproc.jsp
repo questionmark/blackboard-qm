@@ -160,13 +160,13 @@
 				if(!(request.getParameter("start_hour").matches(regexhour) && request.getParameter("start_minute").matches(regexmin) && request.getParameter("end_hour").matches(regexhour) && request.getParameter("end_minute").matches(regexmin)))
 					throw new Exception("Times must be in 24-hour HH:MM format");
 
-				DateFormat df = new SimpleDateFormat("yyyy-MM-dd' 0:0:00'");
+				DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
 
-				startCal.setTime(df.parse(request.getParameter("start_0")));
+				startCal.setTime(df.parse(request.getParameter("start_0").substring(0,10)));
 				startCal.set(Calendar.HOUR_OF_DAY, new Integer(request.getParameter("start_hour")).intValue());
 				startCal.set(Calendar.MINUTE, new Integer(request.getParameter("start_minute")).intValue());
 
-				endCal.setTime(df.parse(request.getParameter("end_1")));
+				endCal.setTime(df.parse(request.getParameter("end_1").substring(0,10)));
 				endCal.set(Calendar.HOUR_OF_DAY, new Integer(request.getParameter("end_hour")).intValue());
 				endCal.set(Calendar.MINUTE, new Integer(request.getParameter("end_minute")).intValue());
 

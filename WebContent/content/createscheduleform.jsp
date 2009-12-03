@@ -282,10 +282,10 @@
 			function disable_set_access() {
 				if(document.getElementById('set_access_period')) {
 					var disabled = !document.getElementById('set_access_period').checked;
-					document.getElementById('dp_start_0_start_date').disabled = disabled;
+					
 					document.getElementById('start_hour').disabled = disabled;
 					document.getElementById('start_minute').disabled = disabled;
-					document.getElementById('dp_end_1_start_date').disabled = disabled;
+					
 					document.getElementById('end_hour').disabled = disabled;
 					document.getElementById('end_minute').disabled = disabled;
 				}

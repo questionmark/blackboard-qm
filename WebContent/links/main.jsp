@@ -24,7 +24,8 @@
 <!-- variables -->
 <%
 	String path = request.getContextPath();
-	String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+path+"/";
+	String basePath = request.getScheme()+"://"+request.getServerName()+
+		":"+request.getServerPort()+path+"/";
 	String schedule_name = request.getParameter("schedule_name");
 %>
 
@@ -343,9 +344,12 @@
 			</tr>
 			<%
 					for(int i = 0; i < schedules.size(); i++) {
-						String idStr="scheduleURL_"+Integer.toString(i);
+						String idStr="scheduleURL_"+Integer.toString(i);						
 						if(schedules.get(i) == null) continue;
-						%>
+						if(schedule_name != "" && schedule_name != null){
+							if(!schedules.get(i).getSchedule_Name().equals(schedule_name)) continue;	
+						}						
+			%>
 			<tr>
 				<!--<td><%=schedules.get(i).getAssessment_ID()%></td>-->
 				<td><%=schedules.get(i).getSchedule_Name()%></td>
@@ -413,14 +417,16 @@
 		if(assessments.length == 0) { %>
 			<p>There are no assessments defined in Perception so you cannot schedule an assessment.</p>
 		<% } else { %>
+		
+		
 			<script type="text/javascript">
 				function disable_set_access() {
 					if(document.getElementById('set_access_period')) {
-						var disabled = !document.getElementById('set_access_period').checked;
-						document.getElementById('dp_start_0_start_date').disabled = disabled;
+						var disabled = !document.getElementById('set_access_period').checked;					
+						
 						document.getElementById('start_hour').disabled = disabled;
 						document.getElementById('start_minute').disabled = disabled;
-						document.getElementById('dp_end_1_start_date').disabled = disabled;
+						
 						document.getElementById('end_hour').disabled = disabled;
 						document.getElementById('end_minute').disabled = disabled;
 					}
@@ -617,10 +623,11 @@
 			for(int i = 0; i < schedules.size(); i++) {	
 				if(schedules.get(i) == null) continue;												
 				if(schedulesactive[i] == false) continue;
-				if(schedule_name!=null && schedule_name.length()>0 && 
-						!schedule_name.equals(schedules.get(i).getSchedule_Name())) continue;						
+				if(schedule_name != "" && schedule_name != null){
+					if(!schedules.get(i).getSchedule_Name().equals(schedule_name)) continue;	
+				}				
 						//this is what is different in the content item view. Want to see 
-						//just the schedule created through the content item creation form.					
+						//just the schedule created through the content item creation form.
 		%>				
 
 				<tr>
