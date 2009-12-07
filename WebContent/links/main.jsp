@@ -451,9 +451,13 @@
 						<input type="text" name="schedule" /><br />
 						The schedule name must be unique if results are to be stored in the gradebook
 					</bbUI:dataElement>
-					<bbUI:dataElement label="Store results in gradebook?">
-						<input type="checkbox" id="use_gradebook" name="use_gradebook" value="true" checked="checked">
-					</bbUI:dataElement>
+				<bbUI:dataElement label="Store results in gradebook?">
+					<select name="use_gradebook">
+						<option value="percent" selected="selected">as percentage scores</option>
+						<option value="point">as point scores</option>
+						<option value="no">do not store results in gradebook</option>
+					</select>
+				</bbUI:dataElement>
 					<bbUI:dataElement label="Assessment name">
 						<select name="assessment">
 							<% for(int i = 0; i < assessments.length; i++) { %>
