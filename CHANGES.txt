@@ -1,3 +1,11 @@
+Version 8.0.2
+-------------
+
+Includes fixes for:
+
+[#228] Assessment names now sorted alphabetically in drop-down menus
+
+
 Version 8.0.1
 -------------
 
