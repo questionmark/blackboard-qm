@@ -384,6 +384,7 @@
 			Assessment[] assessments;
 			try {
 				assessments = qmwise.getStub().getAssessmentListByAdministrator(adminid);
+			
 			} catch(Exception e) {
 				QMWiseException qe = new QMWiseException(e);
 				%>
@@ -446,9 +447,15 @@
 		</bbUI:dataElement>
 		<bbUI:dataElement label="Assessment name">
 			<select name="assessment">
-				<% for(int i = 0; i < assessments.length; i++) { %>
-				<option value="<%=assessments[i].getAssessment_ID()%>"><%=assessments[i].getSession_Name()%></option>
-				<% } %>
+				<% 
+				String last_ID = "";
+				for(int i = 0; i < assessments.length; i++) { 
+					String next_ID = assessments[i].getAssessment_ID();
+					if (!next_ID.equals(last_ID)){%>
+				<option value="<%=next_ID%>"><%=assessments[i].getSession_Name()%></option>				
+				<%		last_ID = next_ID;
+					}					
+				} %>
 			</select>
 		</bbUI:dataElement>
 		<bbUI:dataElement label="Limit attempts?">
