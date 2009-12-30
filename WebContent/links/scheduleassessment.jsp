@@ -32,7 +32,7 @@
 <bbData:context id="ctx">
 	<bbUI:docTemplateHead title="Questionmark Perception connector" />	
 	<bbUI:docTemplate>
-		<bbUI:titleBar iconUrl="images/qm.gif">Schedule Creation Successful</bbUI:titleBar>
+		<bbUI:titleBar iconUrl='<%=path+"/images/qm.gif"%>'>Schedule Creation Successful</bbUI:titleBar>
 		<%
 		QMWise qmwise;
 		int groupId;
