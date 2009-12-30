@@ -34,7 +34,7 @@
 
 		<bbUI:docTemplate>
 		
-			<bbUI:titleBar iconUrl="images/qm.gif" >
+			<bbUI:titleBar iconUrl='<%=path+"/images/qm.gif"%>' >
 				Questionmark Perception connector
 			</bbUI:titleBar>
 

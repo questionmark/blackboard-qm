@@ -55,7 +55,7 @@
 	
 	<bbUI:docTemplateBody onLoad="disable_set_access()">
 	
-		<bbUI:titleBar iconUrl="../images/qm.gif">
+		<bbUI:titleBar iconUrl='<%=path+"/images/qm.gif"%>'>
 			Questionmark Perception Connector - Content Item
 		</bbUI:titleBar>
 		
@@ -214,7 +214,7 @@
 			if(pb.getProperty("perception.singlesignon") != null) {
 		%>
 				<li class="mainButton">
-					<a href="links/enterprisemanager.jsp" target="_blank">Log in to Enterprise Manager</a>
+					<a href='<%=path+"/links/enterprisemanager.jsp"%>' target="_blank">Log in to Enterprise Manager</a>
 				</li>
 		<%
 			}
