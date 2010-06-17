@@ -2,6 +2,7 @@ Version 9.0.11
 --------------
 
 [#208] Fixed page controls on the viewresults page
+[#293] Workaround for Gradebook not being updated with some v5 configurations
 
 
 Version 9.0.10

@@ -34,9 +34,9 @@ Lineitem lineitem;
 String scoreType; 
 
 try {
-	course = courseLoader.loadByBatchUid(((String) request.getParameter("Group_Name")));
+	course = courseLoader.loadByBatchUid(((String) request.getParameter("bb_courseid")));
 } catch(KeyNotFoundException e) {
-	System.out.println("Perception: Callback: couldn't load course with batchuid " + ((String) request.getParameter("Group_Name")));
+	System.out.println("Perception: Callback: couldn't load course with batchuid " + ((String) request.getParameter("bb_courseid")));
 	return;
 }
 
