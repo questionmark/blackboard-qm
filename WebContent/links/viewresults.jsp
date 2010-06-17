@@ -173,7 +173,7 @@
 			
 			if(resultsPerPage < 10) resultsPerPage = 10;
 			%>
-			<h1 id="Results">Results</h1>
+			<h1 id="Results">Results per page (minimum 10)</h1>
 	<% 		if (results.length == 0) { %>
 				<p>There are not yet results for this course.</p>
 	<% 
@@ -182,7 +182,7 @@
 			{ 
 	%>
 		
-		<form action='<%=path+"/links/main.jsp#Results"%>' method="GET" >
+		<form action='<%=path+"/links/viewresults.jsp"%>' method="GET" > 
 			<input type="hidden" name="course_id" value="<%=courseId%>" />
 			Results to show per page: <input type="text" size="4" name="resultsPerPage" value="<%=resultsPerPage %>" />
 			<input type="submit" value="Update table" />
@@ -266,10 +266,10 @@
 						if(request.getParameter("resultPage") != null && new Integer(request.getParameter("resultPage")).intValue() == i) {
 							out.println("<strong>" + i + "</strong> ");
 						} else {
-							out.println("<a href=\""+path+"/links/main.jsp?course_id=" + courseId + 
+							out.println("<a href=\""+path+"/links/viewresults.jsp?course_id=" + courseId + 
 								"&amp;resultPage=" + i +
 								"&amp;resultsPerPage=" + resultsPerPage +
-								"#Results\">" + i + "</a> ");
+								"\">" + i + "</a> ");
 						}
 					}
 				
