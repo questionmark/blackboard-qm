@@ -1,6 +1,8 @@
-<%@ page
+
+<%@page import="org.eclipse.jdt.internal.compiler.ast.ForeachStatement"%><%@ page
 	language="java"
 	pageEncoding="UTF-8"
+	contentType="text/plain"
 	import="
 		java.util.*,
 		blackboard.platform.*,
@@ -34,10 +36,38 @@ Lineitem lineitem;
 String scoreType; 
 
 try {
+	@SuppressWarnings("unchecked")
+	Iterator it = request.getParameterMap().entrySet().iterator();
+	while(it.hasNext()){
+		@SuppressWarnings("unchecked")
+		Map.Entry pairs = (Map.Entry) it.next();
+		//out.println(pairs.getKey() + " = " + pairs.getValue());
+		
+		//for Iterator values =  (Iterator) pairs.getValue();
+		
+	}
+	@SuppressWarnings("unchecked")
+	Enumeration ParameterNames = request.getParameterNames();
+	while(ParameterNames.hasMoreElements()){
+		String name = (String) ParameterNames.nextElement();
+		
+		String[] values = request.getParameterValues(name);
+		
+		for(int i=0; i < values.length ; i++){
+			out.println(name + " = " + values[i]);
+		}
+	}
+	
+	
+	
 	course = courseLoader.loadByBatchUid(((String) request.getParameter("bb_courseid")));
+	
 } catch(KeyNotFoundException e) {
-	System.out.println("Perception: Callback: couldn't load course with batchuid " + ((String) request.getParameter("bb_courseid")));
+	out.println("Perception: Callback: couldn't load course with batchuid " + ((String) request.getParameter("bb_courseid")));
+	
 	return;
+	
+	
 }
 
 try {
@@ -45,10 +75,10 @@ try {
 } catch(java.lang.IndexOutOfBoundsException e) {
 	//lineitem doesn't exist yet -- "use gradebook" box was not checked 
 	//otherwise it would exist already. so we ignore this callback.
-	System.out.println("Perception: Callback: Ignoring score since there is no corresponding gradebook column");
+	out.println("Perception: Callback: Ignoring score since there is no corresponding gradebook column");
 	return;
 } catch(Exception e) {
-	System.out.println("Perception: Callback: got an exception: " + e);
+	out.println("Perception: Callback: got an exception: " + e);
 	return;
 }
 
@@ -61,13 +91,13 @@ if(lineitem.getPointsPossible() == 0f) {
 	try {
 		lineitem.validate();
 	} catch(Exception e) {
-		System.out.println("Perception: Callback: Lineitem validation failed: " + e);
+		out.println("Perception: Callback: Lineitem validation failed: " + e);
 		return;
 	}
 	try {
 		lineitemdbpersister.persist(lineitem);
 	} catch(Exception e) {
-		System.out.println("Perception: Callback: Lineitem persisting failed: " + e);
+		out.println("Perception: Callback: Lineitem persisting failed: " + e);
 		return;
 	}
 }
@@ -93,7 +123,7 @@ User user;
 try {
 	user = userdbloader.loadByUserName(request.getParameter("Participant_Name"));
 } catch(Exception e) {
-	System.out.println("Perception: Callback: Couldn't find user '" + request.getParameter("Participant_Name)" + "': " + e));
+	out.println("Perception: Callback: Couldn't find user '" + request.getParameter("Participant_Name)" + "': " + e));
 	return;
 }
 
@@ -101,14 +131,14 @@ try {
 	coursemembership = coursemembershipdbloader.loadByCourseAndUserId(course.getId(), user.getId());
 } catch (KeyNotFoundException e) {
 	// There is no membership record.
-	System.out.println("Perception: Callback: User " + request.getParameter("Participant_Name") + " doesn't have a role on this course");
+	out.println("Perception: Callback: User " + request.getParameter("Participant_Name") + " doesn't have a role on this course");
 	return;
 } catch (PersistenceException pe) {
-	System.out.println("Perception: Callback: Error loading user " + request.getParameter("Participant_Name") + "'s membership");
+	out.println("Perception: Callback: Error loading user " + request.getParameter("Participant_Name") + "'s membership");
 	return;
 }
 
-//get a score loader
+//get a score loader 
 ScoreDbLoader scoredbloader = (ScoreDbLoader) bbPm.getLoader(ScoreDbLoader.TYPE);
 Score score;
 
@@ -116,7 +146,7 @@ try {
 	score = scoredbloader.loadByCourseMembershipIdAndLineitemId(coursemembership.getId(), lineitem.getId());
 	if(new Float(score.getGrade()).floatValue() >= new Float(request.getParameter(scoreType)).floatValue()) {
 		//new score is less than old score -- ignore
-		System.out.println("Perception: Callback: ignored a score since it was less than or equal to old score");
+		out.println("Perception: Callback: ignored a score since it was less than or equal to old score");
 		return;
 	}
 	score.setGrade(request.getParameter(scoreType));
@@ -129,7 +159,7 @@ try {
 	score.setLineitemId(lineitem.getId());
 	score.setGrade(request.getParameter(scoreType));
 } catch(Exception e) {
-	System.out.println("Perception: Callback: Error getting old score: " + e);
+	out.println("Perception: Callback: Error getting old score: " + e);
 	return;
 }
 
@@ -137,7 +167,7 @@ try {
 try {
 	score.validate();
 } catch(Exception e) {
-	System.out.println("Perception: Callback: score did not validate: " + e);
+	out.println("Perception: Callback: score did not validate: " + e);
 	return;
 }
 
@@ -146,6 +176,6 @@ ScoreDbPersister scoredbpersister = (ScoreDbPersister) bbPm.getPersister(ScoreDb
 
 //persist it (write it to the database)
 scoredbpersister.persist(score);
-System.out.println("Perception: Callback: added a score to gradebook");
+out.println("Perception: Callback: added a score to gradebook");
 
 %>
