@@ -7,6 +7,11 @@
 
 package com.questionmark.QMWISe;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+
 public class ScheduleV42  extends com.questionmark.QMWISe.DataEntity  implements java.io.Serializable {
     private int schedule_ID;
 
@@ -24,9 +29,9 @@ public class ScheduleV42  extends com.questionmark.QMWISe.DataEntity  implements
 
     private boolean restrict_Times;
 
-    private java.util.Calendar schedule_Starts;
+    private java.lang.String schedule_Starts;
 
-    private java.util.Calendar schedule_Stops;
+    private java.lang.String schedule_Stops;
 
     private boolean restrict_Attempts;
 
@@ -66,8 +71,8 @@ public class ScheduleV42  extends com.questionmark.QMWISe.DataEntity  implements
            int group_Tree_ID,
            java.lang.String schedule_Name,
            boolean restrict_Times,
-           java.util.Calendar schedule_Starts,
-           java.util.Calendar schedule_Stops,
+           java.lang.String schedule_Starts,
+           java.lang.String schedule_Stops,
            boolean restrict_Attempts,
            int max_Attempts,
            int monitored,
@@ -272,8 +277,20 @@ public class ScheduleV42  extends com.questionmark.QMWISe.DataEntity  implements
      * 
      * @return schedule_Starts
      */
-    public java.util.Calendar getSchedule_Starts() {
+    public java.lang.String getSchedule_Starts() {
         return schedule_Starts;
+    }
+
+    public java.util.Calendar getSchedule_Starts_Calendar() {
+    	SimpleDateFormat df=new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+    	Calendar start=Calendar.getInstance();
+    	try {
+    		start.setTime(df.parse(schedule_Starts));
+    	}
+    	catch(ParseException e) {
+    		start.setTime(new Date(0));
+    	}    	
+        return start;
     }
 
 
@@ -282,18 +299,35 @@ public class ScheduleV42  extends com.questionmark.QMWISe.DataEntity  implements
      * 
      * @param schedule_Starts
      */
-    public void setSchedule_Starts(java.util.Calendar schedule_Starts) {
+    public void setSchedule_Starts(java.lang.String schedule_Starts) {
         this.schedule_Starts = schedule_Starts;
     }
 
+    public void setSchedule_Starts(java.util.Calendar schedule_Starts) {
+    	SimpleDateFormat df=new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+        this.schedule_Starts = df.format(schedule_Starts.getTime());
+    }
+    
 
     /**
      * Gets the schedule_Stops value for this ScheduleV42.
      * 
      * @return schedule_Stops
      */
-    public java.util.Calendar getSchedule_Stops() {
+    public java.lang.String getSchedule_Stops() {
         return schedule_Stops;
+    }
+
+    public java.util.Calendar getSchedule_Stops_Calendar() {
+    	SimpleDateFormat df=new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+    	Calendar stop=Calendar.getInstance();
+    	try {
+    		stop.setTime(df.parse(schedule_Stops));
+    	}
+    	catch(ParseException e) {
+    		stop.setTime(new Date(0));
+    	}
+        return stop;
     }
 
 
@@ -302,12 +336,17 @@ public class ScheduleV42  extends com.questionmark.QMWISe.DataEntity  implements
      * 
      * @param schedule_Stops
      */
-    public void setSchedule_Stops(java.util.Calendar schedule_Stops) {
+    public void setSchedule_Stops(java.lang.String schedule_Stops) {
         this.schedule_Stops = schedule_Stops;
     }
 
+    public void setSchedule_Stops(java.util.Calendar schedule_Stops) {
+    	SimpleDateFormat df=new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+        this.schedule_Stops = df.format(schedule_Stops.getTime());
+    }
+    
 
-    /**
+   /**
      * Gets the restrict_Attempts value for this ScheduleV42.
      * 
      * @return restrict_Attempts
@@ -735,13 +774,13 @@ public class ScheduleV42  extends com.questionmark.QMWISe.DataEntity  implements
         elemField = new org.apache.axis.description.ElementDesc();
         elemField.setFieldName("schedule_Starts");
         elemField.setXmlName(new javax.xml.namespace.QName("http://questionmark.com/QMWISe/", "Schedule_Starts"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "dateTime"));
+        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
         elemField.setNillable(false);
         typeDesc.addFieldDesc(elemField);
         elemField = new org.apache.axis.description.ElementDesc();
         elemField.setFieldName("schedule_Stops");
         elemField.setXmlName(new javax.xml.namespace.QName("http://questionmark.com/QMWISe/", "Schedule_Stops"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "dateTime"));
+        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
         elemField.setNillable(false);
         typeDesc.addFieldDesc(elemField);
         elemField = new org.apache.axis.description.ElementDesc();
