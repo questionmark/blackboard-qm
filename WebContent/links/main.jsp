@@ -13,6 +13,7 @@
 		blackboard.data.course.*,
 		blackboard.persist.course.*,
 		org.apache.axis.*,
+		org.apache.commons.lang.StringEscapeUtils,
 		java.rmi.RemoteException,
 		javax.xml.namespace.QName,
 		com.questionmark.*,
@@ -29,22 +30,29 @@
 %>
 
 
-<bbNG:learningSystemPage ctxId="ctx"
+
+<%@page import="com.sun.mail.handlers.text_html"%>
+<%@page import="org.apache.velocity.app.event.implement.EscapeHtmlReference"%><bbNG:learningSystemPage ctxId="ctx"
 	title="Questionmark Perception connector" onLoad="disable_set_access()">
 	<bbNG:pageHeader>
 		<bbNG:pageTitleBar iconUrl='<%=path+"/images/qm.gif"%>'
 			title="Questionmark Perception connector" />
 	</bbNG:pageHeader>
 
+	
 	<%
 		// Retrieve the course identifier from the URL
 		String courseId = request.getParameter("course_id");
 
 		if(courseId == null) {
 	%>
+	
+	
 	<bbNG:receipt type="FAIL" title="No course ID was given">
 				No course ID was given with the request
 	</bbNG:receipt>
+	
+	
 	<%
 			return;
 		}
@@ -62,8 +70,11 @@
 		} catch(Exception e) {
 			QMWiseException qe = new QMWiseException(e);
 			%>
+	
 	<bbNG:receipt type="FAIL" title="Error connecting to Perception server">
-		<%=qe.getMessage()%>
+		
+		Error connecting to Perception server. Please contact your system administrator.
+		
 	</bbNG:receipt>
 	<%
 			return;
@@ -96,24 +107,35 @@
 				//synchronize course users
 				System.out.println("Perception: course " + courseId + ": it's been more than the sync period since last sync -- syncing users");
 				UserSynchronizer us = new UserSynchronizer();
+				String result;
 				try {
-					us.synchronizeCourse(courseId);
+					result = us.synchronizeCourse(courseId);
 					configReader.setCourseSyncDate();
-				} catch (Exception e) {
-					System.out.println("Perception: course " + courseId + ": synchronization failed: " + e.getMessage());
-					%>
-	<bbNG:receipt type="FAIL"
-		title="Error synchronizing course users with Perception">
-		<%=e.getMessage()%>
-	</bbNG:receipt>
-	<%
+					out.print(result);
+				} catch (QMWiseException nqe ) {					
+					System.out.println("Qmwise exception caught: course " + courseId + ": synchronization failed: " + nqe.getMessage());
+					String output = "Qmwise exception caught: course " + courseId + ": synchronization failed: " + nqe.getMessage();
+					
+					%>					
+					<h1>Participant Synchronisation failed!</h1>					
+					
+					<p>
+						<%=StringEscapeUtils.escapeHtml(output)%>
+					</p>
+					
+					<%
+					//Do not want the page to crash!
+					//return;
+				}
+				catch (Exception pe){
+					System.out.println("Other exception caught: Course " + courseId + ": synchronisation failed: " + pe.getMessage());
 					return;
 				}
 			}
 		}
 		
 		//get Perception group id
-		int perceptiongroupid;
+		int perceptiongroupid = 0;
 		try {
 			perceptiongroupid = new Integer(qmwise.getStub().getGroupByName(course.getBatchUid()).getGroup_ID()).intValue();
 		} catch(Exception e) {
@@ -122,19 +144,37 @@
 				//group doesn't exist -- force sync
 				System.out.println("Perception: course " + courseId + ": Perception group doesn't exist -- forcing synchronization");
 				UserSynchronizer us = new UserSynchronizer();
+				String force_sync_result;
 				try {
-					us.synchronizeCourse(courseId);
+					force_sync_result = us.synchronizeCourse(courseId);
 					configReader.setCourseSyncDate();
+					out.print(force_sync_result);
 					//get fresh group
 					perceptiongroupid = new Integer(qmwise.getStub().getGroupByName(course.getBatchUid()).getGroup_ID()).intValue();
-				} catch (Exception ne) {
-					System.out.println("Perception: course " + courseId + ": synchronization failed: " + ne.getMessage());
+					
+				} catch (QMWiseException nqe ) {					
+					System.out.println("Qmwise exception caught: course " + courseId + ": synchronization failed: " + nqe.getMessage());
+					String output = "Qmwise exception caught: course " + courseId + ": synchronization failed: " + nqe.getMessage();
+					
+					%>					
+					<h1>Group Synchronisation failed!</h1>					
+					
+					<p>
+						<%=StringEscapeUtils.escapeHtml(output)%>
+					</p>
+					
+					<%
+					//Do not want the page to crash!
+					//return;
+				}
+				catch (Exception ge) {
+					System.out.println("Perception: course " + courseId + ": synchronization failed: " + ge.getMessage());
 					%>
-	<bbNG:receipt type="FAIL"
-		title="Error synchronizing course users with Perception">
-		<%=ne.getMessage()%>
-	</bbNG:receipt>
-	<%
+					<bbUI:receipt type="FAIL"
+						title="Unknown Error : synchronizing course users with Perception">
+						<%=ge.getMessage()%>
+					</bbUI:receipt>
+					<%
 					return;
 				}
 			} else {
@@ -207,8 +247,8 @@
 	
 	</bbNG:actionControlBar>
 
-	<h1 id="Syncdetails">Synchronization details</h1>
-	<p>Users of this course were last synchronized <%=new Date(configReader.getCourseSyncDate()).toString()%></p>
+	<h1 id="Syncdetails">Synchronisation details</h1>
+	<p>Users of this course were last synchronised <%=new Date(configReader.getCourseSyncDate()).toString()%></p>
 	<bbUI:spacer height="20" />
 
 	<h1 id="CourseSettings">Course Settings</h1>
@@ -390,8 +430,9 @@
 				%>
 	<bbNG:receipt type="FAIL"
 		title="Error getting list of available assessments">
-		<%=qe.getMessage()%>
+		Error getting list of available assessments
 	</bbNG:receipt>
+	
 	<%
 				return;
 			}
@@ -664,4 +705,5 @@
 	<%
 		}
 	%>
+	
 </bbNG:learningSystemPage>
