@@ -274,17 +274,33 @@
 
 	<h1 id="Schedules">Schedules</h1>
 	<%
-			ScheduleV42[] schedulesarray;
+			ScheduleV42[] schedulesarray = null;
 			try {
 				schedulesarray = qmwise.getStub().getScheduleListByParticipantV42(new Integer(UserSynchronizer.getPhantomUserId()).intValue());
 			} catch(Exception e) {
 				QMWiseException qe = new QMWiseException(e);
+				if(qe.getQMErrorCode() == 1301) {	
+					String assessmentErrorOutput = "Perception: course " + courseId + 
+					": Error getting group schedule list. Cause: Assessment not found, check whether assessment exists in Perception."
+					+ " For more information please check Perception server logs - QMWISe trace log. Message: "
+					+ qe.getMessage();
+					System.out.println(assessmentErrorOutput);					
 				%>
-	<bbNG:receipt type="FAIL" title="Error getting group schedule list">
-		<%=qe.getMessage()%>
-	</bbNG:receipt>
-	<%
-				return;
+					<h1>Error getting group schedule list, assessment missing!</h1>
+					<p><%=StringEscapeUtils.escapeHtml(assessmentErrorOutput)%></p>
+				<%
+			
+				}
+				else{
+					String qmErrorOutput = "Perception: course " + courseId + 
+					": Error getting group schedule list. Cause: " + qe.getMessage();
+					System.out.println(qmErrorOutput);
+					%>
+					<h1>Error getting group schedule list, QMWISe error!</h1>
+					<p><%=StringEscapeUtils.escapeHtml(qmErrorOutput)%></p>
+					<%
+				}
+				//	return; //remove return - to avoid the page crashing out.
 			}
 
 			Vector<ScheduleV42> schedules = new Vector<ScheduleV42>();
@@ -332,8 +348,8 @@
 					return;
 				}
 
-				Long schedule_start = schedules.get(i).getSchedule_Starts_Calendar().getTime().getTime();
-				Long schedule_stop = schedules.get(i).getSchedule_Stops_Calendar().getTime().getTime();
+				Long schedule_start = schedules.get(i).readSchedule_Starts_asCalendar().getTime().getTime();
+				Long schedule_stop = schedules.get(i).readSchedule_Stops_asCalendar().getTime().getTime();
 				Long now = new Date().getTime();
 				if (schedules.get(i).isRestrict_Times() && (
 					schedule_start > now //not started yet
@@ -377,8 +393,8 @@
 			<!--<td><%=schedules.get(i).getAssessment_ID()%></td>-->
 			<td><%=schedules.get(i).getSchedule_Name()%></td>
 			<td><%=schedules.get(i).isRestrict_Attempts() ? schedules.get(i).getMax_Attempts() : "no limit"%></td>
-			<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).getSchedule_Starts_Calendar().getTime().toString()%></td>
-			<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).getSchedule_Stops_Calendar().getTime().toString()%></td>
+			<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).readSchedule_Starts_asCalendar().getTime().toString()%></td>
+			<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).readSchedule_Stops_asCalendar().getTime().toString()%></td>
 			<td><%=schedulesactive[i] ? "active" : "inactive"%></td>
 			<td><a href="<%=scheduleurls[i]%>" target="_blank">Test
 			assessment</a></td>
@@ -614,8 +630,8 @@
 				//launch it
 				//haven't coded any timezone handling in here, so this 
 				//may be dodgy
-				Long schedule_start = schedules.get(i).getSchedule_Starts_Calendar().getTime().getTime();
-				Long schedule_stop = schedules.get(i).getSchedule_Stops_Calendar().getTime().getTime();
+				Long schedule_start = schedules.get(i).readSchedule_Starts_asCalendar().getTime().getTime();
+				Long schedule_stop = schedules.get(i).readSchedule_Stops_asCalendar().getTime().getTime();
 				Long now = new Date().getTime();
 				if(
 					schedules.get(i).isRestrict_Times()
@@ -689,8 +705,8 @@
 			<!--<td><%=schedules.get(i).getAssessment_ID()%></td>-->
 			<td><%=schedules.get(i).getSchedule_Name()%></td>
 			<td><%=schedules.get(i).isRestrict_Attempts() ? schedules.get(i).getMax_Attempts() : "no limit"%></td>
-			<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).getSchedule_Starts_Calendar().getTime().toString()%></td>
-			<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).getSchedule_Stops_Calendar().getTime().toString()%></td>
+			<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).readSchedule_Starts_asCalendar().getTime().toString()%></td>
+			<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).readSchedule_Stops_asCalendar().getTime().toString()%></td>
 			<td>
 			<% if(schedulesactive[i]) { %> <% if(scheduleurls[i] == null) { %> No
 			attempts remaining <% } else { %>

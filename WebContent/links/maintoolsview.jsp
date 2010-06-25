@@ -254,8 +254,8 @@
 							return;
 						}
 
-						Long schedule_start = schedules.get(i).getSchedule_Starts_Calendar().getTime().getTime();
-						Long schedule_stop = schedules.get(i).getSchedule_Stops_Calendar().getTime().getTime();
+						Long schedule_start = schedules.get(i).readSchedule_Starts_asCalendar().getTime().getTime();
+						Long schedule_stop = schedules.get(i).readSchedule_Stops_asCalendar().getTime().getTime();
 						Long now = new Date().getTime();
 						if (schedules.get(i).isRestrict_Times() && (
 							schedule_start > now //not started yet
@@ -297,8 +297,8 @@
 					<!--<td><%=schedules.get(i).getAssessment_ID()%></td>-->
 					<td><%=schedules.get(i).getSchedule_Name()%></td>
 					<td><%=schedules.get(i).isRestrict_Attempts() ? schedules.get(i).getMax_Attempts() : "no limit"%></td>
-					<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).getSchedule_Starts_Calendar().getTime().toString()%></td>
-					<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).getSchedule_Stops_Calendar().getTime().toString()%></td>
+					<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).readSchedule_Starts_asCalendar().getTime().toString()%></td>
+					<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).readSchedule_Stops_asCalendar().getTime().toString()%></td>
 					<td><%=schedulesactive[i] ? "active" : "inactive"%></td>
 					<td><a href="<%=scheduleurls[i]%>" target="_blank">Test
 					assessment</a></td>
@@ -402,8 +402,8 @@
 						//launch it
 						//haven't coded any timezone handling in here, so this 
 						//may be dodgy
-						Long schedule_start = schedules.get(i).getSchedule_Starts_Calendar().getTime().getTime();
-						Long schedule_stop = schedules.get(i).getSchedule_Stops_Calendar().getTime().getTime();
+						Long schedule_start = schedules.get(i).readSchedule_Starts_asCalendar().getTime().getTime();
+						Long schedule_stop = schedules.get(i).readSchedule_Stops_asCalendar().getTime().getTime();
 						Long now = new Date().getTime();
 						if(
 							schedules.get(i).isRestrict_Times()
@@ -476,9 +476,9 @@
 						<td><%=schedules.get(i).isRestrict_Attempts() ? schedules.get(i).getMax_Attempts() 
 							: "no limit"%></td>
 						<td><%=!schedules.get(i).isRestrict_Times() ? "None" 
-							: schedules.get(i).getSchedule_Starts_Calendar().getTime().toString()%></td>
+							: schedules.get(i).readSchedule_Starts_asCalendar().getTime().toString()%></td>
 						<td><%=!schedules.get(i).isRestrict_Times() ? "None" 
-							: schedules.get(i).getSchedule_Stops_Calendar().getTime().toString()%></td>
+							: schedules.get(i).readSchedule_Stops_asCalendar().getTime().toString()%></td>
 						<td>
 			
 			<% 			if(schedulesactive[i]) { 
