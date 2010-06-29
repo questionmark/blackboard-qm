@@ -9,6 +9,7 @@
 
 <%@ taglib uri="/bbUI" prefix="bbUI"%>
 <%@ taglib uri="/bbData" prefix="bbData"%>
+<%@ taglib uri="/bbNG" prefix="bbNG"%>
 
 <bbData:context>
 	<bbUI:docTemplate title="Custom My Courses Module">
@@ -18,7 +19,7 @@
 		</bbUI:titleBar>
 
 		<%
-		QMWise qmwise;
+		QMWise qmwise = null;
 
 		try {
 			qmwise = new QMWise();

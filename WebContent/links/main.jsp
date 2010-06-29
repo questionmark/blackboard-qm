@@ -54,7 +54,7 @@
 	
 	
 	<%
-			return;
+		//	return;
 		}
 
 		//create a ConfigFileReader, to check whether this course needs 
@@ -64,20 +64,18 @@
 		CourseSettings courseSettings = new CourseSettings(courseId);
 		
 		//connect to QMWise
-		QMWise qmwise;
+		QMWise qmwise = null;
 		try {
 			qmwise = new QMWise();
 		} catch(Exception e) {
 			QMWiseException qe = new QMWiseException(e);
 			%>
 	
-	<bbNG:receipt type="FAIL" title="Error connecting to Perception server">
+				<h1>Error connecting to Perception server</h1>
+				<p><%=StringEscapeUtils.escapeHtml(qe.getMessage())%></p>	
 		
-		Error connecting to Perception server. Please contact your system administrator.
-		
-	</bbNG:receipt>
-	<%
-			return;
+			<%
+			//return;
 		}
 
 		//Retrieve the Db persistence manager from the persistence service
@@ -129,7 +127,11 @@
 				}
 				catch (Exception pe){
 					System.out.println("Other exception caught: Course " + courseId + ": synchronisation failed: " + pe.getMessage());
-					return;
+					%>
+					<p><%=StringEscapeUtils.escapeHtml(pe.getMessage())%></p>
+					
+					<%
+					//return;
 				}
 			}
 		}
@@ -142,7 +144,7 @@
 			QMWiseException qe = new QMWiseException(e);
 			if(qe.getQMErrorCode() == 1201) {
 				//group doesn't exist -- force sync
-				System.out.println("Perception: course " + courseId + ": Perception group doesn't exist -- forcing synchronization");
+				System.out.println("Perception: course " + courseId + ": Perception group doesn't exist -- forcing synchronisation");
 				UserSynchronizer us = new UserSynchronizer();
 				String force_sync_result;
 				try {
@@ -166,25 +168,14 @@
 					<%
 					//Do not want the page to crash!
 					//return;
-				}
-				catch (Exception ge) {
-					System.out.println("Perception: course " + courseId + ": synchronization failed: " + ge.getMessage());
-					%>
-					<bbUI:receipt type="FAIL"
-						title="Unknown Error : synchronizing course users with Perception">
-						<%=ge.getMessage()%>
-					</bbUI:receipt>
-					<%
-					return;
-				}
+				} 
 			} else {
 				%>
-	<bbNG:receipt type="FAIL"
-		title="Error retrieving course group from Perception">
-		<%=qe.getMessage()%>
-	</bbNG:receipt>
-	<%
-				return;
+					<h1>Error retrieving course group from Perception</h1>
+						<p><%=StringEscapeUtils.escapeHtml(qe.getMessage())%></p>
+					
+				<%
+				//return;
 			}
 		}
 
@@ -204,20 +195,18 @@
 			crsMembership = crsMembershipLoader.loadByCourseAndUserId(courseIdObject, sessionUserId);
 		} catch (KeyNotFoundException e) {
 			// There is no membership record.
-			%>
-	<bbNG:receipt type="FAIL" title="You don't have a role on this course">
-		<%=e.getMessage()%>
-	</bbNG:receipt>
-	<%
-			return;
+			%>			
+			<h1>You don't have a role on this course</h1>
+				<p><%=StringEscapeUtils.escapeHtml(e.getMessage())%></p>
+			<%
+			//return;
 		} catch (PersistenceException pe) {
 			// There is no membership record.
 			%>
-	<bbNG:receipt type="FAIL" title="Error loading the current user">
-		<%=pe.getMessage()%>
-	</bbNG:receipt>
-	<%
-			return;
+			<h1>Error loading the current user</h1>
+				<p><%=pe.getMessage()%></p>			
+			<%
+			//return;
 		}
 
 		if(crsMembership.getRole() == CourseMembership.Role.INSTRUCTOR
@@ -275,32 +264,41 @@
 	<h1 id="Schedules">Schedules</h1>
 	<%
 			ScheduleV42[] schedulesarray = null;
-			try {
+			try {				
 				schedulesarray = qmwise.getStub().getScheduleListByParticipantV42(new Integer(UserSynchronizer.getPhantomUserId()).intValue());
-			} catch(Exception e) {
-				QMWiseException qe = new QMWiseException(e);
-				if(qe.getQMErrorCode() == 1301) {	
-					String assessmentErrorOutput = "Perception: course " + courseId + 
-					": Error getting group schedule list. Cause: Assessment not found, check whether assessment exists in Perception."
-					+ " For more information please check Perception server logs - QMWISe trace log. Message: "
-					+ qe.getMessage();
-					System.out.println(assessmentErrorOutput);					
-				%>
-					<h1>Error getting group schedule list, assessment missing!</h1>
-					<p><%=StringEscapeUtils.escapeHtml(assessmentErrorOutput)%></p>
-				<%
-			
+			} catch (Exception e){			
+				if( e instanceof QMWiseException ){
+					QMWiseException qe = new QMWiseException(e);
+					if(qe.getQMErrorCode() == 1301){
+						String assessmentErrorOutput = "Perception: course " + courseId + 
+						": Error getting group schedule list. Cause: Assessment not found, check whether assessment exists in Perception."
+						+ " For more information please check Perception server logs - QMWISe trace log. Message: "
+						+ qe.getMessage();
+						System.out.println(assessmentErrorOutput);					
+						%>
+							<h1>Error getting group schedule list, assessment missing!</h1>
+							<p><%=StringEscapeUtils.escapeHtml(assessmentErrorOutput)%></p>
+						<%						
+					} else {
+						String qmErrorOutput = "Perception: course " + courseId + ": Error getting group schedule list. Cause: " + qe.getMessage();
+						
+						System.out.println(qmErrorOutput);
+						%>
+							<h1>Error getting group schedule list, QMWISe error!</h1>
+							<p><%=StringEscapeUtils.escapeHtml(qmErrorOutput)%></p>
+						<%
+					}
+				} else {
+					String errorMessage = e.getMessage();
+					System.out.println("Unknown Exception returned: details: " + e.getMessage());
+					%><p>Error getting schedules, unknown exception</p>
+						<p><%=StringEscapeUtils.escapeHtml(errorMessage)%></p>	
+					<%						
+				
 				}
-				else{
-					String qmErrorOutput = "Perception: course " + courseId + 
-					": Error getting group schedule list. Cause: " + qe.getMessage();
-					System.out.println(qmErrorOutput);
-					%>
-					<h1>Error getting group schedule list, QMWISe error!</h1>
-					<p><%=StringEscapeUtils.escapeHtml(qmErrorOutput)%></p>
-					<%
-				}
-				//	return; //remove return - to avoid the page crashing out.
+				// Return disabled to allow for the page to continue loading.
+				//return;
+				
 			}
 
 			Vector<ScheduleV42> schedules = new Vector<ScheduleV42>();
@@ -310,17 +308,17 @@
 					schedules.add(schedulesarray[i]);
 			}
 
-			ScheduleV42[] zeroschedulesarray;
+			ScheduleV42[] zeroschedulesarray = null;
 			try {
 				zeroschedulesarray = qmwise.getStub().getScheduleListByParticipantV42(0);
 			} catch(Exception e) {
 				QMWiseException qe = new QMWiseException(e);
 				%>
-	<bbNG:receipt type="FAIL" title="Error getting zero user schedule list">
-		<%=qe.getMessage()%>
-	</bbNG:receipt>
-	<%
-				return;
+					<h1>Error getting zero user schedule list</h1>
+					<p><%=StringEscapeUtils.escapeHtml(qe.getMessage())%></p>
+	
+				<%
+				//return;
 			}
 
 			for(int i = 0; i < zeroschedulesarray.length; i++)
@@ -340,12 +338,31 @@
 					);
 				} catch(Exception e) {
 					QMWiseException qe = new QMWiseException(e);
-					%>
-	<bbNG:receipt type="FAIL" title="Error getting assessment URL">
-		<%=qe.getMessage()%>
-	</bbNG:receipt>
-	<%
-					return;
+					if(qe.getQMErrorCode() == 1301){
+						String assessmentErrorOutput = "Perception: course " + courseId + 
+						": Error getting group schedule list. Cause: Assessment not found, check whether assessment exists in Perception."
+						+ " For more information please check Perception server logs - QMWISe trace log. Message: "
+						+ qe.getMessage();
+						System.out.println(assessmentErrorOutput);
+						
+						schedules.get(i).setSchedule_Name(schedules.get(i).getSchedule_Name() 
+								+ " - ERROR.");	
+						
+						scheduleurls[i] = "";
+						
+						%>
+							<h1>Error getting assessment URL, assessment missing!</h1>
+							<p><%=StringEscapeUtils.escapeHtml(assessmentErrorOutput)%></p>
+						<%						
+					}
+					else {						
+					
+						%>
+							<h1>Error getting assessment URL</h1>
+							<p><%=StringEscapeUtils.escapeHtml(qe.getMessage())%></p>							
+						<%
+					//return;
+					}
 				}
 
 				Long schedule_start = schedules.get(i).readSchedule_Starts_asCalendar().getTime().getTime();
@@ -362,13 +379,17 @@
 			}
 
 			%>
-	<table border="2" cellpadding="1">
-		<script type="text/javascript">
-				function showhideScheduleURL(box,rowID) {
-					var row = document.getElementById(rowID) 
-					row.style.display = box.checked? "table-row":"none"
-					}
-				</script>
+			
+			
+		<table border="2" cellpadding="1">
+		<bbNG:jsBlock>
+			<script type="text/javascript">
+					function showhideScheduleURL(box,rowID) {
+						var row = document.getElementById(rowID); 
+						row.style.display = box.checked? "table-row":"none";
+						}
+			</script>
+		</bbNG:jsBlock>
 		<tr>
 			<!--<th>Assessment ID</th>-->
 			<th>Schedule name</th>
@@ -388,29 +409,57 @@
 						if(!schedules.get(i).getSchedule_Name().equals(schedule_name)) continue;	
 					}
 					
-		%>
-		<tr>
-			<!--<td><%=schedules.get(i).getAssessment_ID()%></td>-->
-			<td><%=schedules.get(i).getSchedule_Name()%></td>
-			<td><%=schedules.get(i).isRestrict_Attempts() ? schedules.get(i).getMax_Attempts() : "no limit"%></td>
-			<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).readSchedule_Starts_asCalendar().getTime().toString()%></td>
-			<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).readSchedule_Stops_asCalendar().getTime().toString()%></td>
-			<td><%=schedulesactive[i] ? "active" : "inactive"%></td>
-			<td><a href="<%=scheduleurls[i]%>" target="_blank">Test
-			assessment</a></td>
-			<td><input type="checkbox" name="switchBox"
-				onClick="showhideScheduleURL(this,'<%=idStr%>')" /></td>
-			<!--<td><%=schedules.get(i).getGroup_ID()%></td>-->
-		</tr>
-		<tr id='<%=idStr%>' style="display: none;">
-			<td><i>URL:</i></td>
-			<td colspan="6"><code><%=basePath+"links/main.jsp?course_id="+courseId+"&amp;schedule_name="+URLEncoder.encode(schedules.get(i).getSchedule_Name())%></code></td>
-		</tr>
-		<% } %>
+					%>
+					<tr>
+						<!--<td><%=schedules.get(i).getAssessment_ID()%></td>-->
+						
+						<% 
+							if ( schedules.get(i).getSchedule_Name().contains("ERROR") ) { 
+							%>
+								<td bgcolor="yellow"><%=schedules.get(i).getSchedule_Name()%>
+							 		<i> : Missing Assessment in Perception, Schedule Disabled</i></td>
+							<% 
+							} else {
+								%>
+									<td><%=schedules.get(i).getSchedule_Name()%></td>
+								<% 
+							}
+						%>						
+						
+						<td><%=schedules.get(i).isRestrict_Attempts() ? schedules.get(i).getMax_Attempts() : "no limit"%></td>
+						<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).readSchedule_Starts_asCalendar().getTime().toString()%></td>
+						<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).readSchedule_Stops_asCalendar().getTime().toString()%></td>
+						<td><%=schedulesactive[i] ? "active" : "inactive"%></td>
+						
+						<% 
+						
+						if (scheduleurls[i].length() == 0) {						
+							%>
+								<td bgcolor="yellow"><i>Schedule Disabled</i></td>
+							<% 
+							
+						} else {
+							%>							
+								<td><a href="<%=StringEscapeUtils.escapeHtml(scheduleurls[i])%>" target="_blank">Test assessment</a></td>
+							<% 
+						} 
+						
+						%>
+						
+						<td><input type="checkbox" name="switchBox"
+							onClick="showhideScheduleURL(this,'<%=idStr%>')" /></td>
+						<!--<td><%=schedules.get(i).getGroup_ID()%></td>-->
+					</tr>
+					<tr id='<%=idStr%>' style="display: none;">
+						<td><i>URL:</i></td>
+						<td colspan="6"><code><%=basePath+"links/main.jsp?course_id="+courseId+"&amp;schedule_name="+StringEscapeUtils.escapeHtml(schedules.get(i).getSchedule_Name())%></code></td>
+					</tr>
+					<% 
+				} 
+				%>
 	</table>
 	
 	<bbUI:spacer height="20" />
-
 	<%
 			//-----------------------------------------------------------------------
 			// Schedule-authoring form
@@ -423,34 +472,31 @@
 			Calendar enddate = Calendar.getInstance();
 			enddate.add(Calendar.DAY_OF_MONTH, 7);
 
-			String adminid;
+			String adminid = null;
 			try {
 				adminid = qmwise.getStub().getAdministratorByName(sessionUser.getUserName()).getAdministrator_ID();
 			} catch(Exception e) {
 				QMWiseException qe = new QMWiseException(e);
 				%>
-	<bbNG:receipt type="FAIL"
-		title="Error getting Perception administrator ID">
-		<%=qe.getMessage()%>
-	</bbNG:receipt>
-	<%
-				return;
+					<h1>Error getting Perception administrator ID</h1>
+						<p><%=StringEscapeUtils.escapeHtml(qe.getMessage())%></p>
+					
+				<%
+				//return;
 			}
 
-			Assessment[] assessments;
+			Assessment[] assessments = null;
 			try {
 				assessments = qmwise.getStub().getAssessmentListByAdministrator(adminid);
 			
 			} catch(Exception e) {
 				QMWiseException qe = new QMWiseException(e);
 				%>
-	<bbNG:receipt type="FAIL"
-		title="Error getting list of available assessments">
-		Error getting list of available assessments
-	</bbNG:receipt>
-	
-	<%
-				return;
+					<h1>Error getting list of available assessments</h1>
+						<p><%=StringEscapeUtils.escapeHtml(qe.getMessage())%></p>
+						
+				<%
+				//return;
 			}
 
 			//sort assessments by Session_Name
@@ -460,31 +506,33 @@
 	<p>There are no assessments defined in Perception so you cannot
 	schedule an assessment.</p>
 	<% } else { %>
-	<script type="text/javascript">
-					function disable_set_access() {
-						if(document.getElementById('set_access_period')) {
-							var disabled = !document.getElementById('set_access_period').checked;
-							document.getElementById('dp_start_0_start_date').disabled = disabled;
-							document.getElementById('start_hour').disabled = disabled;
-							document.getElementById('start_minute').disabled = disabled;
-							document.getElementById('dp_end_1_start_date').disabled = disabled;
-							document.getElementById('end_hour').disabled = disabled;
-							document.getElementById('end_minute').disabled = disabled;
+	<bbNG:jsBlock>
+		<script type="text/javascript">
+						function disable_set_access() {
+							if(document.getElementById('set_access_period')) {
+								var disabled = !document.getElementById('set_access_period').checked;
+								document.getElementById('dp_start_0_start_date').disabled = disabled;
+								document.getElementById('start_hour').disabled = disabled;
+								document.getElementById('start_minute').disabled = disabled;
+								document.getElementById('dp_end_1_start_date').disabled = disabled;
+								document.getElementById('end_hour').disabled = disabled;
+								document.getElementById('end_minute').disabled = disabled;
+							}
 						}
-					}
-					function disable_limit_attempts() {
-						if(document.getElementById('limit_attempts')) {
-							var checked = document.getElementById('limit_attempts').checked;
-							document.getElementById('limit').disabled = !checked;
-							document.getElementById('per_participant').checked = checked;
-							document.getElementById('per_participant').disabled = checked;
-							set_limit_attempts_hidden();
+						function disable_limit_attempts() {
+							if(document.getElementById('limit_attempts')) {
+								var checked = document.getElementById('limit_attempts').checked;
+								document.getElementById('limit').disabled = !checked;
+								document.getElementById('per_participant').checked = checked;
+								document.getElementById('per_participant').disabled = checked;
+								set_limit_attempts_hidden();
+							}
 						}
-					}
-					function set_limit_attempts_hidden() {
-						document.getElementById('per_participant_hidden').value = document.getElementById('per_participant').checked ? "1" : "0";
-					}
-				</script>
+						function set_limit_attempts_hidden() {
+							document.getElementById('per_participant_hidden').value = document.getElementById('per_participant').checked ? "1" : "0";
+						}
+		</script>
+	</bbNG:jsBlock>
 
 	<form name="schedule_assessment"
 		action='<%=path+"/links/scheduleassessment.jsp"%>' method="post">
@@ -564,32 +612,32 @@
 			//-----------------------------------------------------------------------
 
 			//get Perception user id
-			int perceptionuserid;
+			int perceptionuserid = 0;
 			try {
 				perceptionuserid = new Integer(qmwise.getStub().getParticipantByName(sessionUser.getUserName()).getParticipant_ID()).intValue();
-			} catch(Exception e) {
+			}catch(Exception e) {
 				QMWiseException qe = new QMWiseException(e);
 				%>
-	<bbNG:receipt type="FAIL"
-		title="Error retrieving participant from Perception">
-		<%=qe.getMessage()%>
-	</bbNG:receipt>
-	<%
-				return;
+					<h1>Error retrieving participant from Perception</h1>
+						<p><%=StringEscapeUtils.escapeHtml(qe.getMessage())%></p>
+					
+	
+				<%
+				//return;
 			}
 
-			ScheduleV42[] schedulesarray;
+			ScheduleV42[] schedulesarray = null;
 			try {
 				schedulesarray = qmwise.getStub().getScheduleListByParticipantV42(perceptionuserid);
-			} catch(Exception e) {
+			}  catch(Exception e) {
 				QMWiseException qe = new QMWiseException(e);
 				%>
-	<bbNG:receipt type="FAIL"
-		title="Error getting participant schedule list">
-		<%=qe.getMessage()%>
-	</bbNG:receipt>
-	<%
-				return;
+					<h1>Error getting participant schedule list</h1>
+						<p><%=StringEscapeUtils.escapeHtml(qe.getMessage())%></p>
+					
+	
+				<%
+				//return;
 			}
 
 			Vector<ScheduleV42> schedules = new Vector<ScheduleV42>();
@@ -599,17 +647,18 @@
 					schedules.add(schedulesarray[i]);
 			}
 
-			ScheduleV42[] zeroschedulesarray;
+			ScheduleV42[] zeroschedulesarray = null;
 			try {
 				zeroschedulesarray = qmwise.getStub().getScheduleListByParticipantV42(0);
 			} catch(Exception e) {
 				QMWiseException qe = new QMWiseException(e);
 				%>
-	<bbNG:receipt type="FAIL" title="Error getting zero user schedule list">
-		<%=qe.getMessage()%>
-	</bbNG:receipt>
-	<%
-				return;
+					<h1>Error getting zero user schedule list</h1>
+						<p><%=StringEscapeUtils.escapeHtml(qe.getMessage())%></p>
+					
+	
+				<%
+				//return;
 			}
 
 			for(int i = 0; i < zeroschedulesarray.length; i++) {
@@ -668,14 +717,15 @@
 							//exception is saying "no attempts left"
 							scheduleurls[i] = null;
 						}
-					} catch(Exception e) {
+					}  catch(Exception e) {
 						QMWiseException qe = new QMWiseException(e);
 						%>
-	<bbNG:receipt type="FAIL" title="Error getting assessment URL">
-		<%=qe.getMessage()%>
-	</bbNG:receipt>
-	<%
-						return;
+							<h1>Error getting assessment URL</h1>
+								<p><%=StringEscapeUtils.escapeHtml(qe.getMessage())%></p>
+							
+			
+						<%
+						//return;
 					}
 				}
 			}
