@@ -73,17 +73,6 @@
 		<bbUI:breadcrumb>QUESTIONMARK PERCEPTION SCHEDULE CREATED</bbUI:breadcrumb>
 	
 	</bbUI:breadcrumbBar>	
-	
-	<!--put in variables to display right here, DEBUGGING CODE
-	<p>
-	<%
-			
-			out.println("Parent id, which is the content id of the maincreate page: " + parent_id);
-			out.println("Course id: " + course_id);
-			out.println("Persisted QM Schedule name from form: " + schedule_name);
-	%>
-	</p>
-	-->
 
 
 		<bbUI:docTemplate>

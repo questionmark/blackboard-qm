@@ -94,6 +94,16 @@
 		int perceptiongroupid = 0;
 		try {
 			perceptiongroupid = new Integer(qmwise.getStub().getGroupByName(course.getBatchUid()).getGroup_ID()).intValue();
+		} catch(NullPointerException npe){
+			System.out.println("Perception: course " + courseId + ": synchronization failed: " + npe.getMessage());
+			%>
+			<h1>Error retrieving course group from Perception, please ensure Connector is successfully 
+			connected to Perception</h1>
+				<p><%=StringEscapeUtils.escapeHtml(npe.getMessage())%></p>					
+
+			<%
+			return;
+		
 		} catch(Exception e) {
 			QMWiseException qe = new QMWiseException(e);
 			if(qe.getQMErrorCode() == 1201) {

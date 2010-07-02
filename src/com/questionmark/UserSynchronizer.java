@@ -1,18 +1,20 @@
 package com.questionmark;
 
-import com.questionmark.QMWISe.*;
-import com.questionmark.*;
+import java.util.ArrayList;
+import java.util.ListIterator;
+import java.util.Vector;
 
-import blackboard.platform.*;
-import blackboard.base.*;
-import blackboard.platform.session.*;
-import blackboard.data.user.*;
-import blackboard.persist.*;
-import blackboard.persist.user.*;
-import blackboard.data.course.*;
-import blackboard.persist.course.*;
+import blackboard.data.course.Course;
+import blackboard.data.course.CourseMembership;
+import blackboard.persist.BbPersistenceManager;
+import blackboard.persist.Id;
+import blackboard.persist.course.CourseDbLoader;
+import blackboard.persist.course.CourseMembershipDbLoader;
+import blackboard.platform.persistence.PersistenceServiceFactory;
 
-import java.util.*;
+import com.questionmark.QMWISe.Administrator;
+import com.questionmark.QMWISe.Participant;
+import com.questionmark.QMWISe.ScheduleV42;
 
 public class UserSynchronizer {
 	public UserSynchronizer() {
@@ -65,7 +67,9 @@ public class UserSynchronizer {
 		}
 	}
 
+
 	public String synchronizeCourse(String courseId) throws Exception {
+
 		QMWise qmwise;
 		int added = 0;
 		int removed = 0;
@@ -76,7 +80,8 @@ public class UserSynchronizer {
 		}
 
 		//Retrieve the Db persistence manager from the persistence service
-		BbPersistenceManager bbPm = BbServiceManager.getPersistenceService().getDbPersistenceManager();
+		
+		BbPersistenceManager bbPm = PersistenceServiceFactory.getInstance().getDbPersistenceManager();
 
 		// Generate a persistence framework course Id to be used for loading the 
 		// course
@@ -88,7 +93,7 @@ public class UserSynchronizer {
 
 		// retrieve the CourseMembership data for this course
 		CourseMembershipDbLoader crsMembershipLoader = (CourseMembershipDbLoader) bbPm.getLoader(CourseMembershipDbLoader.TYPE);
-		BbList allMembershipsList = crsMembershipLoader.loadByCourseId(sessionCourseId, null, true);
+		ArrayList allMembershipsList = crsMembershipLoader.loadByCourseId(sessionCourseId, null, true);
 		ListIterator iterator = allMembershipsList.listIterator();
 
 		//sort course members into admins and participants
@@ -172,10 +177,22 @@ public class UserSynchronizer {
 					if(qe.getQMErrorCode() == 1101) {
 						//user doesn't exist
 						try {
-							Participant newuser = new Participant();
-							newuser.setFirst_Name(currentmembership.getUser().getGivenName());
-							newuser.setLast_Name(currentmembership.getUser().getFamilyName()); //last name with comma would fail
-							//this is now an expected exception, should add a fix for it here...
+							Participant newuser = new Participant();							
+
+							//Clean out special characters by replacing them with acceptable ones (By Perception)
+							
+							String userFirstName = replaceSpecChars(currentmembership.getUser().getGivenName());
+							String userLastName = replaceSpecChars(currentmembership.getUser().getFamilyName());	
+							
+							//test:
+							System.out.println(userFirstName);	
+							System.out.println(userLastName);
+							
+							
+							newuser.setFirst_Name(userFirstName);
+							newuser.setLast_Name(userLastName); 							
+
+							
 							newuser.setParticipant_Name(currentmembership.getUser().getUserName());
 							newuser.setPassword(currentmembership.getUser().getPassword().substring(0, 20));
 							id = qmwise.getStub().createParticipant(newuser);
@@ -183,6 +200,8 @@ public class UserSynchronizer {
 							//the group
 						} catch(Exception ne) {
 							QMWiseException nqe = new QMWiseException(e);
+							
+							if(nqe.getQMErrorCode()==4002) System.out.println("Illegal character not handled");
 							//throw new Exception("Error creating Perception user. " + nqe.getMessage());
 							//reaches here..throws it back.
 							throw nqe;
@@ -403,5 +422,27 @@ public class UserSynchronizer {
 		}
 
 		return "Success: " + added + " user" + (added == 1 ? "" : "s") + " added and " + removed + " user" + (removed == 1 ? "" : "s") + " removed from Perception group";
+	}
+
+	//Static routine to help handle invalid special characters in the Blackboard user details, which would break Perception
+	private static String replaceSpecChars (String replaceString){
+		
+		/*Search replace routine..remove special characters
+		 * In summary:
+		 * 		' " \ / all become space
+		 * 		, | : all become ;
+		 * 		£ goes to #
+		 *		<> go to []
+		 * 		& goes to -
+		*/	
+		
+		replaceString = replaceString.replaceAll("(:|,|\\|)", ";");
+		replaceString = replaceString.replaceAll("('|\"|\\\\|/)", " ");
+		replaceString = replaceString.replaceAll("\u00A3", "#");
+		replaceString = replaceString.replaceAll("<>", "[]");
+		replaceString = replaceString.replaceAll("&", "-");
+		
+		return replaceString;
+		
 	}
 }

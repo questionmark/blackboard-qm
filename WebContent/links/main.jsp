@@ -91,7 +91,7 @@
 		PropertiesBean pb = new PropertiesBean();
 
 		//-----------------------------------------------------------------------
-		//synchronization
+		// Participant synchronization
 		//-----------------------------------------------------------------------
 
 		//read in synchronization period
@@ -110,7 +110,13 @@
 					result = us.synchronizeCourse(courseId);
 					configReader.setCourseSyncDate();
 					out.print(result);
-				} catch (QMWiseException nqe ) {					
+				} catch (QMWiseException nqe ) {
+					if(nqe.getQMErrorCode() == 4002) System.out.println("Illegal character still");
+					
+					%>
+					<p>Illegal Character exception</p>
+					<%
+					
 					System.out.println("Qmwise exception caught: course " + courseId + ": synchronization failed: " + nqe.getMessage());
 					String output = "Qmwise exception caught: course " + courseId + ": synchronization failed: " + nqe.getMessage();
 					
@@ -136,11 +142,30 @@
 			}
 		}
 		
+		//-----------------------------------------------------------------------
+		// Group synchronization
+		//-----------------------------------------------------------------------
+		
 		//get Perception group id
 		int perceptiongroupid = 0;
 		try {
+			
 			perceptiongroupid = new Integer(qmwise.getStub().getGroupByName(course.getBatchUid()).getGroup_ID()).intValue();
-		} catch(Exception e) {
+			
+		} catch(NullPointerException npe){
+			
+			System.out.println("Perception: course " + courseId + ": synchronization failed: " + npe.getMessage());
+			%>
+			<h1>Error retrieving course group from Perception, please ensure Connector is successfully 
+			connected to Perception</h1>
+				<p><%=StringEscapeUtils.escapeHtml(npe.getMessage())%></p>					
+
+			<%
+			return;
+			
+		
+		}  catch(Exception e) {
+			
 			QMWiseException qe = new QMWiseException(e);
 			if(qe.getQMErrorCode() == 1201) {
 				//group doesn't exist -- force sync
@@ -154,7 +179,8 @@
 					//get fresh group
 					perceptiongroupid = new Integer(qmwise.getStub().getGroupByName(course.getBatchUid()).getGroup_ID()).intValue();
 					
-				} catch (QMWiseException nqe ) {					
+				} catch (QMWiseException nqe ) {		
+					
 					System.out.println("Qmwise exception caught: course " + courseId + ": synchronization failed: " + nqe.getMessage());
 					String output = "Qmwise exception caught: course " + courseId + ": synchronization failed: " + nqe.getMessage();
 					
@@ -178,7 +204,12 @@
 				//return;
 			}
 		}
-
+		
+		//----------------------End of sync block-----------------------------------------------
+		
+				
+		
+		
 		//-----------------------------------------------------------------------
 		//view specific to current user
 		//-----------------------------------------------------------------------
