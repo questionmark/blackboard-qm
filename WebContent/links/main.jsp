@@ -377,7 +377,7 @@
 						System.out.println(assessmentErrorOutput);
 						
 						schedules.get(i).setSchedule_Name(schedules.get(i).getSchedule_Name() 
-								+ " - ERROR.");	
+								+ " - ERROR");	
 						
 						scheduleurls[i] = "";
 						

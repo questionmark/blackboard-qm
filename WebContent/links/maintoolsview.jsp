@@ -286,7 +286,7 @@
 						System.out.println(assessmentErrorOutput);
 						
 						schedules.get(i).setSchedule_Name(schedules.get(i).getSchedule_Name() 
-								+ " - ERROR.");	
+								+ " - ERROR");	
 						
 						scheduleurls[i] = "";
 						
@@ -504,12 +504,27 @@
 									new Parameter("bb_courseid", course.getBatchUid())
 								};
 								try {
+									
+									//Try to trigger a missing assessment exception using the following
+									String assessmentTest = qmwise.getStub().getAccessAssessment(
+											schedules.get(i).getAssessment_ID(),
+											sessionUser.getUserName(),
+											"", //participant details
+											"" //group name
+											);
+									
+									//If the above fails the exception code will treat it as a qmwise assessment error
+									// and disable the schedule for the participant..
+									
+									//If not then the participant gets a 'valid' perception assessment url as normal!
+									
 									scheduleurls[i] = qmwise.getStub().getAccessScheduleNotify(
 										new Integer(schedules.get(i).getSchedule_ID()).toString(),
 										sessionUser.getUserName(),
 										request.getScheme() + "://" + request.getServerName() 
 											+ request.getContextPath() + "/links/callback.jsp",	
 												"blackboard.pip", parameters);
+									
 								} catch(Exception ne) {
 									//this method hasn't been programmed well 
 									//and doesn't have unique error codes for 
@@ -531,21 +546,20 @@
 									else {
 										schedules.get(i).setSchedule_Name(schedules.get(i).getSchedule_Name() + " QMWISE ERROR ");
 										scheduleurls[i] = "ERROR";
-									}								
+									}		
 									
-									%>
-									<h1>Error getting assessment URL</h1>
-										<p><%=StringEscapeUtils.escapeHtml(qe.getMessage())%></p>
-									<%									
+									schedulesactive[i] = false;
+		
+									// No notification needed to give student. No error message displayed.
 									
 								}
 							} catch(Exception e) {								
 								scheduleurls[i] = "ERROR";
-								%>
-								<h1>Error getting assessment URL</h1>
-									<p><%=StringEscapeUtils.escapeHtml(e.getMessage())%></p>
-								<%
-								//return;
+								schedulesactive[i] = false;
+								
+								// No notification needed to give student. No error message displayed.
+								
+								
 								}
 							
 						}
@@ -571,23 +585,7 @@
 					<tr>
 						<!--<td><%=schedules.get(i).getAssessment_ID()%></td>-->						
 						
-						<% 
-							if (schedules.get(i).getSchedule_Name().contains("QMWISE_ASSESSMENT_ERROR")) { 
-							%>
-								<td bgcolor="yellow"><%=schedules.get(i).getSchedule_Name()%>
-							 		<i> : Missing Assessment in Perception, Schedule Disabled</i></td>
-							<% 
-							} else if(schedules.get(i).getSchedule_Name().contains("ERROR")){
-								%>
-									<td bgcolor="yellow"><%=schedules.get(i).getSchedule_Name()%>
-							 			<i> : Perception Error, Schedule Disabled</i></td>
-								<% 
-							} else {
-								%>
-									<td><%=schedules.get(i).getSchedule_Name()%></td>
-								<% 
-							}
-						%>	
+						<td><%=schedules.get(i).getSchedule_Name()%></td>								
 												
 						<td><%=schedules.get(i).isRestrict_Attempts() ? schedules.get(i).getMax_Attempts() 
 							: "no limit"%></td>
@@ -595,27 +593,18 @@
 							: schedules.get(i).readSchedule_Starts_asCalendar().getTime().toString()%></td>
 						<td><%=!schedules.get(i).isRestrict_Times() ? "None" 
 							: schedules.get(i).readSchedule_Stops_asCalendar().getTime().toString()%></td>
-						<td bgcolor>
+						<td>
 			
 			<% 			if(schedulesactive[i]) { 
 			%> 	
-			<% 				if(scheduleurls[i].contains("QMWISE_ASSESSMENT_ERROR")) { 
-			%> 					Assessment Error: Scheduled Disabled 
-			<% 				} else if (scheduleurls[i].contains("ERROR")) {
-			%> 					Error: Scheduled Disabled 
-			<% 				} else { 
-			%>		
-								<form><input type="button" value="Take assessment"
-									onclick="window.open('<%=scheduleurls[i]%>');">
-								</form>
-			<%	 			}
+			
+							<form><input type="button" value="Take assessment"
+								onclick="window.open('<%=scheduleurls[i]%>');">
+							</form>
+							
+			<%	 		}
 			%> 
-			<% 			} 
-						else
-						{ ////technically shouldn't arrive at this line but hey.
-			%>				 inactive 
-			<% 			} 
-			%>
+				
 						</td>
 						<!--<td><%=schedules.get(i).getGroup_ID()%></td>-->
 					</tr>

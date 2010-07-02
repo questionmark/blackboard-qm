@@ -46,7 +46,7 @@
 	String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+path+"/";
 	//the parent id of content object created will be this content id from this context!
 	String parent_id = request.getParameter("content_id");	
-	String courseId = request.getParameter("course_id");
+	String course_id = request.getParameter("course_id");
 %>
 
 
@@ -64,9 +64,9 @@
 	<%
 	//create a ConfigFileReader, to check whether this course needs 
 	//to sync its members and to show date last synchronized
-	ConfigFileReader configReader = new ConfigFileReader(courseId);
+	ConfigFileReader configReader = new ConfigFileReader(course_id);
 	//load the courseSettings file too...
-	CourseSettings courseSettings = new CourseSettings(courseId);
+	CourseSettings courseSettings = new CourseSettings(course_id);
 	
 	//connect to QMWise
 	QMWise qmwise = null;
@@ -88,7 +88,7 @@
 
 	// Generate a persistence framework course Id to be used for 
 	// loading the course
-	Id courseIdObject = bbPm.generateId(Course.DATA_TYPE, courseId);
+	Id courseIdObject = bbPm.generateId(Course.DATA_TYPE, course_id);
 
 	CourseDbLoader courseLoader = (CourseDbLoader) bbPm.getLoader(CourseDbLoader.TYPE);
 	Course course = courseLoader.loadById(courseIdObject);
@@ -108,7 +108,7 @@
 		
 	} catch(NullPointerException npe){
 		
-		System.out.println("Perception: course " + courseId + ": synchronization failed: " + npe.getMessage());
+		System.out.println("Perception: course " + course_id + ": synchronization failed: " + npe.getMessage());
 		%>
 		<h1>Error retrieving course group from Perception, please ensure Connector is successfully 
 		connected to Perception</h1>
@@ -123,11 +123,11 @@
 		QMWiseException qe = new QMWiseException(e);
 		if(qe.getQMErrorCode() == 1201) {
 			//group doesn't exist -- force sync
-			System.out.println("Perception: course " + courseId + ": Perception group doesn't exist -- forcing synchronisation");
+			System.out.println("Perception: course " + course_id + ": Perception group doesn't exist -- forcing synchronisation");
 			UserSynchronizer us = new UserSynchronizer();
 			String force_sync_result;
 			try {
-				force_sync_result = us.synchronizeCourse(courseId);
+				force_sync_result = us.synchronizeCourse(course_id);
 				configReader.setCourseSyncDate();
 				out.print(force_sync_result);
 				//get fresh group
@@ -135,8 +135,8 @@
 				
 			} catch (QMWiseException nqe ) {		
 				
-				System.out.println("Qmwise exception caught: course " + courseId + ": synchronization failed: " + nqe.getMessage());
-				String output = "Qmwise exception caught: course " + courseId + ": synchronization failed: " + nqe.getMessage();
+				System.out.println("Qmwise exception caught: course " + course_id + ": synchronization failed: " + nqe.getMessage());
+				String output = "Qmwise exception caught: course " + course_id + ": synchronization failed: " + nqe.getMessage();
 				
 				%>					
 				<h1>Group Synchronisation failed!</h1>					
@@ -355,7 +355,7 @@
 							</bbUI:dataElement>
 						</bbUI:dataElement>
 						<input type="hidden" name="group" value="<%=course.getBatchUid()%>" />
-						<input type="hidden" name="course_id" value="<%=courseId%>" />
+						<input type="hidden" name="course_id" value="<%=course_id%>" />
 					</bbUI:step> <bbUI:stepSubmit title="Submit" number="2" /></form>
 	<% }
 
