@@ -1,3 +1,11 @@
+Version 9.0.15
+--------------
+
+[#299] Fixed timezone problems in schedule creation
+[#298] Fixed exception handling to prevent connector blank pages
+[#300] Added workaround for special characters in student names
+
+
 Version 9.0.11
 --------------
 
