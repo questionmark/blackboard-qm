@@ -237,12 +237,6 @@
 			
 	<bbNG:actionControlBar showWhenEmpty="true">	
 
-		<bbNG:actionButton  url='<%=path+"/links/forcesync.jsp?course_id="+courseId%>' title="Synchronize
-		users now"/>		
-
-		<bbNG:actionButton url='<%=path+"/links/viewresults.jsp?course_id="+courseId%>' title="View
-		results"/>		
-
 	<%
 		if(pb.getProperty("perception.singlesignon") != null) {
 	%>
@@ -254,32 +248,8 @@
 	
 	</bbNG:actionControlBar>
 
-	<h1 id="Syncdetails">Synchronisation details</h1>
-	<p>Users of this course were last synchronised <%=new Date(configReader.getCourseSyncDate()).toString()%></p>
-	<bbUI:spacer height="20" />
 
-	<h1 id="CourseSettings">Course Settings</h1>
-	<form name="course_settings"
-		action='<%=path+"/links/coursesettings.jsp"%>' method="post"><bbUI:step
-		title="Enter Information" number="1">
-		<bbUI:dataElement label="Hide schedules from students in Course Tool view?">
-			<% if (courseSettings.getProperty("hide_schedules","0").equals("1")) { %>
-			<input type="checkbox" id="hide_schedules" name="hide_schedules"
-				value="true" checked="checked" />
-			<% } 
-						else {
-						%>
-			<input type="checkbox" id="hide_schedules" name="hide_schedules"
-				value="false" />
-			<% } %>
-			<p><i>Use this option if you are creating schedules using content items to prevent students from seeing the schedule list in the Course Tool 
-			view of the connector. <br/>
-			Hidden schedules can still be accessed individually using the schedule's URL below.</i></p>
-		</bbUI:dataElement>
-		<input type="hidden" name="course_id" value="<%=courseId%>" />
-	</bbUI:step> <bbUI:stepSubmit title="Submit" number="2" /></form>
-
-	<h1 id="Schedules">Schedules</h1>
+	<h1 id="Schedule">Schedule</h1>
 	<%
 			ScheduleV42[] schedulesarray = null;
 			try {				
@@ -301,23 +271,19 @@
 						String qmErrorOutput = "Perception: course " + courseId + ": Error getting group schedule list. Cause: " + qe.getMessage();
 						
 						System.out.println(qmErrorOutput);
-						%>
-							<h1>Error getting group schedule list, QMWISe error!</h1>
-							<p><%=StringEscapeUtils.escapeHtml(qmErrorOutput)%></p>
-						<%
+						//Suppressing synch related html on this page. Synch errors should show up on the course tools view.
+						
 					}
 				} else {
 					String errorMessage = e.getMessage();
 					System.out.println("Unknown Exception returned: details: " + e.getMessage());
-					%><p>Error getting schedules, unknown exception</p>
-						<p><%=StringEscapeUtils.escapeHtml(errorMessage)%></p>	
-					<%						
+					//Suppressing synch related html on this page. Synch errors should show up on the course tools view.					
 				
 				}
 				// Return disabled to allow for the page to continue loading.
 				//return;
 				
-			}
+			} //End of catch block
 
 			Vector<ScheduleV42> schedules = new Vector<ScheduleV42>();
 
@@ -367,22 +333,17 @@
 								+ " - ERROR.");	
 						
 						scheduleurls[i] = "";
-						
-						%>
-							<h1>Error getting assessment URL, assessment missing!</h1>
-							<p><%=StringEscapeUtils.escapeHtml(assessmentErrorOutput)%></p>
-						<%						
+						//Suppress html being printed as part of exception, not needed as the schedule will be highlighted if
+						//there is an error.					
 					}
 					else {						
 					
-						%>
-							<h1>Error getting assessment URL</h1>
-							<p><%=StringEscapeUtils.escapeHtml(qe.getMessage())%></p>							
-						<%
-					//return;
+						//Suppress html being printed as part of exception, not needed as the schedule will be highlighted if
+						//there is an error.					
 					}
 				}
 
+				int schedule_id = schedules.get(i).getSchedule_ID(); //Can get schedule id to enable deletion	
 				Long schedule_start = schedules.get(i).readSchedule_Starts_asCalendar().getTime().getTime();
 				Long schedule_stop = schedules.get(i).readSchedule_Stops_asCalendar().getTime().getTime();
 				Long now = new Date().getTime();
@@ -396,8 +357,7 @@
 				}
 			}
 
-			%>
-			
+			%>			
 			
 		<table border="2" cellpadding="1">
 		<bbNG:jsBlock>

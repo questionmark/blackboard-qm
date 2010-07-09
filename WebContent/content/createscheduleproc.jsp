@@ -24,10 +24,18 @@
 	String basePath = request.getScheme() + "://"
 			+ request.getServerName() + ":" + request.getServerPort()
 			+ path + "/";
-	//Authenticate for use.	
-	if (!PlugInUtil.authorizeForCourseControlPanel(request, response)) {
-		return;
-	}
+			
+			
+			//Authenticate for use.	
+			if (!PlugInUtil.authorizeForCourseControlPanel(request, response)) {
+				//If user is not authorised to see this page then return blank page
+				
+				%>	<h1>You are not authorised to view this page</h1>			
+				<%
+				
+				//Stop the script
+				return;
+			}
 
 	String course_id = request.getParameter("course_id");
 	String parent_id = request.getParameter("parent_id"); //  id of the parent folder
