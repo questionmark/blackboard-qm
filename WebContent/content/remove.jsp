@@ -297,56 +297,21 @@
 				
 			} //end of catch block.
 		
-			Vector<ScheduleV42> schedules = new Vector<ScheduleV42>();
 			
+			
+			//Pass through the array returned by getting all schedules for bb-phantom, find the one 
+			//that shares the name with this content item, and delete it from Perception.
+			//This should stop a Race condition from developing, i.e. Synchronising will cease while the 
+			//deletion takes place.
 			
 			for(int i = 0; i < schedulesarray.length; i++) {
-				if(schedulesarray[i].getGroup_ID() == perceptiongroupid)
-					schedules.add(schedulesarray[i]);
-			}
-
-			ScheduleV42[] zeroschedulesarray = null;
-			try {
-				zeroschedulesarray = qmwise.getStub().getScheduleListByParticipantV42(0);
-			} catch(Exception e) {
-				QMWiseException qe = new QMWiseException(e);
-				%>
-					<h1>Error getting zero user schedule list</h1>
-					<p><%=StringEscapeUtils.escapeHtml(qe.getMessage())%></p>
-	
-				<%
-				//return;
-			}
-
-			for(int i = 0; i < zeroschedulesarray.length; i++)
-				if(zeroschedulesarray[i].getGroup_ID() == perceptiongroupid)
-					schedules.add(zeroschedulesarray[i]);		
-
-			/**Empty array check, if the schedules list coming back is empty, 
-				Error, no schedule found in Perception with the name, print schedule name,
-				Deleting content item, please confirm whether this schedule exists on perception.
-			*/
-			
-			
-			if(schedules.size() > 0){			
-				for(int i = 0; i < schedules.size(); i++) {
-					if(schedules.get(i) == null) continue;
-					if(schedule_name!=null && schedule_name.length()>0 && 
-							!schedule_name.equals(schedules.get(i).getSchedule_Name())) continue;			
-					
-					//Need to get the schedule id to enable deletion via QMWISe.				
-					int schedule_id = schedules.get(i).getSchedule_ID(); 
-				
-					//Got the group name as well.
-					String this_schedule_group_name = schedules.get(i).getGroup_Name();
-					
-					System.out.println("Schedule id of the course doc schedule is: " + schedule_id);
-					
-					//QMWISe delete routine: DeleteScheduleV42 applied to the above found schedule.
-					//For every schedule you find with the same name as the group name, delete using deleteScheduleV42.
-					try {
-						qmwise.getStub().deleteScheduleV42(schedule_id);	
-					} catch (Exception e) {
+				//Delete the schedule for bb-phantom but only for this group!
+				if((schedulesarray[i].getGroup_ID() == perceptiongroupid) && 
+						(schedulesarray[i].getSchedule_Name() == schedule_name)){
+					//Delete that one straightaway, most likely to be the schedule for bb-phantom user
+					try{
+						qmwise.getStub().deleteScheduleV42(schedulesarray[i].getSchedule_ID());
+					}  catch (Exception e) {
 						QMWiseException qe = new QMWiseException(e);
 						System.out.println("Error deleting schedules: " + qe.getMessage());
 						%>
@@ -356,13 +321,102 @@
 						<%
 						return;
 					}
-					
-					
-				}
+				}					
 			}
+			//That just lifted one schedule out of the array of schedules.
+			
+			
+			ScheduleV42[] groupScheduleArray = null;
+			
+			try {
+				//Get schedule list by group from QMWISe
+				groupScheduleArray = qmwise.getStub().getScheduleListByGroupV42(perceptiongroupid);
+				
+			} catch(Exception e) {
+				QMWiseException qe = new QMWiseException(e);
+				System.out.println("Error getting list of schedules for this group: " + qe.getMessage());
+				%>
+					<h1>Error getting list of schedules for this group</h1>
+					<p><%=StringEscapeUtils.escapeHtml(qe.getMessage())%></p>
+	
+				<%
+				//return;
+			}
+			
+			
+			//Now loop through the group schedule list and identify schedules with the same name as the content item, 
+			//Add them to delete_schedules array, then pass it to QMWISE method deleteScheduleList as that array for deletion!
+			//Robust: If deletion fails don't kill the script, log short messages on Blackboard logs for
+			//BB admins with course name /group name and a simple message to fix the issue in Perception
+			
+
+			
+			Vector<String> deleteScheduleIdArray = new Vector<String>();
+			
+			String deleteScheduleID = null;		
+			
+			
+			for(int i = 0; i < groupScheduleArray.length; i++){
+
+				//Test 
+				//System.out.println("\nCurrent I'th Schedule name: " + groupScheduleArray[i].getSchedule_Name() + "\n");
+				
+				//If we dont' have a valid schedule name then the delete schedule list will be empty, which will be handled
+				//further down this script.
+				if(!schedule_name.equals(groupScheduleArray[i].getSchedule_Name())) continue;
+				
+				if(groupScheduleArray[i] == null) continue;
+					
+				//Set id of schedule to string array to pass onto qmwise later.	
+				deleteScheduleID = Integer.toString(groupScheduleArray[i].getSchedule_ID());
+				deleteScheduleIdArray.add(deleteScheduleID);
+				
+			}
+			
+			//We get a schedule array back as response, so initialise one..
+			Schedule[] responseScheduleIdArray = null;
+
+
+			/**Empty array check, if the schedules list coming back is empty, 
+			//	Error, no schedule found in Perception with the name, print schedule name,
+				Deleting content item, please confirm whether this schedule exists on perception.
+			*/
+			
+			//Null check.
+			if(!deleteScheduleIdArray.isEmpty()){
+				
+					try {
+						//QMWISe deleteScheduleList, returns an array of schedules which have been deleted
+						String[] newArray = new String[deleteScheduleIdArray.size()];						
+						responseScheduleIdArray = qmwise.getStub().deleteScheduleList(deleteScheduleIdArray.toArray(newArray));
+						
+						//For the logs
+						
+						System.out.println("Found schedules in Questionmark Perception matching content item name, deleting...");
+						
+						if((responseScheduleIdArray != null) && (responseScheduleIdArray.length > 0)){
+							for(int i = 0; i < responseScheduleIdArray.length; i++){
+								System.out.println("Schedule deleted, Name: " + responseScheduleIdArray[i].getSchedule_Name()
+										+ " ID: " + responseScheduleIdArray[i].getSchedule_ID());
+							}
+						}
+						
+					} catch (Exception e) {
+							QMWiseException qe = new QMWiseException(e);
+							System.out.println("Error deleting schedules: " + qe.getMessage() + 
+									"\nPlease log into Enterprise Manager to ensure schedules are properly deleted");
+							%>
+								<bbNG:receipt type="FAIL" title="Error deleting schedule">
+									<%=StringEscapeUtils.escapeHtml(qe.getMessage())%>
+								</bbNG:receipt>
+							<%
+							return;
+					}
+			}
+			
 			else {
-				System.out.println("Error, no schedules found in this Course content item, Could not find schedule named: " 
-						+ schedule_name + " on Perception database. Please check your Perception error logs.");
+				System.out.println("Error, no schedules could be found by this name: " 
+						+ schedule_name + " on the Perception database. Please check your Perception error logs.");
 				%> 
 					<bbNG:receipt type="FAIL" title="Error, no schedules found in this Course content item">
 						<%=StringEscapeUtils.escapeHtml("Could not find schedule named: " + schedule_name + " on Perception database")%>
@@ -370,12 +424,9 @@
 				<%
 				return;
 			}
-		
-			//Delete the gradebook linteitem:
-		// GradebookUtil.getInstance().conditionallyRemoveColumn(ctx);		
-			
+					
 	}
-			
+	
 
 %>	
 

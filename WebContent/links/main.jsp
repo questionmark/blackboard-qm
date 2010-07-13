@@ -161,7 +161,7 @@
 				<p><%=StringEscapeUtils.escapeHtml(npe.getMessage())%></p>					
 
 			<%
-			return;
+			//return;
 			
 		
 		}  catch(Exception e) {
