@@ -415,10 +415,20 @@
 		<table border="2" cellpadding="1">
 		<bbNG:jsBlock>
 			<script type="text/javascript">
+				var scheduleTable = {};
+				
 					function showhideScheduleURL(box,rowID) {
 						var row = document.getElementById(rowID); 
 						row.style.display = box.checked? "table-row":"none";
-						}
+					}
+
+					function deleteSchedule(scheduleName, scheduleRowID){
+						var schedule = document.getElementById(scheduleName);
+						var scheduleRow = document.getElementById(scheduleRowID);
+						
+						
+					}
+						
 			</script>
 		</bbNG:jsBlock>
 		<tr>
@@ -430,6 +440,7 @@
 			<th>Active?</th>
 			<th>Try Out</th>
 			<th>Show URL</th>
+			<th>Delete Schedule</th>
 			<!--<th>Group</th>-->
 		</tr>
 		<%
@@ -441,7 +452,7 @@
 					}
 					
 					%>
-					<tr>
+					<tr id="scheduleRowID">
 						<!--<td><%=schedules.get(i).getAssessment_ID()%></td>-->
 						
 						<% 
@@ -477,8 +488,21 @@
 						
 						%>
 						
-						<td><input type="checkbox" name="switchBox"
+						<td>
+						<form id="deleteScheduleForm" 
+							action='<%=path+"/links/removeproc.jsp"%>' method="post">
+							
+							<input type="hidden" name="schedule_name" 
+							value="<%=schedules.get(i).getSchedule_Name()%>" />
+							
+							<bbNG:button id="deleteSchedButton" label="Delete" 
+								onClick="submitDelete(deleteScheduleForm)" />
+								
+						</form>
+						
+						<input align="middle" type="checkbox" name="switchBox"
 							onClick="showhideScheduleURL(this,'<%=idStr%>')" /></td>
+							
 						<!--<td><%=schedules.get(i).getGroup_ID()%></td>-->
 					</tr>
 					<tr id='<%=idStr%>' style="display: none;">
@@ -489,6 +513,7 @@
 				} 
 				%>
 	</table>
+
 	
 	<bbUI:spacer height="20" />
 	<%

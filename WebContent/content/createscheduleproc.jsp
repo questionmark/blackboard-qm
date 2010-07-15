@@ -257,8 +257,7 @@
 						Id parentId = bbPm.generateId(CourseDocument.DATA_TYPE,
 								parent_id);
 						if (parentId == null)
-							out
-									.println("Stop here parent id is null, parent_id is"
+							out.println("Stop here parent id is null, parent_id is"
 											+ parent_id);
 
 						Id courseId = bbPm.generateId(CourseDocument.DATA_TYPE,
@@ -281,6 +280,7 @@
 								FormattedText.Type.HTML);
 
 						courseDoc.setBody(text);
+						
 
 						//made it unconditionally available to all, can change depending on user story.
 						courseDoc.setIsAvailable(true);
@@ -323,26 +323,16 @@
 					<p>
 						<i>Schedule creation was successful.</i>						
 					</p>
-				</bbUI:receipt>
-				<%
-					// <br>
-								//  <div align=right>
-								//        <bbUI:button action="LINK" alt="ok" name="ok" type="FORM_ACTION" targetUrl="<%=okUrl%//"/>
-								//	    </div>
-								//
-				%>
+		</bbUI:receipt>
 				<%
 					}
-							//	catch(NullPointerException npe){
-							//		out.println("null pointer exception " + npe.getCause() + npe.getMessage()); 
-							//	}
+
 							catch (PersistenceException pE) {
 				%>
 				<bbUI:receipt type="FAIL" title="content item creation unsuccessful" recallUrl="" buttonName="failOk" buttonAlt="OK">
 					Sorry but there was a problem creating this content item, see below:<br>
 					<%
-						out
-												.println("Persistence Exception caught, Message: "
+						out.println("Persistence Exception caught, Message: "
 														+ pE.getMessage());
 					%>
 				</bbUI:receipt>

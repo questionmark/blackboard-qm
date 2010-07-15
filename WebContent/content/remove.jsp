@@ -216,8 +216,6 @@
 		}
 	}
 	
-	
-	
 		
 	
 	//----------------------End of sync block-----------------------------------------------
@@ -304,32 +302,35 @@
 			//This should stop a Race condition from developing, i.e. Synchronising will cease while the 
 			//deletion takes place.
 			
-			for(int i = 0; i < schedulesarray.length; i++) {
-				//Delete the schedule for bb-phantom but only for this group!
-				if((schedulesarray[i].getGroup_ID() == perceptiongroupid) && 
-						(schedulesarray[i].getSchedule_Name() == schedule_name)){
-					//Delete that one straightaway, most likely to be the schedule for bb-phantom user
+			for(ScheduleV42 schedule: schedulesarray){
+				//Delete group schedule - but make sure delete for only this group!
+				if(schedule.getGroup_ID() == perceptiongroupid 
+					&& schedule.getSchedule_Name().equals(schedule_name)){						
 					try{
-						qmwise.getStub().deleteScheduleV42(schedulesarray[i].getSchedule_ID());
+						//Once found delete straigthaway, Deletes the Group Schedule for this Course.						
+						qmwise.getStub().deleteScheduleV42(schedule.getSchedule_ID());
+						//Announce deletion for logs.
+						System.out.println("Group Schedule deleted, Name: " + schedule.getSchedule_Name()
+								+ " ID: " + schedule.getSchedule_ID());						
 					}  catch (Exception e) {
 						QMWiseException qe = new QMWiseException(e);
-						System.out.println("Error deleting schedules: " + qe.getMessage());
-						%>
-							<bbNG:receipt type="FAIL" title="Error deleting schedule">
-								<%=StringEscapeUtils.escapeHtml(qe.getMessage())%>
-							</bbNG:receipt>
-						<%
+						//This schedule has to be deleted, else synchronisation will put it back in!
+						//So if qmwise call fails, terminate this script.
+						System.out.println("Error deleting Group schedule: " + qe.getMessage());
+						System.out.println("Terminating remove script...Please manually delete Enerprise Manager ");						
 						return;
-					}
-				}					
+					}					
+				}
 			}
-			//That just lifted one schedule out of the array of schedules.
+
+			//Now to delete participant schedules..
 			
+			//Start by getting a schedule list by group from QMWISe
 			
 			ScheduleV42[] groupScheduleArray = null;
 			
 			try {
-				//Get schedule list by group from QMWISe
+				
 				groupScheduleArray = qmwise.getStub().getScheduleListByGroupV42(perceptiongroupid);
 				
 			} catch(Exception e) {
@@ -343,39 +344,33 @@
 				//return;
 			}
 			
-			
 			//Now loop through the group schedule list and identify schedules with the same name as the content item, 
 			//Add them to delete_schedules array, then pass it to QMWISE method deleteScheduleList as that array for deletion!
 			//Robust: If deletion fails don't kill the script, log short messages on Blackboard logs for
-			//BB admins with course name /group name and a simple message to fix the issue in Perception
+			//BB admins with course name/group name and a simple message to fix the issue in Perception
 			
-
 			
+			//New String array to store all the schedule ID's to be sent to qmwise for deletion.
 			Vector<String> deleteScheduleIdArray = new Vector<String>();
 			
-			String deleteScheduleID = null;		
+			String deleteScheduleID = null;					
 			
+			//Populate deleteSchedulIdArray with Id's of schedules to be deleted from groupScheduleArray
 			
-			for(int i = 0; i < groupScheduleArray.length; i++){
-
-				//Test 
-				//System.out.println("\nCurrent I'th Schedule name: " + groupScheduleArray[i].getSchedule_Name() + "\n");
-				
-				//If we dont' have a valid schedule name then the delete schedule list will be empty, which will be handled
-				//further down this script.
-				if(!schedule_name.equals(groupScheduleArray[i].getSchedule_Name())) continue;
-				
-				if(groupScheduleArray[i] == null) continue;
-					
-				//Set id of schedule to string array to pass onto qmwise later.	
-				deleteScheduleID = Integer.toString(groupScheduleArray[i].getSchedule_ID());
-				deleteScheduleIdArray.add(deleteScheduleID);
-				
+			//Null check
+			if(groupScheduleArray != null){
+				for(ScheduleV42 schedule: groupScheduleArray){
+					//If we dont' have a valid schedule name then the delete schedule list will be empty, which will be handled
+					//further down this script.
+					if(!schedule_name.equals(schedule.getSchedule_Name())) continue;
+					//Set id of schedule to string array to pass onto qmwise later.	
+					deleteScheduleID = Integer.toString(schedule.getSchedule_ID());
+					deleteScheduleIdArray.add(deleteScheduleID);
+				}
 			}
 			
 			//We get a schedule array back as response, so initialise one..
 			Schedule[] responseScheduleIdArray = null;
-
 
 			/**Empty array check, if the schedules list coming back is empty, 
 			//	Error, no schedule found in Perception with the name, print schedule name,
