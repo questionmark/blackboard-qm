@@ -58,8 +58,7 @@
 		//Stop the script
 		return;
 		
-	}
-	
+	}	
 
 %>
 
@@ -68,6 +67,13 @@
 
 
 <% 
+	//Declare members.
+	
+	QMWise qmwise;
+	int perceptiongroupid = 0, schedule_id; 
+	
+	String group_name;
+	
 	//Get context path.
 	String path = request.getContextPath();
 	
@@ -75,9 +81,6 @@
 	String basePath = request.getScheme() + "://"
 		+ request.getServerName() + ":" + request.getServerPort()
 		+ path + "/";
-	
-
-	
 	
 	//Get a User , course membership details, and Course instance via context
 	User sessionUser = contentCtx.getUser();
@@ -87,24 +90,10 @@
 	
 	//Get course id and content id from within the context of the content item.
 	String course_id = contentCtx.getCourseId().toExternalString();
-	String content_id = contentCtx.getContentId().toExternalString();
-	
-	//Test for logs 
-	/*
-	System.out.println("Course id is: "  + course_id);
-	System.out.println("Content id is: "  + content_id);
-	*/	
 
-	//Now use content_id to get the course document, i.e. Content Item object.
-	Id contentId = Id.generateId(Content.DATA_TYPE, content_id);
-	ContentDbLoader courseDocumentLoader = ContentDbLoader.Default.getInstance();
-	Content courseDoc = courseDocumentLoader.loadById(contentId); 
-
-	// can now query this...
-	String parent_id = courseDoc.getParentId().toExternalString();
 	
-	//We now have the schedule name for this content item!
-	String schedule_name = courseDoc.getTitle();
+	//Get schedule name from request object reference to start the deletion process
+	String schedule_name = request.getParameter("schedule_name");
 	
 	//Test 
 	System.out.println("Coursedoc name - Schedule name is: " + schedule_name);
@@ -118,7 +107,7 @@
 		
 	
 	//connect to QMWise
-	QMWise qmwise = null;
+	
 	try {
 		qmwise = new QMWise();
 	} catch(Exception e) {
@@ -138,9 +127,14 @@
 	// Generate a persistence framework course Id to be used for 
 	// loading the course
 	Id courseIdObject = bbPm.generateId(Course.DATA_TYPE, course_id);
-
-	CourseDbLoader courseLoader = (CourseDbLoader) bbPm.getLoader(CourseDbLoader.TYPE);
-	Course course = courseLoader.loadById(courseIdObject);
+	Course course = null;
+	try{
+		CourseDbLoader courseLoader = (CourseDbLoader) bbPm.getLoader(CourseDbLoader.TYPE);
+		 course = courseLoader.loadById(courseIdObject);	
+	} catch (KeyNotFoundException knfe){
+		out.println("Exception Caught: " + knfe.getMessage() );
+	}
+	
 
 	PropertiesBean pb = new PropertiesBean();
 	
@@ -154,11 +148,11 @@
 	// Group synchronization
 	//-----------------------------------------------------------------------
 	
-	//get Perception group id
-	int perceptiongroupid = 0;
+	//get Perception group id from delete schedule form.	
+	
 	try {
 		
-		perceptiongroupid = new Integer(qmwise.getStub().getGroupByName(course.getBatchUid()).getGroup_ID()).intValue();
+		perceptiongroupid = new Integer(qmwise.getStub().getGroupByName(request.getParameter("group_name")).getGroup_ID()).intValue();
 		
 	} catch(NullPointerException npe){
 		
