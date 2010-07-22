@@ -29,7 +29,8 @@
 	String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+path+"/";
 %>
 
-<bbData:context id="ctx">
+
+<%@page import="org.apache.log4j.helpers.SyslogWriter"%><bbData:context id="ctx">
 	<bbUI:docTemplateHead title="Questionmark Perception connector" />	
 	<bbUI:docTemplate>
 		<bbUI:titleBar iconUrl='<%=path+"/images/qm.gif"%>'>Schedule Creation Successful</bbUI:titleBar>
@@ -37,8 +38,8 @@
 		QMWise qmwise;
 		int groupId;
 		Boolean perParticipant, limitAttempts, setAccessPeriod;
-		String useGradebook;
-
+		String useGradebook, gradeResultType;
+		
 		try {
 			qmwise = new QMWise();
 		} catch(Exception e) {
@@ -50,7 +51,7 @@
 			<%
 			return;
 		}
-
+	
 		// get the group ID, using the supplied group name
 		try {
 			groupId = new Integer(qmwise.getStub().getGroupByName(request.getParameter("group")).getGroup_ID()).intValue();
@@ -75,6 +76,10 @@
 
 		// read the value of the "store results in gradebook" select menu
 		useGradebook = request.getParameter("use_gradebook");
+		
+		// read in the value of the "Select result to display in Grade Center" select
+		// menu		
+		gradeResultType = request.getParameter("result_type");
 
 		// create a "Schedule" object for the current user, from the data provided
 		ScheduleV42 schedule = new ScheduleV42();
@@ -162,16 +167,20 @@
 				return;
 			}
 
-			LineitemDbPersister lineitemdbpersister = (LineitemDbPersister) bbPm.getPersister(LineitemDbPersister.TYPE);
-			Lineitem lineitem = new Lineitem();
+			LineitemDbPersister lineitemdbpersister = 
+				(LineitemDbPersister) bbPm.getPersister(LineitemDbPersister.TYPE);
+			
+			Lineitem lineitem = new Lineitem();			
 			lineitem.setName(request.getParameter("schedule"));
 			lineitem.setCourseId(course.getId());
 			lineitem.setIsAvailable(true);
-			lineitem.setType("Questionmark Perception assessment");
-			lineitem.validate();
+			
+			// Feed in the chosen grade type from the chosen option
+			lineitem.setType("QM Assessment Grade: " + gradeResultType);
+			lineitem.validate();			
 			if (useGradebook.equals("percent")) {
 				lineitem.setPointsPossible(100f);
-			}
+			}			
 			lineitemdbpersister.persist(lineitem);
 		} catch(Exception e) {
 			QMWiseException qe = new QMWiseException(e);

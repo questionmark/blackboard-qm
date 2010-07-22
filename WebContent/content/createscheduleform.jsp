@@ -293,14 +293,22 @@
 						<bbUI:dataElement label="Schedule name">
 							<input type="text" name="schedule" />
 							<br />
-											The schedule name must be unique if results are to be stored in the gradebook
-										</bbUI:dataElement>
-						<bbUI:dataElement label="Store results in gradebook?">
+							The schedule name must be unique if results are to be stored in the gradebook
+						</bbUI:dataElement>
+						<bbUI:dataElement label="Store results in Grade Center?">
 							<select name="use_gradebook">
 								<option value="percent" selected="selected">as percentage
 								scores</option>
 								<option value="point">as point scores</option>
-								<option value="no">do not store results in gradebook</option>
+								<option value="no">do not store results in Grade Center</option>
+							</select>
+						</bbUI:dataElement>						
+						<bbUI:dataElement label="Select result to display in Grade Center">
+							<select name="result_type">
+								<option value="FIRST">First</option>				
+								<option value="BEST" selected="selected">Best</option>
+								<option value="WORST">Worst</option>
+								<option value="LAST">Last</option>
 							</select>
 						</bbUI:dataElement>
 						<bbUI:dataElement label="Assessment name">
@@ -329,6 +337,7 @@
 								name="per_participant_hidden" value="0" />
 						</bbUI:dataElement>
 						<bbUI:dataElement label="Set access period?">
+							<br />
 							<input type="checkbox" id="set_access_period"
 								name="set_access_period" value="true" onclick="disable_set_access()" />
 							<bbUI:dataElement label="Start date">

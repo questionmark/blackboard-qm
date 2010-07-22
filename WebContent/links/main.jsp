@@ -440,8 +440,7 @@
 			<th>Active?</th>
 			<th>Try Out</th>
 			<th>Show URL</th>
-			<th>Delete Schedule</th>
-			<!--<th>Group</th>-->
+			<th>Delete Schedule</th>			
 		</tr>
 		<%
 				for(int i = 0; i < schedules.size(); i++) {
@@ -487,23 +486,22 @@
 						} 
 						
 						%>
-						
 						<td>
-						<form id="deleteScheduleForm" 
-							action='<%=path+"/links/removeproc.jsp"%>' method="post">
+							<input align="middle" type="checkbox" name="switchBox"
+								onClick="showhideScheduleURL(this,'<%=idStr%>')" />
+						</td>
+												
+						<td>
+							<form id="deleteScheduleForm" 
+								action='<%=path+"/links/removeproc.jsp"%>' method="post">
+									
+								<input type="hidden" name="schedule_name" 
+								value="<%=schedules.get(i).getSchedule_Name()%>" />
 							
-							<input type="hidden" name="schedule_name" 
-							value="<%=schedules.get(i).getSchedule_Name()%>" />
-							
-							<bbNG:button id="deleteSchedButton" label="Delete" 
-								onClick="submitDelete(deleteScheduleForm)" />
-								
-						</form>
-						
-						<input align="middle" type="checkbox" name="switchBox"
-							onClick="showhideScheduleURL(this,'<%=idStr%>')" /></td>
-							
-						<!--<td><%=schedules.get(i).getGroup_ID()%></td>-->
+								<bbNG:button id="deleteSchedButton" label="Delete" 
+									onClick="submitDelete(deleteScheduleForm)" />								
+							</form>
+						</td>
 					</tr>
 					<tr id='<%=idStr%>' style="display: none;">
 						<td><i>URL:</i></td>
@@ -596,16 +594,24 @@
 		<bbUI:dataElement label="Schedule name">
 			<input type="text" name="schedule" />
 			<br />
-							The schedule name must be unique if results are to be stored in the gradebook
-						</bbUI:dataElement>
-		<bbUI:dataElement label="Store results in gradebook?">
+			The schedule name must be unique if results are to be stored in the gradebook
+		</bbUI:dataElement>
+		<bbUI:dataElement label="Store results in Grade Center?">
 			<select name="use_gradebook">
 				<option value="percent" selected="selected">as percentage
 				scores</option>
 				<option value="point">as point scores</option>
-				<option value="no">do not store results in gradebook</option>
+				<option value="no">do not store results in Grade Center</option>
 			</select>
 		</bbUI:dataElement>
+		<bbUI:dataElement label="Select result to display in Grade Center">
+			<select name="result_type">
+				<option value="FIRST">First</option>				
+				<option value="BEST" selected="selected">Best</option>
+				<option value="WORST">Worst</option>
+				<option value="LAST">Last</option>
+			</select>
+		</bbUI:dataElement>		
 		<bbUI:dataElement label="Assessment name">
 			<select name="assessment">
 				<% 
@@ -632,6 +638,7 @@
 				name="per_participant_hidden" value="0" />
 		</bbUI:dataElement>
 		<bbUI:dataElement label="Set access period?">
+			<br />
 			<input type="checkbox" id="set_access_period"
 				name="set_access_period" value="true" onclick="disable_set_access()" />
 			<bbUI:dataElement label="Start date">
@@ -796,7 +803,7 @@
 			<th>Start datetime</th>
 			<th>End datetime</th>
 			<th>Actions</th>
-			<!--<th>Group</th>-->
+
 		</tr>
 		<%
 				for(int i = 0; i < schedules.size(); i++) {	
@@ -820,7 +827,7 @@
 				onclick="window.open('<%=scheduleurls[i]%>');"></form>
 			<% } %> <% } else { %> inactive <% } %>
 			</td>
-			<!--<td><%=schedules.get(i).getGroup_ID()%></td>-->
+
 		</tr>
 		<% } %>
 	</table>

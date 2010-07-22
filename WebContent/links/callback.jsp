@@ -110,6 +110,11 @@ if(lineitem.getPointsPossible() == 100f) {
 	scoreType="Score_Attained";
 }
 
+//Get the Grade result type selected by the instructor for this schedule - 'Best' score, 'Worst', 'First' or 'Last' scores.
+String lineItemType = lineitem.getType();
+
+      
+
 
 // get the membership loader
 CourseMembershipDbLoader coursemembershipdbloader = (CourseMembershipDbLoader) bbPm.getLoader(CourseMembershipDbLoader.TYPE);
@@ -144,13 +149,70 @@ Score score;
 
 try {
 	score = scoredbloader.loadByCourseMembershipIdAndLineitemId(coursemembership.getId(), lineitem.getId());
-	if(new Float(score.getGrade()).floatValue() >= new Float(request.getParameter(scoreType)).floatValue()) {
-		//new score is less than old score -- ignore
-		out.println("Perception: Callback: ignored a score since it was less than or equal to old score");
-		return;
-	}
+	
+	int gradeType = 0; // start with none.
+	
+	if(lineItemType.contains("FIRST")) gradeType = 1;			
+	if(lineItemType.contains("BEST")) gradeType = 2;
+	if(lineItemType.contains("WORST")) gradeType = 3;
+	if(lineItemType.contains("LAST")) gradeType = 4;
+	
+	
+	switch(gradeType){
+	
+		//First result score
+		case 1:
+						
+			if (!(score.getGrade().equalsIgnoreCase("-"))) {
+				//This is not the first score coming in so therefore is ignored.
+				out.println("Perception: Callback: ignored a score since it was more than or equal to old score");
+				return;
+			}
+			//else this is the first score coming in for this schedule hence allowed to go through.
+			break;
+			
+		//Best result score
+		case 2:
+			
+			if(new Float(score.getGrade()).floatValue() >= new Float(request.getParameter(scoreType)).floatValue()) {
+				//new score is less than old score -- ignore
+				out.println("Perception: Callback: ignored a score since it was less than or equal to old score : BEST Score option selected");
+				//Important to end this script in order to ignore this score value, if the best score value is selected, see above.
+				return;
+			}
+			//else: The current score is LESS than the incoming score and hence this value cannot be ignored, break to allow for this new
+			// score to replace the current grade. Very important.
+
+			break;
+			
+		//Worst result score
+		case 3:
+			if(new Float(score.getGrade()).floatValue() <= new Float(request.getParameter(scoreType)).floatValue()) {
+				//new score is more than old score -- ignore
+				out.println("Perception: Callback: ignored a score since it was more than or equal to old score: WORST score option selected");
+				//Important to end this script in order to ignore this score value, if the best score value is selected, see above.
+				return;
+			}
+			//else: The current score is MORE than the incoming score and hence this value represents a worse score than the current one
+			// - break to allow for this new score to replace the current grade. Very important.
+
+			break;
+			
+		//Last result score - Score from the latest attempt.
+		case 4:
+			//Just let it through.
+			break;
+		        	
+        default:
+        	out.println("Perception Error: Callback: ignored a score since no result type option was detected..callback.jsp now terminating..");
+		     return;
+		     //no break because we want to terminate the script if the options are not clear.
+	}  
+			
+	
 	score.setGrade(request.getParameter(scoreType));
 	score.setDateChanged();
+	
 } catch(KeyNotFoundException e) {
 	//doesn't exist -- make a new one
 	score = new Score();

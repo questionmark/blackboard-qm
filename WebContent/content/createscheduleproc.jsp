@@ -24,33 +24,30 @@
 	String basePath = request.getScheme() + "://"
 			+ request.getServerName() + ":" + request.getServerPort()
 			+ path + "/";
-			
-			
-			//Authenticate for use.	
-			if (!PlugInUtil.authorizeForCourseControlPanel(request, response)) {
-				//If user is not authorised to see this page then return blank page
-				
-				%>	<h1>You are not authorised to view this page</h1>			
+
+	//Authenticate for use.	
+	if (!PlugInUtil.authorizeForCourseControlPanel(request, response)) {
+		//If user is not authorised to see this page then return blank page
+%>	<h1>You are not authorised to view this page</h1>			
 				<%
-				
-				//Stop the script
-				return;
-			}
+								//Stop the script
+									return;
+								}
 
-	String course_id = request.getParameter("course_id");
-	String parent_id = request.getParameter("parent_id"); //  id of the parent folder
-	String schedule_name = request.getParameter("schedule");
+								String course_id = request.getParameter("course_id");
+								String parent_id = request.getParameter("parent_id"); //  id of the parent folder
+								String schedule_name = request.getParameter("schedule");
 
-	//Retrieve the Db persistence manager from the persistence service
-	BbPersistenceManager bbPm = PersistenceServiceFactory.getInstance()
-			.getDbPersistenceManager();
+								//Retrieve the Db persistence manager from the persistence service
+								BbPersistenceManager bbPm = PersistenceServiceFactory.getInstance()
+										.getDbPersistenceManager();
 
-	//load course by short course name to get its Blackboard ID
-	CourseDbLoader courseLoader = (CourseDbLoader) bbPm
-			.getLoader(CourseDbLoader.TYPE);
-	Course course;
-	User user;
-%>
+								//load course by short course name to get its Blackboard ID
+								CourseDbLoader courseLoader = (CourseDbLoader) bbPm
+										.getLoader(CourseDbLoader.TYPE);
+								Course course;
+								User user;
+							%>
 
 
 <bbData:context id="ctx">
@@ -68,7 +65,8 @@
 				QMWise qmwise;
 						int groupId;
 						Boolean perParticipant, limitAttempts, setAccessPeriod;
-						String useGradebook;
+						
+						String useGradebook, gradeResultType;
 
 						try {
 							qmwise = new QMWise();
@@ -110,7 +108,11 @@
 
 							// read the value of the "store results in gradebook" select menu
 							useGradebook = request.getParameter("use_gradebook");
-
+							
+							// read in the value of the "Select result to display in Grade Center" select
+							// menu		
+							gradeResultType = request.getParameter("result_type");
+							
 							// create a "Schedule" object for the current user, from the data provided
 							ScheduleV42 schedule = new ScheduleV42();
 							try {
@@ -226,19 +228,19 @@
 							Lineitem lineitem = new Lineitem();
 							lineitem.setName(schedule_name);
 							lineitem.setCourseId(course.getId());
-							lineitem.setIsAvailable(true);
-							lineitem
-									.setType("Questionmark Perception assessment");
+							lineitem.setIsAvailable(true);							
+							lineitem.setType("QM Assessment Grade: " + gradeResultType);
 							lineitem.validate();
 							if (useGradebook.equals("percent")) {
 								lineitem.setPointsPossible(100f);
 							}
 							lineitemdbpersister.persist(lineitem);
-						} catch (PersistenceException pe){
-							
-							System.out.println("Persistence Exception Message: " + pe.getStackTrace());
-						
-							
+						} catch (PersistenceException pe) {
+
+							System.out
+									.println("Persistence Exception Message: "
+											+ pe.getStackTrace());
+
 						} catch (Exception e) {
 							System.out.println(e.getStackTrace());
 		%>
@@ -257,7 +259,8 @@
 						Id parentId = bbPm.generateId(CourseDocument.DATA_TYPE,
 								parent_id);
 						if (parentId == null)
-							out.println("Stop here parent id is null, parent_id is"
+							out
+									.println("Stop here parent id is null, parent_id is"
 											+ parent_id);
 
 						Id courseId = bbPm.generateId(CourseDocument.DATA_TYPE,
@@ -280,7 +283,6 @@
 								FormattedText.Type.HTML);
 
 						courseDoc.setBody(text);
-						
 
 						//made it unconditionally available to all, can change depending on user story.
 						courseDoc.setIsAvailable(true);
@@ -332,7 +334,8 @@
 				<bbUI:receipt type="FAIL" title="content item creation unsuccessful" recallUrl="" buttonName="failOk" buttonAlt="OK">
 					Sorry but there was a problem creating this content item, see below:<br>
 					<%
-						out.println("Persistence Exception caught, Message: "
+						out
+												.println("Persistence Exception caught, Message: "
 														+ pE.getMessage());
 					%>
 				</bbUI:receipt>
