@@ -165,7 +165,7 @@ try {
 						
 			if (!(score.getGrade().equalsIgnoreCase("-"))) {
 				//This is not the first score coming in so therefore is ignored.
-				out.println("Perception: Callback: ignored a score since it was more than or equal to old score");
+				out.println("Perception: Callback: ignored a score since it was not the first attempt.");
 				return;
 			}
 			//else this is the first score coming in for this schedule hence allowed to go through.
@@ -201,6 +201,8 @@ try {
 		//Last result score - Score from the latest attempt.
 		case 4:
 			//Just let it through.
+			//Test
+			out.println("LAST score option selected.");
 			break;
 		        	
         default:

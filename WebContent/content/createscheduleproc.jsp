@@ -37,6 +37,8 @@
 								String course_id = request.getParameter("course_id");
 								String parent_id = request.getParameter("parent_id"); //  id of the parent folder
 								String schedule_name = request.getParameter("schedule");
+								String schedule_description = "Questionmark Perception Scheduled Assessment:\n " + request.getParameter("schedule_textbox");
+								out.println("description string is: " + schedule_description);
 
 								//Retrieve the Db persistence manager from the persistence service
 								BbPersistenceManager bbPm = PersistenceServiceFactory.getInstance()
@@ -117,6 +119,7 @@
 							ScheduleV42 schedule = new ScheduleV42();
 							try {
 								schedule.setSchedule_Name(schedule_name);
+								
 								schedule.setAssessment_ID(request
 										.getParameter("assessment"));
 
@@ -210,9 +213,7 @@
 						try {
 
 							try {
-								course = courseLoader
-										.loadByBatchUid(((String) request
-												.getParameter("group")));
+								course = courseLoader.loadByBatchUid(((String) request.getParameter("group")));
 							} catch (KeyNotFoundException e) {
 		%>
 		<bbUI:receipt type="FAIL"
@@ -256,12 +257,12 @@
 					try {
 
 						//get the parent and course objects...
-						Id parentId = bbPm.generateId(CourseDocument.DATA_TYPE,
-								parent_id);
-						if (parentId == null)
-							out
-									.println("Stop here parent id is null, parent_id is"
-											+ parent_id);
+						Id parentId = bbPm.generateId(CourseDocument.DATA_TYPE,parent_id);
+						if (parentId == null){
+							out.println("Stop here parent id is null, parent_id is"	+ parent_id);
+							return;
+						}
+							
 
 						Id courseId = bbPm.generateId(CourseDocument.DATA_TYPE,
 								course_id);
@@ -278,10 +279,10 @@
 						courseDoc.setTitle(schedule_name);
 
 						//set description of content item, in this case, perception schedule..
-						FormattedText text = new FormattedText(
-								"Questionmark Perception Scheduled Assessment",
-								FormattedText.Type.HTML);
-
+						
+						FormattedText text = new FormattedText(schedule_description,
+								FormattedText.Type.PLAIN_TEXT);						
+												
 						courseDoc.setBody(text);
 
 						//made it unconditionally available to all, can change depending on user story.
