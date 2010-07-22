@@ -106,8 +106,8 @@
 	//We now have the schedule name for this content item!
 	String schedule_name = courseDoc.getTitle();
 	
-	//Test 
-	System.out.println("Coursedoc name - Schedule name is: " + schedule_name);
+	//Flag for lineitem deletion
+	boolean schedule_deleted = false;
 		
 
 	//create a ConfigFileReader, to check whether this course needs 
@@ -319,7 +319,9 @@
 						System.out.println("Error deleting Group schedule: " + qe.getMessage());
 						System.out.println("Terminating remove script...Please manually delete Enerprise Manager ");						
 						return;
-					}					
+					}
+					
+					schedule_deleted = true; //Set flag for deleting lineitem.
 				}
 			}
 
@@ -394,6 +396,8 @@
 								System.out.println("Schedule deleted, Name: " + responseScheduleIdArray[i].getSchedule_Name()
 										+ " ID: " + responseScheduleIdArray[i].getSchedule_ID());
 							}
+							
+							schedule_deleted = true; //If all of them deleted, then set flag to clear the lineitem deletion.
 						}
 						
 					} catch (Exception e) {
@@ -407,6 +411,41 @@
 							<%
 							return;
 					}
+
+					
+					//If schedules deleted on perception then delete corresponding lineitem in Blackboard Grade Center:
+					
+					//get LineitemDbLoader
+					LineitemDbLoader lineitemLoader = (LineitemDbLoader) bbPm.getLoader(LineitemDbLoader.TYPE);			
+			
+					LineitemDbPersister lineitemdbpersister = (LineitemDbPersister) bbPm.getPersister(LineitemDbPersister.TYPE);
+					
+					Lineitem lineitem;
+								
+					try {
+						lineitem = lineitemLoader.loadByCourseIdAndLineitemName(course.getId(), schedule_name).get(0);
+					} catch(java.lang.IndexOutOfBoundsException e) {
+						//lineitem doesn't exist yet -- "use gradebook" box was not checked 
+						//otherwise it would exist already. so we ignore this callback.
+						out.println("Perception: removeproc.jsp: Ignoring delete lineitem command since no corresponding gradebook column");
+						return;
+					} catch(Exception e) {
+						out.println("Perception: removeproc.jsp: got an exception: " + e);
+						return;
+					}
+					
+					if(!lineitem.equals(null) && schedule_deleted == true){
+						lineitemdbpersister.deleteById(lineitem.getId());
+					}
+					
+					String recallurl = "main.jsp?course_id=" + course_id + "#Schedules";
+					
+					%> 
+						<bbNG:receipt type="SUCCESS" title="Success" recallUrl="<%=recallurl%>">
+							The schedule was successfully deleted!
+						</bbNG:receipt>
+					<%
+
 			}
 			
 			else {
@@ -418,8 +457,7 @@
 					</bbNG:receipt>
 				<%
 				return;
-			}
-					
+			}					
 	}
 	
 

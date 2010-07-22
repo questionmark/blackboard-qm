@@ -37,8 +37,9 @@
 								String course_id = request.getParameter("course_id");
 								String parent_id = request.getParameter("parent_id"); //  id of the parent folder
 								String schedule_name = request.getParameter("schedule");
-								String schedule_description = "Questionmark Perception Scheduled Assessment:\n " + request.getParameter("schedule_textbox");
-								out.println("description string is: " + schedule_description);
+								String schedule_description = "Questionmark Perception Scheduled Assessment "; 
+								//+ request.getParameter("\n" + "schedule_textbox_0");
+								//out.println("description string is: " + schedule_description);
 
 								//Retrieve the Db persistence manager from the persistence service
 								BbPersistenceManager bbPm = PersistenceServiceFactory.getInstance()

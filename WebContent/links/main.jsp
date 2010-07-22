@@ -32,7 +32,9 @@
 
 
 <%@page import="com.sun.mail.handlers.text_html"%>
-<%@page import="org.apache.velocity.app.event.implement.EscapeHtmlReference"%><bbNG:learningSystemPage ctxId="ctx"
+<%@page import="org.apache.velocity.app.event.implement.EscapeHtmlReference"%>
+
+<bbNG:learningSystemPage ctxId="ctx"
 	title="Questionmark Perception connector" onLoad="disable_set_access()">
 	<bbNG:pageHeader>
 		<bbNG:pageTitleBar iconUrl='<%=path+"/images/qm.gif"%>'
@@ -496,10 +498,18 @@
 								action='<%=path+"/links/removeproc.jsp"%>' method="post">
 									
 								<input type="hidden" name="schedule_name" 
-								value="<%=schedules.get(i).getSchedule_Name()%>" />
-							
-								<bbNG:button id="deleteSchedButton" label="Delete" 
-									onClick="submitDelete(deleteScheduleForm)" />								
+									value="<%=schedules.get(i).getSchedule_Name()%>" />
+								
+								<input type="hidden" name="schedule_group_id"
+									value="<%=schedules.get(i).getGroup_ID()%>"/>
+								
+								<input type="hidden" name="schedule_group_name"
+									value="<%=schedules.get(i).getGroup_Name()%>"/>
+									
+								<input type="hidden" name="course_id" value="<%=courseId%>" />	
+								
+								<input type="submit" name="delete_schedule" value="Delete"/>
+																
 							</form>
 						</td>
 					</tr>

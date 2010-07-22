@@ -299,7 +299,10 @@
 						<bbUI:dataElement label="Schedule description">
 							<bbUI:textbox name="schedule_textbox" label="Content Item Description" 
 								cols="3" rows="3"  text="Enter a short description for this Content item"  format="TextboxTag.PLAIN_TEXT"
-								maxLength="4000"	/>
+								maxLength="4000" 	
+							/>
+							
+							
 						</bbUI:dataElement>
 						<bbUI:dataElement label="Store results in Grade Center?">
 							<select name="use_gradebook">

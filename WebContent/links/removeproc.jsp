@@ -1,13 +1,11 @@
 <!-- 
- Filename		: content/remove.jsp
- Description	: Runs when deleting a content item: 
- 					- View schedule code to generate the schedules view and pick out the schedule name matching the content 
- 						item name.
+ Filename		: content/removeproc.jsp
+ Description	: Runs when deleting a schedule from control panel view: 
+ 					- View schedule code to generate the schedules view and pick out the schedule name matching the incoming schedule name.
  					- Once the schedule is picked out store that schedule's id to be sent off to QMWISe delete method.
  					- Connect to qmwise again with delete schedule routine for that particular schedule's id.
 					- Delete the schedule line item from BB Grade Center, if the column by the schedule name exists.
-					- Continue with deletion of content item. The deletion happens anyway this script allows
-						cleanup tasks to be taken care of.				  
+					- Refresh this page - to allow for html cleanup. Once the schedule is deleted the table row should disappear.				  
 
 -->
 
@@ -63,16 +61,17 @@
 %>
 
 
-<bbNG:learningSystemPage ctxId="contentCtx">
+<bbNG:learningSystemPage ctxId="ctx">
 
 
 <% 
 	//Declare members.
 	
-	QMWise qmwise;
-	int perceptiongroupid = 0, schedule_id; 
+	QMWise qmwise = null;
+	int perception_group_ID = 0, schedule_id = 0; 
+	boolean schedule_deleted = false;
 	
-	String group_name;
+	String schedule_name, perception_group_name;
 	
 	//Get context path.
 	String path = request.getContextPath();
@@ -81,44 +80,48 @@
 	String basePath = request.getScheme() + "://"
 		+ request.getServerName() + ":" + request.getServerPort()
 		+ path + "/";
-	
-	//Get a User , course membership details, and Course instance via context
-	User sessionUser = contentCtx.getUser();
-	Id sessionUserId = sessionUser.getId();
-	Course courseCtx = contentCtx.getCourse();	
-	CourseMembership cMembership = contentCtx.getCourseMembership(); // may be null if a SysAdmin!	
-	
-	//Get course id and content id from within the context of the content item.
-	String course_id = contentCtx.getCourseId().toExternalString();
-
-	
-	//Get schedule name from request object reference to start the deletion process
-	String schedule_name = request.getParameter("schedule_name");
-	
-	//Test 
-	System.out.println("Coursedoc name - Schedule name is: " + schedule_name);
+		//Get schedule name from request object reference to start the deletion process
 		
+	schedule_name = request.getParameter("schedule_name");
+	perception_group_name = request.getParameter("schedule_group_name");
+	perception_group_ID = Integer.parseInt(request.getParameter("schedule_group_id"));
+	
+
+	// Retrieve the course identifier from the delete form
+	String courseId = request.getParameter("course_id");
+
+	if(courseId == null) {
+		%>
+		
+		
+		<bbNG:receipt type="FAIL" title="Oops! No course ID was found, terminated script. Please remove this schedule manually from Perception.">
+					No course ID was given with the request
+		</bbNG:receipt>
+		
+		
+		<%
+		return;
+	}
 
 	//create a ConfigFileReader, to check whether this course needs 
 	//to sync its members and to show date last synchronized
-	ConfigFileReader configReader = new ConfigFileReader(course_id);
+	ConfigFileReader configReader = new ConfigFileReader(courseId);
 	//load the courseSettings file too...
-	CourseSettings courseSettings = new CourseSettings(course_id);
-		
+	CourseSettings courseSettings = new CourseSettings(courseId);
 	
 	//connect to QMWise
-	
+
 	try {
 		qmwise = new QMWise();
 	} catch(Exception e) {
 		QMWiseException qe = new QMWiseException(e);
-		%>	
-			<bbNG:receipt type="FAIL" title="Error connecting to Perception server">
-				<%=StringEscapeUtils.escapeHtml(qe.getMessage())%>
-			</bbNG:receipt>
+		%>
+
+			<h1>Error connecting to Perception server</h1>
+			<p><%=StringEscapeUtils.escapeHtml(qe.getMessage())%></p>	
+	
 		<%
-		//Want this page to crash now!
-		return;
+		//return;
 	}
 
 	//Retrieve the Db persistence manager from the persistence service
@@ -126,106 +129,24 @@
 
 	// Generate a persistence framework course Id to be used for 
 	// loading the course
-	Id courseIdObject = bbPm.generateId(Course.DATA_TYPE, course_id);
-	Course course = null;
-	try{
-		CourseDbLoader courseLoader = (CourseDbLoader) bbPm.getLoader(CourseDbLoader.TYPE);
-		 course = courseLoader.loadById(courseIdObject);	
-	} catch (KeyNotFoundException knfe){
-		out.println("Exception Caught: " + knfe.getMessage() );
-	}
-	
+	Id courseIdObject = bbPm.generateId(Course.DATA_TYPE, courseId);
+
+	CourseDbLoader courseLoader = (CourseDbLoader) bbPm.getLoader(CourseDbLoader.TYPE);
+	Course course = courseLoader.loadById(courseIdObject);
 
 	PropertiesBean pb = new PropertiesBean();
-	
-	
-	//-----------------------------------------------------------------------
-	//synchronization: No Participant synching code needed for Tools view.
-	//-----------------------------------------------------------------------
-	
-	
-	//-----------------------------------------------------------------------
-	// Group synchronization
-	//-----------------------------------------------------------------------
-	
-	//get Perception group id from delete schedule form.	
-	
-	try {
-		
-		perceptiongroupid = new Integer(qmwise.getStub().getGroupByName(request.getParameter("group_name")).getGroup_ID()).intValue();
-		
-	} catch(NullPointerException npe){
-		
-		System.out.println("Perception: course " + course_id + ": synchronization failed: " + npe.getMessage());
-		%>
-		<h1>Error retrieving course group from Perception, please ensure Connector is successfully 
-		connected to Perception</h1>
-			<p><%=StringEscapeUtils.escapeHtml(npe.getMessage())%></p>					
 
-		<%
-		return;
-		
 	
-	}  catch(Exception e) {
-		
-		QMWiseException qe = new QMWiseException(e);
-		if(qe.getQMErrorCode() == 1201) {
-			//group doesn't exist -- force sync
-			System.out.println("Perception: course " + course_id + ": Perception group doesn't exist -- forcing synchronisation");
-			UserSynchronizer us = new UserSynchronizer();
-			String force_sync_result;
-			try {
-				force_sync_result = us.synchronizeCourse(course_id);
-				configReader.setCourseSyncDate();
-				out.print(force_sync_result);
-				//get fresh group
-				perceptiongroupid = new Integer(qmwise.getStub().getGroupByName(course.getBatchUid()).getGroup_ID()).intValue();
-				
-			} catch (QMWiseException nqe ) {		
-				
-				System.out.println("Qmwise exception caught: course " + course_id + ": synchronization failed: " + nqe.getMessage());
-				String output = "Qmwise exception caught: course " + course_id + ": synchronization failed: " + nqe.getMessage();
-				
-				%>				
-				<!-- Trying this one out -->
-				<bbNG:error exception="nqe"/>
-				
-				
-				<bbNG:receipt type="FAIL" title="Group Synchronisation failed!">
-					<%=StringEscapeUtils.escapeHtml(output)%>
-				</bbNG:receipt>
-				
-				
-				<%
-				//We don't want the page to crash! Can continue without sync to be dealt with separately in course tools view.
-				//return;
-			} 
-		} else {
-			%>
-				<bbNG:receipt type="FAIL" title="Error retrieving course group from Perception">
-					<%=StringEscapeUtils.escapeHtml(qe.getMessage())%>
-				</bbNG:receipt>
-			<%
-			//return;
-		}
-	}
-	
-		
-	
-	//----------------------End of sync block-----------------------------------------------
-	
+	//----------------------No syncing during deletion-------------------------------------
 					
 
-	//-----------------------------------------------------------------------
-	//view (still) specific to current user, i.e. Student can only Take assessments
-	// and Staff can "Test Assessments"
-	//-----------------------------------------------------------------------
-
+	//Get a User instance via user context
+	User sessionUser = ctx.getUser();
+	Id sessionUserId = sessionUser.getId();
 	
 	// get the membership data to determine the User's Role
 	CourseMembershipDbLoader crsMembershipLoader = (CourseMembershipDbLoader) bbPm.getLoader(CourseMembershipDbLoader.TYPE);
 	CourseMembership crsMembership = null;
-
 
 	try {
 		crsMembership = crsMembershipLoader.loadByCourseAndUserId(courseIdObject, sessionUserId);
@@ -262,7 +183,7 @@
 				if( e instanceof QMWiseException ){
 					QMWiseException qe = new QMWiseException(e);
 					if(qe.getQMErrorCode() == 1301){
-						String assessmentErrorOutput = "Perception: course " + course_id + 
+						String assessmentErrorOutput = "Perception: course " + courseId + 
 						": Error getting group schedule list. Cause: Assessment not found, check whether assessment exists in Perception."
 						+ " For more information please check Perception server logs - QMWISe trace log. Message: "
 						+ qe.getMessage();
@@ -272,7 +193,7 @@
 							<p><%=StringEscapeUtils.escapeHtml(assessmentErrorOutput)%></p>
 						<%						
 					} else {
-						String qmErrorOutput = "Perception: course " + course_id + ": Error getting group schedule list. Cause: " + qe.getMessage();
+						String qmErrorOutput = "Perception: course " + courseId + ": Error getting group schedule list. Cause: " + qe.getMessage();
 						
 						System.out.println(qmErrorOutput);
 						//Suppressing synch related html on this page. Synch errors should show up on the course tools view.
@@ -298,22 +219,25 @@
 			
 			for(ScheduleV42 schedule: schedulesarray){
 				//Delete group schedule - but make sure delete for only this group!
-				if(schedule.getGroup_ID() == perceptiongroupid 
+				if(schedule.getGroup_ID() == perception_group_ID 
 					&& schedule.getSchedule_Name().equals(schedule_name)){						
 					try{
 						//Once found delete straigthaway, Deletes the Group Schedule for this Course.						
 						qmwise.getStub().deleteScheduleV42(schedule.getSchedule_ID());
 						//Announce deletion for logs.
 						System.out.println("Group Schedule deleted, Name: " + schedule.getSchedule_Name()
-								+ " ID: " + schedule.getSchedule_ID());						
-					}  catch (Exception e) {
+								+ " ID: " + schedule.getSchedule_ID());
+						
+					} catch (Exception e) {
 						QMWiseException qe = new QMWiseException(e);
 						//This schedule has to be deleted, else synchronisation will put it back in!
 						//So if qmwise call fails, terminate this script.
 						System.out.println("Error deleting Group schedule: " + qe.getMessage());
 						System.out.println("Terminating remove script...Please manually delete Enerprise Manager ");						
 						return;
-					}					
+					}
+					
+					schedule_deleted = true; //Flag for deleting lineitem.
 				}
 			}
 
@@ -325,7 +249,7 @@
 			
 			try {
 				
-				groupScheduleArray = qmwise.getStub().getScheduleListByGroupV42(perceptiongroupid);
+				groupScheduleArray = qmwise.getStub().getScheduleListByGroupV42(perception_group_ID);
 				
 			} catch(Exception e) {
 				QMWiseException qe = new QMWiseException(e);
@@ -388,6 +312,8 @@
 								System.out.println("Schedule deleted, Name: " + responseScheduleIdArray[i].getSchedule_Name()
 										+ " ID: " + responseScheduleIdArray[i].getSchedule_ID());
 							}
+							
+							schedule_deleted = true;
 						}
 						
 					} catch (Exception e) {
@@ -407,13 +333,47 @@
 				System.out.println("Error, no schedules could be found by this name: " 
 						+ schedule_name + " on the Perception database. Please check your Perception error logs.");
 				%> 
-					<bbNG:receipt type="FAIL" title="Error, no schedules found in this Course content item">
+					<bbNG:receipt type="FAIL" title="Error, no schedules could be found by this name:">
 						<%=StringEscapeUtils.escapeHtml("Could not find schedule named: " + schedule_name + " on Perception database")%>
 					</bbNG:receipt>
 				<%
 				return;
 			}
-					
+			
+			//If schedules deleted on perception then delete corresponding lineitem in Blackboard Grade Center:
+				
+			//get LineitemDbLoader
+			LineitemDbLoader lineitemLoader = (LineitemDbLoader) bbPm.getLoader(LineitemDbLoader.TYPE);			
+	
+			LineitemDbPersister lineitemdbpersister = (LineitemDbPersister) bbPm.getPersister(LineitemDbPersister.TYPE);
+			
+			Lineitem lineitem;
+						
+			try {
+				lineitem = lineitemLoader.loadByCourseIdAndLineitemName(course.getId(), schedule_name).get(0);
+			} catch(java.lang.IndexOutOfBoundsException e) {
+				//lineitem doesn't exist yet -- "use gradebook" box was not checked 
+				//otherwise it would exist already. so we ignore this callback.
+				out.println("Perception: removeproc.jsp: Ignoring delete lineitem command since no corresponding gradebook column");
+				return;
+			} catch(Exception e) {
+				out.println("Perception: removeproc.jsp: got an exception: " + e);
+				return;
+			}
+			
+			if(!lineitem.equals(null) && schedule_deleted == true){
+				lineitemdbpersister.deleteById(lineitem.getId());
+			}
+			
+			String recallurl = "main.jsp?course_id=" + courseId + "#Schedules";
+			
+			%> 
+				<bbNG:receipt type="SUCCESS" title="Success" recallUrl="<%=recallurl%>">
+					The schedule was successfully deleted!
+				</bbNG:receipt>
+			<%
+			
+			
 	}
 	
 
