@@ -67,11 +67,13 @@
 			
 	String schedule_name = courseDoc.getTitle();
 	
+	String schedule_description = courseDoc.getBody().getText();
+	
 	%>
 
-	<bbNG:pageHeader instructions="View Schedule"> 
+	<bbNG:pageHeader instructions="<%=schedule_description%>"> 
 	<bbNG:pageTitleBar iconUrl='<%=path+"/images/qm.gif"%>'
-			title="Questionmark Scheduled Assessment" />
+			title="<%=schedule_name%>" />
 		<bbNG:breadcrumbBar environment="COURSE" isContent="true">
 			<bbNG:breadcrumb><%=schedule_name%></bbNG:breadcrumb>
 		</bbNG:breadcrumbBar>
@@ -249,7 +251,7 @@
 	</bbNG:actionControlBar>
 
 
-	<h1 id="Schedule">Schedule</h1>
+	
 	<%
 			ScheduleV42[] schedulesarray = null;
 			try {				

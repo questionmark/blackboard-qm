@@ -37,8 +37,7 @@
 								String course_id = request.getParameter("course_id");
 								String parent_id = request.getParameter("parent_id"); //  id of the parent folder
 								String schedule_name = request.getParameter("schedule");
-								String schedule_description = "Questionmark Perception Scheduled Assessment "; 
-								//+ request.getParameter("\n" + "schedule_textbox_0");
+								String schedule_description = request.getParameter("schedule_textboxtext");
 								//out.println("description string is: " + schedule_description);
 
 								//Retrieve the Db persistence manager from the persistence service
@@ -282,7 +281,7 @@
 						//set description of content item, in this case, perception schedule..
 						
 						FormattedText text = new FormattedText(schedule_description,
-								FormattedText.Type.PLAIN_TEXT);						
+								FormattedText.Type.DEFAULT);						
 												
 						courseDoc.setBody(text);
 
@@ -328,7 +327,7 @@
 						<i>Schedule creation was successful.</i>						
 					</p>
 		</bbUI:receipt>
-				<%
+		<%
 					}
 
 							catch (PersistenceException pE) {
@@ -336,8 +335,7 @@
 				<bbUI:receipt type="FAIL" title="content item creation unsuccessful" recallUrl="" buttonName="failOk" buttonAlt="OK">
 					Sorry but there was a problem creating this content item, see below:<br>
 					<%
-						out
-												.println("Persistence Exception caught, Message: "
+						out.println("Persistence Exception caught, Message: "
 														+ pE.getMessage());
 					%>
 				</bbUI:receipt>

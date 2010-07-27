@@ -220,12 +220,6 @@
 	
 	//----------------------End of sync block-----------------------------------------------
 	
-					
-
-	//-----------------------------------------------------------------------
-	//view (still) specific to current user, i.e. Student can only Take assessments
-	// and Staff can "Test Assessments"
-	//-----------------------------------------------------------------------
 
 	
 	// get the membership data to determine the User's Role
@@ -303,20 +297,20 @@
 			//deletion takes place.
 			
 			for(ScheduleV42 schedule: schedulesarray){
-				//Delete group schedule - but make sure delete for only this group!
+				//Delete schedule for 'bb-phantom' user - but make sure delete for only this group!
 				if(schedule.getGroup_ID() == perceptiongroupid 
 					&& schedule.getSchedule_Name().equals(schedule_name)){						
 					try{
-						//Once found delete straigthaway, Deletes the Group Schedule for this Course.						
+						//Once found delete straigthaway, Deletes the bb-phantom Schedule for this Course.						
 						qmwise.getStub().deleteScheduleV42(schedule.getSchedule_ID());
 						//Announce deletion for logs.
-						System.out.println("Group Schedule deleted, Name: " + schedule.getSchedule_Name()
+						System.out.println("Deleted schedule for 'bb-phantom' user, Schedule Name: " + schedule.getSchedule_Name()
 								+ " ID: " + schedule.getSchedule_ID());						
 					}  catch (Exception e) {
 						QMWiseException qe = new QMWiseException(e);
 						//This schedule has to be deleted, else synchronisation will put it back in!
 						//So if qmwise call fails, terminate this script.
-						System.out.println("Error deleting Group schedule: " + qe.getMessage());
+						System.out.println("Error deleting schedule: " + schedule.getSchedule_Name() + "\n" + qe.getMessage());
 						System.out.println("Terminating remove script...Please manually delete Enerprise Manager ");						
 						return;
 					}
@@ -412,10 +406,12 @@
 							return;
 					}
 
+					//Routine to delete gradebook disabled for now. User's have the option to manually delete grade center columns as they 
+					//see fit.
 					
 					//If schedules deleted on perception then delete corresponding lineitem in Blackboard Grade Center:
 					
-					//get LineitemDbLoader
+					/*	
 					LineitemDbLoader lineitemLoader = (LineitemDbLoader) bbPm.getLoader(LineitemDbLoader.TYPE);			
 			
 					LineitemDbPersister lineitemdbpersister = (LineitemDbPersister) bbPm.getPersister(LineitemDbPersister.TYPE);
@@ -427,25 +423,19 @@
 					} catch(java.lang.IndexOutOfBoundsException e) {
 						//lineitem doesn't exist yet -- "use gradebook" box was not checked 
 						//otherwise it would exist already. so we ignore this callback.
-						out.println("Perception: removeproc.jsp: Ignoring delete lineitem command since no corresponding gradebook column");
+						out.println("Perception: content/remove.jsp: Ignoring delete lineitem command since no corresponding gradebook column");
 						return;
 					} catch(Exception e) {
-						out.println("Perception: removeproc.jsp: got an exception: " + e);
+						out.println("Perception: content/remove.jsp: got an exception: " + e);
 						return;
 					}
 					
 					if(!lineitem.equals(null) && schedule_deleted == true){
 						lineitemdbpersister.deleteById(lineitem.getId());
 					}
+					*/
 					
-					String recallurl = "main.jsp?course_id=" + course_id + "#Schedules";
-					
-					%> 
-						<bbNG:receipt type="SUCCESS" title="Success" recallUrl="<%=recallurl%>">
-							The schedule was successfully deleted!
-						</bbNG:receipt>
-					<%
-
+					//No receipt tags because no html is allowed to be displayed anyway.
 			}
 			
 			else {
