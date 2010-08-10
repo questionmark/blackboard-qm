@@ -28,7 +28,9 @@
 	//Authenticate for use.	
 	if (!PlugInUtil.authorizeForCourseControlPanel(request, response)) {
 		//If user is not authorised to see this page then return blank page
-%>	<h1>You are not authorised to view this page</h1>			
+%>	
+<%@page import="blackboard.base.FormattedText.Type"%>
+<%@page import="org.apache.commons.lang.StringEscapeUtils"%><h1>You are not authorised to view this page</h1>			
 				<%
 								//Stop the script
 									return;
@@ -37,7 +39,18 @@
 								String course_id = request.getParameter("course_id");
 								String parent_id = request.getParameter("parent_id"); //  id of the parent folder
 								String schedule_name = request.getParameter("schedule");
-								String schedule_description = request.getParameter("schedule_textboxtext");
+								//FormattedText ftext = request.getParameter("
+								String schedule_description = request.getParameter("schedule_text_area");
+								
+								if (schedule_description.length() > 4000){
+								%>
+									<bbUI:receipt type="FAIL" title="Schedule description is too long!" buttonAlt="Ok" >
+										 Cannot exceed more than 4000 characters. Please click ok to try again
+									</bbUI:receipt>
+								<%
+								return;
+								}
+									
 								//out.println("description string is: " + schedule_description);
 
 								//Retrieve the Db persistence manager from the persistence service
@@ -49,7 +62,8 @@
 										.getLoader(CourseDbLoader.TYPE);
 								Course course;
 								User user;
-							%>
+								
+				%>
 
 
 <bbData:context id="ctx">
@@ -279,9 +293,8 @@
 						courseDoc.setTitle(schedule_name);
 
 						//set description of content item, in this case, perception schedule..
-						
-						FormattedText text = new FormattedText(schedule_description,
-								FormattedText.Type.DEFAULT);						
+						//Escape any html that the user types. Only allowing plaintext.
+						FormattedText text = new FormattedText(StringEscapeUtils.escapeHtml(schedule_description), FormattedText.Type.DEFAULT);						
 												
 						courseDoc.setBody(text);
 

@@ -2,9 +2,7 @@
 ////////////////////////////
 
 // Filename		: content/createscheduleform.jsp
-// Description	: Part of Questionmark Perception Connector, this file is
-// 				  responsible for allowing the course instructor to create
-//				  a new scheduled assessment as a content item.
+// Description	: Part of Questionmark Perception Connector, creation of schedule from content item.
 ////////////////////////////
 -->
 
@@ -50,7 +48,8 @@
 %>
 
 
-<bbNG:learningSystemPage ctxId="ctx" title="Questionmark Perception connector" onLoad="disable_set_access()">
+
+<%@page import="blackboard.base.FormattedText.Type"%><bbNG:learningSystemPage ctxId="ctx" title="Questionmark Perception connector" onLoad="disable_set_access()">
 	
 	<bbNG:pageHeader>
 		<bbNG:breadcrumbBar environment="COURSE" isContent="true">
@@ -252,10 +251,15 @@
 			//sort assessments by Session_Name
 			Arrays.sort(assessments, new AssessmentComparator());
 
-			if(assessments.length == 0) { %>
-	<p>There are no assessments defined in Perception so you cannot
-	schedule an assessment.</p>
-	<% } else { %>
+			if(assessments.length == 0) { 
+	%>
+				<p>There are no assessments defined in Perception so you cannot
+					schedule an assessment.
+				</p>
+	<% 		} else { 
+				
+	
+	%>
 	<bbNG:jsBlock>
 		<script type="text/javascript">
 						function disable_set_access() {
@@ -285,95 +289,102 @@
 	</bbNG:jsBlock>
 
 				<form name="schedule_assessment" action='<%=path+"/content/createscheduleproc.jsp"%>' method="post">
-					
-					<input type="hidden" name="course_id" value="<%=request.getParameter("course_id")%>"/>
-					<input type="hidden" name="parent_id" value="<%=request.getParameter("content_id")%>"/>	
 									
-					<bbUI:step title="Enter Information" number="1">
-						<bbUI:dataElement label="Schedule name">
-							<input type="text" name="schedule" />
-							<br />
-							The schedule name must be unique if results are to be stored in the gradebook
-						</bbUI:dataElement>
-						
-						<bbUI:dataElement label="Schedule description">
-							<bbUI:textbox name="schedule_textbox" label="Content Item Description" 
-								cols="3" rows="3"  text="Enter a short description for this Content item"  format="TextboxTag.PLAIN_TEXT"
-								maxLength="4000" 	
-							/>							
+					<bbNG:dataCollection>			
+						<bbNG:step title="Enter Information">
+							<bbNG:dataElement isRequired="true" label="Schedule name">
+								<input type="text" name="schedule" width=""/>
+								<br />
+								The schedule name must be unique if results are to be stored in the Grade Center
+							</bbNG:dataElement>
 							
-						</bbUI:dataElement>
-						<bbUI:dataElement label="Store results in Grade Center?">
-							<select name="use_gradebook">
-								<option value="percent" selected="selected">as percentage
-								scores</option>
-								<option value="point">as point scores</option>
-								<option value="no">do not store results in Grade Center</option>
-							</select>
-						</bbUI:dataElement>						
-						<bbUI:dataElement label="Select result to display in Grade Center">
-							<select name="result_type">
-								<option value="FIRST">First</option>				
-								<option value="BEST" selected="selected">Best</option>
-								<option value="WORST">Worst</option>
-								<option value="LAST">Last</option>
-							</select>
-						</bbUI:dataElement>
-						<bbUI:dataElement label="Assessment name">
-							<select name="assessment">
-								<% 
-								String last_ID = "";
-								for(int i = 0; i < assessments.length; i++) { 
-									String next_ID = assessments[i].getAssessment_ID();
-									if (!next_ID.equals(last_ID)){%>
-								<option value="<%=next_ID%>"><%=assessments[i].getSession_Name()%></option>				
-								<%		last_ID = next_ID;
-									}					
-								} %>
-							</select>
-						</bbUI:dataElement>
-						<bbUI:dataElement label="Limit attempts?">
-							<input type="checkbox" id="limit_attempts" name="limit_attempts"
-								value="true" onclick="disable_limit_attempts()" />
-							<input type="text" id="limit" name="limit" size="4" disabled
-								value="1" />
-						</bbUI:dataElement>
-						<bbUI:dataElement label="Create schedule for each group participant?">
-							<input type="checkbox" id="per_participant" name="per_participant"
-								value="true" onclick="set_limit_attempts_hidden()" />
-							<input type="hidden" id="per_participant_hidden"
-								name="per_participant_hidden" value="0" />
-						</bbUI:dataElement>
-						<bbUI:dataElement label="Set access period?">
-							<br />
+							<bbNG:dataElement label="Schedule description">	
+								<textarea  cols="40" rows="3" title="Additional Comments" onfocus="this.value='';this.onfocus=null;" 
+									name="schedule_text_area" id="addComments" >Enter a short description for this Content item, N.B. Plaintext only.
+								</textarea>				
+							</bbNG:dataElement>
+							<bbNG:dataElement label="Store results in Grade Center?">
+								<select name="use_gradebook">
+									<option value="percent" selected="selected">as percentage
+									scores</option>
+									<option value="point">as point scores</option>
+									<option value="no">do not store results in Grade Center</option>
+								</select>
+							</bbNG:dataElement>						
+							<bbNG:dataElement label="Select result to display in Grade Center">
+								<select name="result_type">
+									<option value="FIRST">First</option>				
+									<option value="BEST" selected="selected">Best</option>
+									<option value="WORST">Worst</option>
+									<option value="LAST">Last</option>
+								</select>
+							</bbNG:dataElement>
+							<bbNG:dataElement label="Assessment name">
+								<select name="assessment">
+									<% 
+									String last_ID = "";
+									for(int i = 0; i < assessments.length; i++) { 
+										String next_ID = assessments[i].getAssessment_ID();
+										if (!next_ID.equals(last_ID)){%>
+									<option value="<%=next_ID%>"><%=assessments[i].getSession_Name()%></option>				
+									<%		last_ID = next_ID;
+										}					
+									} %>
+								</select>
+							</bbNG:dataElement>
+							<bbNG:dataElement label="Limit attempts?">
+								<input type="checkbox" id="limit_attempts" name="limit_attempts"
+									value="true" onclick="disable_limit_attempts()" />
+								<input type="text" id="limit" name="limit" size="4" disabled
+									value="1" />
+							</bbNG:dataElement>
+							<bbNG:dataElement label="Create schedule for each group participant?">
+								<input type="checkbox" id="per_participant" name="per_participant"
+									value="true" onclick="set_limit_attempts_hidden()" />
+								<input type="hidden" id="per_participant_hidden"
+									name="per_participant_hidden" value="0" />
+							</bbNG:dataElement>
+						<bbNG:dataElement label="Set access period?">							
 							<input type="checkbox" id="set_access_period"
 								name="set_access_period" value="true" onclick="disable_set_access()" />
-							<bbUI:dataElement label="Start date">
+								<br/>
+								<br/>
+							<bbNG:dataElement label="Start date">
 								<bbUI:datePicker startDate="<%=startdate%>"
-									formName="schedule_assessment" startCaption="Start"
+									formName="schedule_assessment" 
 									startDateField="start" />
-							</bbUI:dataElement>
-							<bbUI:dataElement label="Start time (24-hour HH:MM)">
+							</bbNG:dataElement>
+							<bbNG:dataElement label="Start time (24-hour HH:MM)">
 								<input type="text" id="start_hour" name="start_hour" size="2"
 									disabled value="09" /> :
 												<input type="text" id="start_minute" name="start_minute"
 									size="2" disabled value="00" />
-							</bbUI:dataElement>
-							<bbUI:dataElement label="End date">
-								<bbUI:datePicker startDate="<%=enddate%>"
-									formName="schedule_assessment" startCaption="End"
+							</bbNG:dataElement>
+							<br/>
+							<bbNG:dataElement label="End date">
+								<bbUI:datePicker  startDate="<%=enddate%>"
+									formName="schedule_assessment" 
 									startDateField="end" />
-							</bbUI:dataElement>
-							<bbUI:dataElement label="End time (24-hour HH:MM)">
+							</bbNG:dataElement>
+							<bbNG:dataElement label="End time (24-hour HH:MM)">
 								<input type="text" id="end_hour" name="end_hour" size="2" disabled
 									value="17" /> :
 												<input type="text" id="end_minute" name="end_minute" size="2"
 									disabled value="00" />
-							</bbUI:dataElement>
-						</bbUI:dataElement>
+							</bbNG:dataElement>
+						</bbNG:dataElement>
+
+						</bbNG:step> 
+							
 						<input type="hidden" name="group" value="<%=course.getBatchUid()%>" />
 						<input type="hidden" name="course_id" value="<%=course_id%>" />
-					</bbUI:step> <bbUI:stepSubmit title="Submit" number="2" /></form>
+						
+						<input type="hidden" name="parent_id" value="<%=parent_id%>"/>	
+						
+						<bbNG:stepSubmit title="Submit"/>
+						
+					</bbNG:dataCollection>
+				</form>
 	<% }
 
 
