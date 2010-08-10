@@ -179,7 +179,7 @@
 				try {
 					force_sync_result = us.synchronizeCourse(courseId);
 					configReader.setCourseSyncDate();
-					out.print(force_sync_result);
+					System.out.print(force_sync_result);
 					//get fresh group
 					perceptiongroupid = new Integer(qmwise.getStub().getGroupByName(course.getBatchUid()).getGroup_ID()).intValue();
 					
