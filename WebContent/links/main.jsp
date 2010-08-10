@@ -536,7 +536,7 @@
 			} catch(Exception e) {
 				QMWiseException qe = new QMWiseException(e);
 				%>
-					<h1>Error getting Perception administrator ID</h1>
+					<p><em>Error getting Perception administrator ID</em></p>
 						<p><%=StringEscapeUtils.escapeHtml(qe.getMessage())%></p>
 					
 				<%
@@ -544,26 +544,30 @@
 			}
 
 			Assessment[] assessments = null;
-			try {
-				assessments = qmwise.getStub().getAssessmentListByAdministrator(adminid);
-			
-			} catch(Exception e) {
+			try {				
+				assessments = qmwise.getStub().getAssessmentListByAdministrator(adminid);			
+			}
+			catch(Exception e) {
 				QMWiseException qe = new QMWiseException(e);
+				assessments = new Assessment[0];
 				%>
-					<h1>Error getting list of available assessments</h1>
+					<p><em>Error getting list of available assessments</em></p>
 						<p><%=StringEscapeUtils.escapeHtml(qe.getMessage())%></p>
 						
 				<%
 				//return;
 			}
-
-			//sort assessments by Session_Name
-			Arrays.sort(assessments, new AssessmentComparator());
-
-			if(assessments.length == 0) { %>
+			
+			
+			if(assessments.length == 0) {
+		%>
 	<p>There are no assessments defined in Perception so you cannot
 	schedule an assessment.</p>
-	<% } else { %>
+	<% } else { 
+		//if not empty,
+		//sort assessments by Session_Name
+		Arrays.sort(assessments, new AssessmentComparator());
+	%>
 	<bbNG:jsBlock>
 		<script type="text/javascript">
 						function disable_set_access() {
