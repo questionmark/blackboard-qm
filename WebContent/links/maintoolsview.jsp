@@ -203,10 +203,10 @@
 
 	<h1 id="Schedules">Schedules</h1>
 	<%
-			ScheduleV42[] schedulesarray = null;
-			try {				
-				schedulesarray = qmwise.getStub().getScheduleListByParticipantV42(new Integer(UserSynchronizer.getPhantomUserId()).intValue());
-			} catch (Exception e){			
+		ScheduleV42[] schedulesarray = null;
+		try {				
+			schedulesarray = qmwise.getStub().getScheduleListByParticipantV42(new Integer(UserSynchronizer.getPhantomUserId()).intValue());
+		} catch (Exception e){			
 				if( e instanceof QMWiseException ){
 					QMWiseException qe = new QMWiseException(e);
 					if(qe.getQMErrorCode() == 1301){
@@ -220,8 +220,8 @@
 							<p><%=StringEscapeUtils.escapeHtml(assessmentErrorOutput)%></p>
 						<%						
 					} else {
-						String qmErrorOutput = "Perception: course " + courseId + 
-						": Error getting group schedule list. Cause: " + qe.getMessage();
+						String qmErrorOutput = "Perception: course " + courseId + ": Error getting group schedule list. Cause: " + qe.getMessage();
+						
 						System.out.println(qmErrorOutput);
 						%>
 							<h1>Error getting group schedule list, QMWISe error!</h1>
@@ -238,6 +238,7 @@
 				}
 				// Return disabled to allow for the page to continue loading.
 				//return;
+			
 				
 			}
 
@@ -268,6 +269,7 @@
 			String[] scheduleurls = new String[schedules.size()];
 			boolean[] schedulesactive = new boolean[schedules.size()];
 
+
 			for(int i = 0; i < schedules.size(); i++) {
 				try {
 					scheduleurls[i] = qmwise.getStub().getAccessAssessment(
@@ -285,25 +287,18 @@
 						+ qe.getMessage();
 						System.out.println(assessmentErrorOutput);
 						
-						schedules.get(i).setSchedule_Name(schedules.get(i).getSchedule_Name() 
-								+ " - ERROR");	
-						
-						scheduleurls[i] = "";
-						
-						%>
-							<h1>Error getting assessment URL, assessment missing!</h1>
-							<p><%=StringEscapeUtils.escapeHtml(assessmentErrorOutput)%></p>
-						<%						
+						//Set the schedule url to blank and check for blank url later on to decide whether schedule is active or broken.						
+						scheduleurls[i] = "ASSESSMENT_ERROR: Assessment not found, check whether assessment exists in Perception";
+												
 					}
-					else {						
-					
-						%>
-							<h1>Error getting assessment URL</h1>
-							<p><%=StringEscapeUtils.escapeHtml(qe.getMessage())%></p>							
-						<%
-					//return;
+					else {
+						
+						//Set the schedule url to blank and check for blank url later on to decide whether schedule is active or broken.						
+						scheduleurls[i] = "ERROR: " + qe.getMessage().substring(0, 40);						
+						
 					}
 				}
+
 
 				Long schedule_start = schedules.get(i).readSchedule_Starts_asCalendar().getTime().getTime();
 				Long schedule_stop = schedules.get(i).readSchedule_Stops_asCalendar().getTime().getTime();
@@ -331,7 +326,7 @@
 			</script>
 		</bbNG:jsBlock>
 		<tr>
-			<!--<th>Assessment ID</th>-->
+			
 			<th>Schedule name</th>
 			<th>Maximum attempts</th>
 			<th>Start datetime</th>
@@ -339,7 +334,7 @@
 			<th>Active?</th>
 			<th>Try Out</th>
 			<th>Show URL</th>
-			<!--<th>Group</th>-->
+			
 		</tr>
 		<%
 				for(int i = 0; i < schedules.size(); i++) {
@@ -351,21 +346,8 @@
 					
 					%>
 					<tr>
-						<!--<td><%=schedules.get(i).getAssessment_ID()%></td>-->
-						
-						<% 
-							if ( schedules.get(i).getSchedule_Name().contains("ERROR") ) { 
-							%>
-								<td bgcolor="yellow"><%=schedules.get(i).getSchedule_Name()%>
-							 		<i> : Missing Assessment in Perception, Schedule Disabled</i></td>
-							<% 
-							} else {
-								%>
-									<td><%=schedules.get(i).getSchedule_Name()%></td>
-								<% 
-							}
-						%>						
-						
+	
+						<td><%=schedules.get(i).getSchedule_Name()%></td>
 						<td><%=schedules.get(i).isRestrict_Attempts() ? schedules.get(i).getMax_Attempts() : "no limit"%></td>
 						<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).readSchedule_Starts_asCalendar().getTime().toString()%></td>
 						<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).readSchedule_Stops_asCalendar().getTime().toString()%></td>
@@ -373,12 +355,17 @@
 						
 						<% 
 						
-						if (scheduleurls[i].length() == 0) {						
+						if (scheduleurls[i].contains("ASSESSMENT_ERROR")) {						
 							%>
-								<td bgcolor="yellow"><i>Schedule Disabled</i></td>
+								<td bgcolor="yellow"><i>Schedule Disabled: <%=StringEscapeUtils.escapeHtml(scheduleurls[i])%> </i></td>
 							<% 
 							
-						} else {
+						} else if(scheduleurls[i].contains("ERROR")){
+							%>
+								<td bgcolor="yellow"><i>Schedule Disabled: <%=StringEscapeUtils.escapeHtml(scheduleurls[i])%> </i></td>
+							<% 
+						}
+						else {
 							%>							
 								<td><a href="<%=StringEscapeUtils.escapeHtml(scheduleurls[i])%>" target="_blank">Test assessment</a></td>
 							<% 

@@ -1,11 +1,6 @@
 <!-- 
  Filename		: content/removeproc.jsp
  Description	: Runs when deleting a schedule from control panel view: 
- 					- View schedule code to generate the schedules view and pick out the schedule name matching the incoming schedule name.
- 					- Once the schedule is picked out store that schedule's id to be sent off to QMWISe delete method.
- 					- Connect to qmwise again with delete schedule routine for that particular schedule's id.
-					- Delete the schedule line item from BB Grade Center, if the column by the schedule name exists.
-					- Refresh this page - to allow for html cleanup. Once the schedule is deleted the table row should disappear.				  
 
 -->
 
@@ -67,7 +62,7 @@
 	//Declare members.
 	
 	QMWise qmwise = null;
-	int perception_group_ID = 0, schedule_id = 0; 
+	int schedule_id = 0; 
 	boolean schedule_deleted = false;
 	
 	String schedule_name, perception_group_name;
@@ -79,13 +74,20 @@
 	String basePath = request.getScheme() + "://"
 		+ request.getServerName() + ":" + request.getServerPort()
 		+ path + "/";
+		
+		
+		
 		//Get schedule name from request object reference to start the deletion process
 		
+			
 	schedule_name = request.getParameter("schedule_name");
 	perception_group_name = request.getParameter("schedule_group_name");
-	perception_group_ID = Integer.parseInt(request.getParameter("schedule_group_id"));
 	
-
+	
+	String groupIDString = request.getParameter("schedule_group_id");
+	
+	int perception_group_ID = Integer.parseInt(groupIDString);
+	
 	// Retrieve the course identifier from the delete form
 	String courseId = request.getParameter("course_id");
 
@@ -101,6 +103,9 @@
 		<%
 		return;
 	}
+	
+	//URL to go back to once the schedule is successfully deleted.	
+	String recallurl = "main.jsp?course_id=" + courseId + "#Schedules";
 
 	//create a ConfigFileReader, to check whether this course needs 
 	//to sync its members and to show date last synchronized
@@ -312,68 +317,44 @@
 							}
 							
 							schedule_deleted = true;
+							
+
+							%> 
+								<bbNG:receipt type="SUCCESS" title="Success" recallUrl="<%=recallurl%>">
+									The schedule "<%=schedule_name%>" was successfully deleted!
+								</bbNG:receipt>
+							<%		
 						}
 						
 					} catch (Exception e) {
-							QMWiseException qe = new QMWiseException(e);
-							System.out.println("Error deleting schedules: " + qe.getMessage() + 
-									"\nPlease log into Enterprise Manager to ensure schedules are properly deleted");
-							%>
-								<bbNG:receipt type="FAIL" title="Error deleting schedule">
-									<%=StringEscapeUtils.escapeHtml(qe.getMessage())%>
-								</bbNG:receipt>
-							<%
-							return;
+						QMWiseException qe = new QMWiseException(e);
+						System.out.println("Error deleting schedules: " + qe.getMessage() + 
+								"\nPlease log into Enterprise Manager to ensure schedules are properly deleted");
+						%>
+							<h1>Error deleting schedule <%=schedule_name%></h1>
+							 <p>Please log into Enterprise Manager to ensure schedules are properly deleted.</p>
+							 <br/>
+							<%=StringEscapeUtils.escapeHtml(qe.getMessage())%>
+							
+						<%
+						return;
 					}
 			}
 			
 			else {
-				System.out.println("Error, no schedules could be found by this name: " 
-						+ schedule_name + " on the Perception database. Please check your Perception error logs.");
+				
+				String errorMsg = "Error, no schedules could be found by this name: " 
+						+ schedule_name + " on the Perception database. Please check your Perception error logs.";
+				
+				System.out.println(errorMsg);
 				%> 
-					<bbNG:receipt type="FAIL" title="Error, no schedules could be found by this name:">
-						<%=StringEscapeUtils.escapeHtml("Could not find schedule named: " + schedule_name + " on Perception database")%>
-					</bbNG:receipt>
+					<h1>Error deleting schedule!</h1>
+					<br/>
+					<%=errorMsg%>
+					
 				<%
-				return;
-			}
-			
-			
-			//Routine to delete gradebook disabled for now. User's have the option to manually delete grade center columns as they 
-			//see fit.
-			
-			//If schedules deleted on perception then delete corresponding lineitem in Blackboard Grade Center:
-			/*		
-			LineitemDbLoader lineitemLoader = (LineitemDbLoader) bbPm.getLoader(LineitemDbLoader.TYPE);			
-	
-			LineitemDbPersister lineitemdbpersister = (LineitemDbPersister) bbPm.getPersister(LineitemDbPersister.TYPE);
-			
-			Lineitem lineitem;
-						
-			try {
-				lineitem = lineitemLoader.loadByCourseIdAndLineitemName(course.getId(), schedule_name).get(0);
-			} catch(java.lang.IndexOutOfBoundsException e) {
-				//lineitem doesn't exist yet -- "use gradebook" box was not checked 
-				//otherwise it would exist already. so we ignore this callback.
-				out.println("Perception: removeproc.jsp: Ignoring delete lineitem command since no corresponding gradebook column");
-				return;
-			} catch(Exception e) {
-				out.println("Perception: removeproc.jsp: got an exception: " + e);
-				return;
-			}
-			
-			if(!lineitem.equals(null) && schedule_deleted == true){
-				lineitemdbpersister.deleteById(lineitem.getId());
-			}
-			*/
-			
-			String recallurl = "main.jsp?course_id=" + courseId + "#Schedules";
-			
-			%> 
-				<bbNG:receipt type="SUCCESS" title="Success" recallUrl="<%=recallurl%>">
-					The schedule was successfully deleted!
-				</bbNG:receipt>
-			<%			
+				//return;
+			}	
 			
 	}
 	

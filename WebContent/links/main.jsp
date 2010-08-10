@@ -26,7 +26,9 @@
 <%
 	String path = request.getContextPath();
 	String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+path+"/";
-	String schedule_name = request.getParameter("schedule_name");
+	String schedule_name = "";
+	
+	
 %>
 
 
@@ -275,24 +277,26 @@
 
 	<h1 id="CourseSettings">Course Settings</h1>
 	<form name="course_settings"
-		action='<%=path+"/links/coursesettings.jsp"%>' method="post"><bbUI:step
-		title="Enter Information" number="1">
-		<bbUI:dataElement label="Hide schedules from students in Course Tool view?">
-			<% if (courseSettings.getProperty("hide_schedules","0").equals("1")) { %>
-			<input type="checkbox" id="hide_schedules" name="hide_schedules"
-				value="true" checked="checked" />
-			<% } 
-						else {
-						%>
-			<input type="checkbox" id="hide_schedules" name="hide_schedules"
-				value="false" />
-			<% } %>
-			<p><i>Use this option if you are creating schedules using content items to prevent students from seeing the schedule list in the Course Tool 
-			view of the connector. <br/>
-			Hidden schedules can still be accessed individually using the schedule's URL below.</i></p>
-		</bbUI:dataElement>
-		<input type="hidden" name="course_id" value="<%=courseId%>" />
-	</bbUI:step> <bbUI:stepSubmit title="Submit" number="2" /></form>
+		action='<%=path+"/links/coursesettings.jsp"%>' method="post">
+		<bbUI:step title="Enter Information" number="1">
+			<bbUI:dataElement label="Hide schedules from students in Course Tool view?">
+				<% if (courseSettings.getProperty("hide_schedules","0").equals("1")) { %>
+				<input type="checkbox" id="hide_schedules" name="hide_schedules"
+					value="true" checked="checked" />
+				<% }
+					else {
+				%>
+				<input type="checkbox" id="hide_schedules" name="hide_schedules"
+					value="false" />
+				<% } %>
+				<p><i>Use this option if you are creating schedules using content items to prevent students from seeing the schedule list in the Course Tool 
+				view of the connector. <br/>
+				Hidden schedules can still be accessed individually using the schedule's URL below.</i></p>
+			</bbUI:dataElement>
+			<input type="hidden" name="course_id" value="<%=courseId%>" />
+		</bbUI:step>
+	 	<bbUI:stepSubmit title="Submit" number="2" />
+	 </form>
 
 	<h1 id="Schedules">Schedules</h1>
 	<%
@@ -378,23 +382,15 @@
 						+ qe.getMessage();
 						System.out.println(assessmentErrorOutput);
 						
-						schedules.get(i).setSchedule_Name(schedules.get(i).getSchedule_Name() 
-								+ " - ERROR");	
-						
-						scheduleurls[i] = "";
-						
-						%>
-							<h1>Error getting assessment URL, assessment missing!</h1>
-							<p><%=StringEscapeUtils.escapeHtml(assessmentErrorOutput)%></p>
-						<%						
+						//Set the schedule url to blank and check for blank url later on to decide whether schedule is active or broken.						
+						scheduleurls[i] = "ASSESSMENT_ERROR: Assessment not found, check whether assessment exists in Perception";
+												
 					}
-					else {						
-					
-						%>
-							<h1>Error getting assessment URL</h1>
-							<p><%=StringEscapeUtils.escapeHtml(qe.getMessage())%></p>							
-						<%
-					//return;
+					else {
+						
+						//Set the schedule url to blank and check for blank url later on to decide whether schedule is active or broken.						
+						scheduleurls[i] = "ERROR: " + qe.getMessage().substring(0, 40);						
+						
 					}
 				}
 
@@ -414,7 +410,7 @@
 			%>
 			
 			
-		<table border="2" cellpadding="1">
+		<table border="2" cellpadding="1" id="scheduleTable">
 		<bbNG:jsBlock>
 			<script type="text/javascript">
 				var scheduleTable = {};
@@ -424,17 +420,17 @@
 						row.style.display = box.checked? "table-row":"none";
 					}
 
-					function deleteSchedule(scheduleName, scheduleRowID){
-						var schedule = document.getElementById(scheduleName);
-						var scheduleRow = document.getElementById(scheduleRowID);
-						
-						
+					
+					function deleteRow(rowID)
+					{
+						var row = rowID.parentNode.parentNode.rowIndex;
+						document.getElementById('scheduleTable').deleteRow(row);
 					}
 						
 			</script>
 		</bbNG:jsBlock>
 		<tr>
-			<!--<th>Assessment ID</th>-->
+			
 			<th>Schedule name</th>
 			<th>Maximum attempts</th>
 			<th>Start datetime</th>
@@ -454,21 +450,8 @@
 					
 					%>
 					<tr id="scheduleRowID">
-						<!--<td><%=schedules.get(i).getAssessment_ID()%></td>-->
-						
-						<% 
-							if ( schedules.get(i).getSchedule_Name().contains("ERROR") ) { 
-							%>
-								<td bgcolor="yellow"><%=schedules.get(i).getSchedule_Name()%>
-							 		<i> : Missing Assessment in Perception, Schedule Disabled</i></td>
-							<% 
-							} else {
-								%>
-									<td><%=schedules.get(i).getSchedule_Name()%></td>
-								<% 
-							}
-						%>						
-						
+												
+						<td><%=schedules.get(i).getSchedule_Name()%></td>
 						<td><%=schedules.get(i).isRestrict_Attempts() ? schedules.get(i).getMax_Attempts() : "no limit"%></td>
 						<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).readSchedule_Starts_asCalendar().getTime().toString()%></td>
 						<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).readSchedule_Stops_asCalendar().getTime().toString()%></td>
@@ -476,12 +459,17 @@
 						
 						<% 
 						
-						if (scheduleurls[i].length() == 0) {						
+						if (scheduleurls[i].contains("ASSESSMENT_ERROR")) {						
 							%>
-								<td bgcolor="yellow"><i>Schedule Disabled</i></td>
+								<td bgcolor="yellow"><i>Schedule Disabled: <%=StringEscapeUtils.escapeHtml(scheduleurls[i])%> </i></td>
 							<% 
 							
-						} else {
+						} else if(scheduleurls[i].contains("ERROR")){
+							%>
+								<td bgcolor="yellow"><i>Schedule Disabled: <%=StringEscapeUtils.escapeHtml(scheduleurls[i])%> </i></td>
+							<% 
+						}
+						else {
 							%>							
 								<td><a href="<%=StringEscapeUtils.escapeHtml(scheduleurls[i])%>" target="_blank">Test assessment</a></td>
 							<% 
@@ -515,7 +503,13 @@
 					</tr>
 					<tr id='<%=idStr%>' style="display: none;">
 						<td><i>URL:</i></td>
-						<td colspan="6"><code><%=basePath+"links/main.jsp?course_id="+courseId+"&amp;schedule_name="+StringEscapeUtils.escapeHtml(schedules.get(i).getSchedule_Name())%></code></td>
+						<td colspan="6">
+							<code>
+								<%=basePath+"links/main.jsp?course_id="+courseId+"&amp;schedule_name=" + 
+									StringEscapeUtils.escapeHtml(schedules.get(i).getSchedule_Name())
+								%>
+							</code>
+						</td>
 					</tr>
 					<% 
 				} 
@@ -680,6 +674,7 @@
 	<% }
 
 		} else {
+		
 			//-----------------------------------------------------------------------
 			//Student
 			//-----------------------------------------------------------------------
@@ -818,7 +813,7 @@
 		<%
 				for(int i = 0; i < schedules.size(); i++) {	
 					if(schedules.get(i) == null) continue;												
-					if(schedulesactive[i] == false) continue;	//showing only active to students			
+					if(schedulesactive[i] == false) continue;	//showing only active schedules to students			
 					if(schedule_name != null && schedule_name.length() > 0){
 						if(!schedules.get(i).getSchedule_Name().equals(schedule_name)) continue;	
 					}
@@ -831,18 +826,35 @@
 			<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).readSchedule_Starts_asCalendar().getTime().toString()%></td>
 			<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).readSchedule_Stops_asCalendar().getTime().toString()%></td>
 			<td>
-			<% if(schedulesactive[i]) { %> <% if(scheduleurls[i] == null) { %> No
-			attempts remaining <% } else { %>
-			<form><input type="button" value="Take assessment"
-				onclick="window.open('<%=scheduleurls[i]%>');"></form>
-			<% } %> <% } else { %> inactive <% } %>
+			<% 
+			
+				if(schedulesactive[i]) { 
+					if(scheduleurls[i] == null) {
+						
+						%>No attempts remaining<%
+						
+					} else {
+						%>
+							<form><input type="button" value="Take assessment"
+								onclick="window.open('<%=scheduleurls[i]%>');">
+							</form>
+						<% 
+					} 
+				} else {
+					
+					%>inactive<%
+					
+				} 
+			%>
 			</td>
 
 		</tr>
-		<% } %>
+			<%
+				} 
+			%>
 	</table>
 	<%
-		}
+		} //End of student view (else student)
 	%>
 	
 </bbNG:learningSystemPage>

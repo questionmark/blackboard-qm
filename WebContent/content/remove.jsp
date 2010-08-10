@@ -1,13 +1,6 @@
 <!-- 
  Filename		: content/remove.jsp
  Description	: Runs when deleting a content item: 
- 					- View schedule code to generate the schedules view and pick out the schedule name matching the content 
- 						item name.
- 					- Once the schedule is picked out store that schedule's id to be sent off to QMWISe delete method.
- 					- Connect to qmwise again with delete schedule routine for that particular schedule's id.
-					- Delete the schedule line item from BB Grade Center, if the column by the schedule name exists.
-					- Continue with deletion of content item. The deletion happens anyway this script allows
-						cleanup tasks to be taken care of.				  
 
 -->
 
