@@ -1,5 +1,6 @@
 ; blackboard.pip
 ; PIP file for use with Blackboard connector to Perception
+; This file only for use with Perception version 5.x
 
 [Input]
 GROUP=bb_courseid
