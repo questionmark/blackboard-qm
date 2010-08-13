@@ -11,9 +11,11 @@ Licenced under the Apache Software License, see LICENSE.txt for details.
 INSTALLATION
 
 1. Pip file
-	First, install the Blackboard Pip file. To do this, copy the 
-	pip/blackboard.pip file to pip directory (for instance C:\Program 
-	Files\Questionmark\Perception4\server\pip) on the server running Perception.
+	First, install the Blackboard Pip file. To do this, upload the 
+	pip/blackboard.pip file using the Resource Manager.
+	For users of Perception 4.4, copy the pip4/blackboard.pip file to
+	the pip directory (for instance C:\Program Files\Questionmark\Perception4\server\pip)
+	on the server running Perception.
 2. Profiles
 	Next, log into Perception Enterprise Manager and set up two new 
 	administrator profiles, "Blackboard Instructor" and "Blackboard TA" for 
