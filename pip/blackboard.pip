@@ -2,6 +2,7 @@
 ; PIP file for use with Blackboard connector to Perception
 
 [Input]
+GROUP=bb_courseid
 
 [Output]
 Participant_Name=%SESSION.USER%
@@ -14,6 +15,7 @@ Score_Percentage=%SESSION.PERCENT%
 Session_Title=%SESSION.TITLE%
 bb_scheduleid=bb_scheduleid
 bb_schedulename=bb_schedulename
+bb_courseid=bb_courseid
 
 [Security]
 Level=md5
@@ -22,3 +24,4 @@ Key=%SERVER.KEY%
 [Settings]
 HEADER=Content-Type: application/x-www-form-urlencoded
 USEHOME=yes
+closehome=yes

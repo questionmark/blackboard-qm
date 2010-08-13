@@ -586,7 +586,8 @@
 					try {
 						Parameter[] parameters = {
 							new Parameter("bb_schedulename", schedules.get(i).getSchedule_Name()),
-							new Parameter("bb_scheduleid", new Integer(schedules.get(i).getSchedule_ID()).toString())
+							new Parameter("bb_scheduleid", new Integer(schedules.get(i).getSchedule_ID()).toString()),
+							new Parameter("bb_courseid", course.getBatchUid())
 						};
 						try {
 							scheduleurls[i] = qmwise.getStub().getAccessScheduleNotify(
