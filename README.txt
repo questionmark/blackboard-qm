@@ -1,3 +1,6 @@
+Blackboard Connector for Questionmark Perception
+------------------------------------------------
+
 For information about supported versions of this connector please refer to
 the Questionmark website.
 
@@ -17,5 +20,21 @@ http://developer.questionmark.com/home/course/view.php?id=4
 For important information about licensing see:
 LICENSE.txt
 
+Known Issues
+------------
+
+[#221] Sometimes, results show as unfinished on the view results page 
+even though the gradebook has been udpated
+
+[#229] In some browsers, the pop-up calendar widget obscures the names
+of the months
+
+[#316] Users without a role in the Blackboard course get an error message
+
+For more information see:
+http://projects.oscelot.org/gf/project/blackboard-qm/tracker/?action=TrackerItemBrowse&tracker_id=760
+
+
+------------
 This project is being developed on OSCELOT:
 http://projects.oscelot.org/gf/project/blackboard-qm
