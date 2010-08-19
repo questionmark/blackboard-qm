@@ -74,6 +74,22 @@
 			return;
 		}
 
+		//old version test if this works or is deprecated in bb8 api.
+		//Retrieve the Db persistence manager from the persistence service
+		BbPersistenceManager bbPm = PersistenceServiceFactory.getInstance().getDbPersistenceManager();
+		
+		//Non deprecated, new code.
+		//Retrieve the Db persistence manager from the persistence 
+		//service
+		//BbPersistenceManager bbPm = BbServiceManager.getPersistenceService().getDbPersistenceManager();
+				
+		// Generate a persistence framework course Id to be used for 
+		// loading the course
+		Id courseIdObject = bbPm.generateId(Course.DATA_TYPE, courseId);
+
+		CourseDbLoader courseLoader = (CourseDbLoader) bbPm.getLoader(CourseDbLoader.TYPE);
+		Course course = courseLoader.loadById(courseIdObject);
+
 		%>
 		
 		<%@ include file="../common/synchronization.jspf" %>
