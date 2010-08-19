@@ -121,10 +121,13 @@ public class UserSynchronizer {
 					groupID = qmwise.getStub().createGroup(newgroup);
 				} catch(Exception ne) {
 					QMWiseException nqe = new QMWiseException(ne);
-					throw new Exception("Error creating Perception group. " + nqe.getMessage());
+					//We don't want a high level exception to be thrown to main..
+					//throw new Exception("Error creating Perception group. " + nqe.getMessage());
+					throw nqe;
 				}
 			} else {
-				throw new Exception("Error getting Perception group. " + qe.getMessage());
+				//throw new Exception("Error getting Perception group. " + qe.getMessage());
+				throw qe;
 			}
 		}
 
@@ -171,7 +174,8 @@ public class UserSynchronizer {
 						try {
 							Participant newuser = new Participant();
 							newuser.setFirst_Name(currentmembership.getUser().getGivenName());
-							newuser.setLast_Name(currentmembership.getUser().getFamilyName());
+							newuser.setLast_Name(currentmembership.getUser().getFamilyName()); //last name with comma would fail
+							//this is now an expected exception, should add a fix for it here...
 							newuser.setParticipant_Name(currentmembership.getUser().getUserName());
 							newuser.setPassword(currentmembership.getUser().getPassword().substring(0, 20));
 							id = qmwise.getStub().createParticipant(newuser);
@@ -179,10 +183,13 @@ public class UserSynchronizer {
 							//the group
 						} catch(Exception ne) {
 							QMWiseException nqe = new QMWiseException(e);
-							throw new Exception("Error creating Perception user. " + nqe.getMessage());
+							//throw new Exception("Error creating Perception user. " + nqe.getMessage());
+							//reaches here..throws it back.
+							throw nqe;
 						}
 					} else {//exception but not "user doesn't exist"
-						throw new Exception("Error getting Perception user. " + qe.getMessage());
+						//throw new Exception("Error getting Perception user. " + qe.getMessage());
+						throw qe;
 					}
 				}
 				participantstoadd.add(id);
