@@ -13,6 +13,7 @@
 		blackboard.data.course.*,
 		blackboard.persist.course.*,
 		org.apache.axis.*,
+		org.apache.commons.lang.StringEscapeUtils,
 		java.rmi.RemoteException,
 		javax.xml.namespace.QName,
 		com.questionmark.*,
