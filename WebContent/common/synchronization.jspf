@@ -1,0 +1,85 @@
+
+	
+<% 
+		//-----------------------------------------------------------------------
+		//synchronization
+		//-----------------------------------------------------------------------
+
+
+		//read in synchronization period
+		PropertiesBean pb = new PropertiesBean();
+		String syncperiod = pb.getProperty("perception.syncperiod");
+		String syncusers = pb.getProperty("perception.syncusers");
+		if(syncperiod == null) syncperiod = "60";
+		Long syncperiodms = new Long(syncperiod) * 60 * 1000;
+
+		if (syncusers != null) {
+			if(new Date().getTime() > configReader.getCourseSyncDate() + syncperiodms) {
+				//synchronize course users
+				System.out.println("Perception: course " + courseId + ": it's been more than the sync period since last sync -- syncing users");
+				UserSynchronizer us = new UserSynchronizer();
+				try {
+					us.synchronizeCourse(courseId);
+					configReader.setCourseSyncDate();
+				} catch (Exception e) {
+					System.out.println("Perception: course " + courseId + ": synchronization failed: " + e.getMessage());
+	%>
+		<bbUI:receipt type="FAIL" title="Error synchronizing course users with Perception">
+			<%=e.getMessage()%>
+		</bbUI:receipt>
+	<%
+					return;
+				}
+			}
+		}
+		
+		//old version test if this works or is deprecated in bb8 api.
+		//Retrieve the Db persistence manager from the persistence service
+		BbPersistenceManager bbPm = PersistenceServiceFactory.getInstance().getDbPersistenceManager();
+		
+		//Non deprecated, new code.
+		//Retrieve the Db persistence manager from the persistence 
+		//service
+		//BbPersistenceManager bbPm = BbServiceManager.getPersistenceService().getDbPersistenceManager();
+				
+		// Generate a persistence framework course Id to be used for 
+		// loading the course
+		Id courseIdObject = bbPm.generateId(Course.DATA_TYPE, courseId);
+
+		CourseDbLoader courseLoader = (CourseDbLoader) bbPm.getLoader(CourseDbLoader.TYPE);
+		Course course = courseLoader.loadById(courseIdObject);
+
+		//get Perception group id
+		int perceptiongroupid;
+		try {
+			perceptiongroupid = new Integer(qmwise.getStub().getGroupByName(course.getBatchUid()).getGroup_ID()).intValue();
+		} catch(Exception e) {
+			QMWiseException qe = new QMWiseException(e);
+			if(qe.getQMErrorCode() == 1201) {
+				//group doesn't exist -- force sync
+				System.out.println("Perception: course " + courseId + ": Perception group doesn't exist -- forcing synchronization");
+				UserSynchronizer us = new UserSynchronizer();
+				try {
+					us.synchronizeCourse(courseId);
+					configReader.setCourseSyncDate();
+					//get fresh group
+					perceptiongroupid = new Integer(qmwise.getStub().getGroupByName(course.getBatchUid()).getGroup_ID()).intValue();
+				} catch (Exception ne) {
+					System.out.println("Perception: course " + courseId + ": synchronization failed: " + ne.getMessage());
+	%>
+		<bbUI:receipt type="FAIL" title="Error synchronizing course users with Perception">
+			<%=ne.getMessage()%>
+		</bbUI:receipt>
+	<%
+					return;
+				}
+			} else {
+	%>
+		<bbUI:receipt type="FAIL" title="Error retrieving course group from Perception">
+			<%=qe.getMessage()%>
+		</bbUI:receipt>
+	<%
+				return;
+			}
+		}
+%>
