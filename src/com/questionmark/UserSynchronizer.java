@@ -431,18 +431,53 @@ public class UserSynchronizer {
 		 * In summary:
 		 * 		' " \ / all become space
 		 * 		, | : all become ;
-		 * 		£ goes to #
-		 *		<> go to []
+		 * 		£ goes to # - Perception won't allow £.
+		 *		<> go to [] - BB doesn't allow these in names
 		 * 		& goes to -
 		*/	
+		StringBuilder sb = new StringBuilder(replaceString.length());
 		
-		replaceString = replaceString.replaceAll("(:|,|\\|)", ";");
-		replaceString = replaceString.replaceAll("('|\"|\\\\|/)", " ");
-		replaceString = replaceString.replaceAll("\u00A3", "#");
-		replaceString = replaceString.replaceAll("<>", "[]");
-		replaceString = replaceString.replaceAll("&", "-");
-		
-		return replaceString;
+        for (int i = 0; i < replaceString.length(); i++) 
+        {        	        	
+        	switch(replaceString.charAt(i)){
+        	
+	        	case '\'':
+	        	case '\"':
+	        	case '\\':
+	        	case '/':
+	        		sb.append(' ');
+	        		break;
+	        	
+	        	case ',':
+	        	case '|':
+	        	case ':':
+	        		sb.append(';');
+	        		break;
+	        	
+	        	case '£':
+	        		sb.append('#');
+	        		break;
+	        		
+	        	case '<':
+	        		sb.append('[');
+	        		break;
+	        	
+	        	case '>':
+	        		sb.append(']');
+	        		break;
+	        	
+	        	case '&':
+	        		sb.append('-');
+	        		break;
+	        	
+	        	default:
+	        		sb.append(replaceString.charAt(i));
+	        		break;
+        	}  
+        } 
+        
+        return sb.toString();
+
 		
 	}
 }
