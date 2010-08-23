@@ -281,7 +281,7 @@ public class ScheduleV42  extends com.questionmark.QMWISe.DataEntity  implements
         return schedule_Starts;
     }
 
-    public java.util.Calendar getSchedule_Starts_Calendar() {
+    public java.util.Calendar readSchedule_Starts_asCalendar() {
     	SimpleDateFormat df=new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
     	Calendar start=Calendar.getInstance();
     	try {
@@ -303,7 +303,7 @@ public class ScheduleV42  extends com.questionmark.QMWISe.DataEntity  implements
         this.schedule_Starts = schedule_Starts;
     }
 
-    public void setSchedule_Starts(java.util.Calendar schedule_Starts) {
+    public void updateSchedule_Starts_fromCalendar(java.util.Calendar schedule_Starts) {
     	SimpleDateFormat df=new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
         this.schedule_Starts = df.format(schedule_Starts.getTime());
     }
@@ -317,8 +317,8 @@ public class ScheduleV42  extends com.questionmark.QMWISe.DataEntity  implements
     public java.lang.String getSchedule_Stops() {
         return schedule_Stops;
     }
-
-    public java.util.Calendar getSchedule_Stops_Calendar() {
+    
+    public java.util.Calendar readSchedule_Stops_asCalendar() {
     	SimpleDateFormat df=new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
     	Calendar stop=Calendar.getInstance();
     	try {
@@ -340,7 +340,7 @@ public class ScheduleV42  extends com.questionmark.QMWISe.DataEntity  implements
         this.schedule_Stops = schedule_Stops;
     }
 
-    public void setSchedule_Stops(java.util.Calendar schedule_Stops) {
+    public void updateSchedule_Stops_fromCalendar(java.util.Calendar schedule_Stops) {
     	SimpleDateFormat df=new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
         this.schedule_Stops = df.format(schedule_Stops.getTime());
     }
