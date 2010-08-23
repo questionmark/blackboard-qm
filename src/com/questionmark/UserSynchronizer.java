@@ -185,8 +185,8 @@ public class UserSynchronizer {
 							String userLastName = replaceSpecChars(currentmembership.getUser().getFamilyName());	
 							
 							//test:
-							System.out.println(userFirstName);	
-							System.out.println(userLastName);
+							//System.out.println(userFirstName);	
+							//System.out.println(userLastName);
 							
 							
 							newuser.setFirst_Name(userFirstName);
