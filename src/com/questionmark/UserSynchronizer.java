@@ -185,8 +185,8 @@ public class UserSynchronizer {
 							String userLastName = replaceSpecChars(currentmembership.getUser().getFamilyName());	
 							
 							//test:
-							System.out.println(userFirstName);	
-							System.out.println(userLastName);
+							//System.out.println(userFirstName);	
+							//System.out.println(userLastName);
 							
 							
 							newuser.setFirst_Name(userFirstName);
@@ -422,6 +422,7 @@ public class UserSynchronizer {
 		}
 
 		return "Success: " + added + " user" + (added == 1 ? "" : "s") + " added and " + removed + " user" + (removed == 1 ? "" : "s") + " removed from Perception group";
+		
 	}
 
 	//Static routine to help handle invalid special characters in the Blackboard user details, which would break Perception

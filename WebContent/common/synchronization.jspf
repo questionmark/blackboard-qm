@@ -33,9 +33,10 @@
 					String output = "Qmwise exception caught: course " + courseId + ": synchronization failed: " + nqe.getMessage();
 					
 					%>					
-					<h1>Participant Synchronisation failed!</h1>					
 					
 					<p>
+						<em>Participant Synchronisation failed!</em>
+						<br />
 						<%=StringEscapeUtils.escapeHtml(output)%>
 					</p>
 					
