@@ -13,6 +13,7 @@
 		blackboard.data.course.*,
 		blackboard.persist.course.*,
 		org.apache.axis.*,
+		org.apache.commons.lang.StringEscapeUtils,
 		java.rmi.RemoteException,
 		javax.xml.namespace.QName,
 		com.questionmark.*,
@@ -88,51 +89,10 @@
 
 		PropertiesBean pb = new PropertiesBean();
 
-		//-----------------------------------------------------------------------
-		//synchronization: No synching code needed for Tools view.
-		//-----------------------------------------------------------------------
+%>
+		<%@ include file="../common/gsynchronization.jspf" %>
+<%			
 		
-		//get Perception group id
-		int perceptiongroupid;
-		try {
-			perceptiongroupid = new Integer(qmwise.getStub().getGroupByName(course.getBatchUid()).getGroup_ID()).intValue();
-		} catch(Exception e) {
-			QMWiseException qe = new QMWiseException(e);
-			if(qe.getQMErrorCode() == 1201) {
-				//group doesn't exist -- force sync
-				System.out.println("Perception: course " + courseId + 
-					": Perception group doesn't exist -- forcing synchronization");
-				UserSynchronizer us = new UserSynchronizer();
-				try {
-					us.synchronizeCourse(courseId);
-					configReader.setCourseSyncDate();
-					//get fresh group					
-					perceptiongroupid = new Integer(qmwise.getStub().getGroupByName(
-						course.getBatchUid()).getGroup_ID()).intValue();
-						
-				} catch (Exception ne) {
-					System.out.println("Perception: course " + courseId + ": synchronization failed: " + ne.getMessage());
-	%>
-	<bbUI:receipt type="FAIL"
-		title="Error synchronizing course users with Perception">
-		<%=ne.getMessage()%>
-	</bbUI:receipt>
-	<%
-					return;
-				}
-			} 
-			else {
-	%>
-	<bbUI:receipt type="FAIL"
-		title="Error retrieving course group from Perception">
-		<%=qe.getMessage()%>
-	</bbUI:receipt>
-	<%
-				return;
-				
-			}   //end of if(qe.getQMErrorCode...
-		} //end of large catch
-
 		//-----------------------------------------------------------------------
 		//view (still) specific to current user, i.e. Student can only Take assessments
 		// and Staff can "Test Assessments"
