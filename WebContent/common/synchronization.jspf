@@ -7,7 +7,6 @@
 
 
 		//read in synchronization period
-		PropertiesBean pb = new PropertiesBean();
 		String syncperiod = pb.getProperty("perception.syncperiod");
 		String syncusers = pb.getProperty("perception.syncusers");
 		if(syncperiod == null) syncperiod = "60";
@@ -54,64 +53,5 @@
 			}
 		}
 
-		//-----------------------------------------------------------------------
-		// Group synchronization
-		//-----------------------------------------------------------------------
-
-		//get Perception group id
-		int perceptiongroupid = 0;
-		try {
-
-			perceptiongroupid = new Integer(qmwise.getStub().getGroupByName(course.getBatchUid()).getGroup_ID()).intValue();
-
-		} catch(NullPointerException npe){
-			
-			System.out.println("Perception: course " + courseId + ": synchronization failed: " + npe.getMessage());
-			%>
-			<h1>Error retrieving course group from Perception, please ensure Connector is successfully 
-			connected to Perception</h1>
-				<p><%=StringEscapeUtils.escapeHtml(npe.getMessage())%></p>					
-
-			<%
-			//return;
-			
-		
-		} catch(Exception e) {
-			QMWiseException qe = new QMWiseException(e);
-			if(qe.getQMErrorCode() == 1201) {
-				//group doesn't exist -- force sync
-				System.out.println("Perception: course " + courseId + ": Perception group doesn't exist -- forcing synchronization");
-				UserSynchronizer us = new UserSynchronizer();
-				String force_sync_result;
-				try {
-					force_sync_result = us.synchronizeCourse(courseId);
-					configReader.setCourseSyncDate();
-					System.out.print(force_sync_result);
-					//get fresh group
-					perceptiongroupid = new Integer(qmwise.getStub().getGroupByName(course.getBatchUid()).getGroup_ID()).intValue();
-				} catch (Exception nqe) {
-					
-					System.out.println("Qmwise exception caught: course " + courseId + ": synchronization failed: " + nqe.getMessage());
-					String output = "Qmwise exception caught: course " + courseId + ": synchronization failed: " + nqe.getMessage();
-					
-					%>					
-					<h1>Group Synchronisation failed!</h1>					
-					
-					<p>
-						<%=StringEscapeUtils.escapeHtml(output)%>
-					</p>
-					
-					<%
-					//Do not want the page to crash!
-					//return;
-				}
-			} else {
-				%>
-				<h1>Error retrieving course group from Perception</h1>
-				<p><%=StringEscapeUtils.escapeHtml(qe.getMessage())%></p>
-				
-			<%
-			//return;
-			}
-		}
 %>
+		<%@ include file="gsynchronization.jspf" %>

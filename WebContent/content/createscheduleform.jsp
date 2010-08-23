@@ -30,6 +30,7 @@
 		blackboard.persist.Id,		
 		blackboard.persist.course.*,
 		org.apache.axis.*,
+		org.apache.commons.lang.StringEscapeUtils,		
 		java.rmi.RemoteException,
 		javax.xml.namespace.QName,
 		com.questionmark.*,
@@ -46,7 +47,7 @@
 	String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+path+"/";
 	//the parent id of content object created will be this content id from this context!
 	String parent_id = request.getParameter("content_id");	
-	String course_id = request.getParameter("course_id");
+	String courseId = request.getParameter("course_id");
 %>
 
 <bbData:context id="ctx">
@@ -71,7 +72,7 @@
 		
 		<%
 			out.println("Content id is in fact the parent id: " +  parent_id);		
-			out.println("Course id: " + course_id);
+			out.println("Course id: " + courseId);
 		%>
 		
 		</p>
@@ -79,11 +80,11 @@
 			
 		<%
 			//to sync its members and to show date last synchronized
-			ConfigFileReader configReader = new ConfigFileReader(course_id);
+			ConfigFileReader configReader = new ConfigFileReader(courseId);
 			//load the courseSettings file too...
 			
 			// not defined in qm bb8 api
-			// CourseSettings courseSettings = new CourseSettings(course_id);
+			// CourseSettings courseSettings = new CourseSettings(courseId);
 			
 			//connect to QMWise
 			QMWise qmwise;
@@ -106,57 +107,16 @@
 	
 			// Generate a persistence framework course Id to be used for 
 			// loading the course
-			Id courseIdObject = bbPm.generateId(Course.DATA_TYPE, course_id);
+			Id courseIdObject = bbPm.generateId(Course.DATA_TYPE, courseId);
 	
 			CourseDbLoader courseLoader = (CourseDbLoader) bbPm.getLoader(CourseDbLoader.TYPE);
 			Course course = courseLoader.loadById(courseIdObject);
 	
 			PropertiesBean pb = new PropertiesBean();
 	
-			//-----------------------------------------------------------------------
-			//No synchronization feature available in content view.
-			//-----------------------------------------------------------------------
-			
-			//get Perception group id
-			int perceptiongroupid;
-			try {
-				perceptiongroupid = new Integer(qmwise.getStub().getGroupByName(course.getBatchUid()).getGroup_ID()).intValue();
-			} catch(Exception e) {
-				QMWiseException qe = new QMWiseException(e);
-				if(qe.getQMErrorCode() == 1201) 
-				{
-					//group doesn't exist -- force sync
-					System.out.println("Perception: course " + course_id + ": Perception group doesn't exist -- forcing synchronization");
-					UserSynchronizer us = new UserSynchronizer();
-					try {
-						us.synchronizeCourse(course_id);
-						configReader.setCourseSyncDate();
-						//get fresh group
-						perceptiongroupid = new Integer(qmwise.getStub().getGroupByName(course.getBatchUid()).getGroup_ID()).intValue();
-					} catch (Exception ne) {
-						System.out.println("Perception: course " + course_id + ": synchronization failed: " + ne.getMessage());
-		
-		%>
-		
-		<bbUI:receipt type="FAIL" title="Error synchronizing course users with Perception">
-			<%=ne.getMessage()%>
-		</bbUI:receipt>
-		
-		<%
-						return;
-					}
-				} else {
-				
-		%>
-		
-		<bbUI:receipt type="FAIL" title="Error retrieving course group from Perception">
-			<%=qe.getMessage()%>
-		</bbUI:receipt>
-		
-		<%
-					return;
-				}
-			}	
+%>
+			<%@ include file="../common/gsynchronization.jspf" %>
+<%			
 
 			//-----------------------------------------------------------------------
 			//view specific to current user
@@ -362,7 +322,7 @@
 					</bbUI:dataElement>
 				</bbUI:dataElement>
 				<input type="hidden" name="group" value="<%=course.getBatchUid()%>" />
-				<input type="hidden" name="course_id" value="<%=course_id%>" />
+				<input type="hidden" name="course_id" value="<%=courseId%>" />
 			</bbUI:step>
 			<bbUI:stepSubmit title="Submit" number="2"/>
 		</form>

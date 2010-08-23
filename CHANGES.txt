@@ -1,3 +1,11 @@
+
+Version 8.0.3
+-------------
+
+[#300] Fixed synchronization bugs with some special characters
+[#208] Fixed page controls on the viewresults page
+
+
 Version 8.0.2
 -------------
 

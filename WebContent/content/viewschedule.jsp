@@ -28,6 +28,7 @@
 		blackboard.persist.course.*,
 		blackboard.platform.persistence.PersistenceServiceFactory,
 		org.apache.axis.*,
+		org.apache.commons.lang.StringEscapeUtils,		
 		java.rmi.RemoteException,
 		javax.xml.namespace.QName,
 		com.questionmark.*,
@@ -49,9 +50,9 @@
 	String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+path+"/";
 	
 	// Retrieve the course identifier from the URL
-	String course_id = request.getParameter("course_id");	
+	String courseId = request.getParameter("course_id");	
 	//null checks..
-	if(course_id == null) {
+	if(courseId == null) {
 	%>
 	
 		<bbUI:receipt type="FAIL" title="No course ID was given">
@@ -90,7 +91,7 @@
 	// Generate a persistence framework course Id to be used for 
 	// loading the course
 	
-	Id courseIdObject = bbPm.generateId(Course.DATA_TYPE, course_id);
+	Id courseIdObject = bbPm.generateId(Course.DATA_TYPE, courseId);
 	CourseDbLoader courseLoader = (CourseDbLoader) bbPm.getLoader(CourseDbLoader.TYPE);
 	Course course = courseLoader.loadById(courseIdObject);
 
@@ -132,7 +133,7 @@
 	<p>
 			
 		<%	
-			out.println("course id: from context:-  " + course_id + "\n");
+			out.println("course id: from context:-  " + courseId + "\n");
 			out.println("content id: from context:-  " + content_id + "\n");
 
 			out.println("Parent id from persisted object: " + persistantParentId+ "\n");
@@ -153,9 +154,9 @@
 
 		//create a ConfigFileReader, to check whether this course needs 
 		//to sync its members and to show date last synchronized
-		ConfigFileReader configReader = new ConfigFileReader(course_id);
+		ConfigFileReader configReader = new ConfigFileReader(courseId);
 		//load the courseSettings file too...
-		CourseSettings courseSettings = new CourseSettings(course_id);
+		CourseSettings courseSettings = new CourseSettings(courseId);
 		
 		//connect to QMWise
 		QMWise qmwise;
@@ -171,56 +172,13 @@
 			return;
 		}
 
-
 		//-----------------------------------------------------------------------
 		//synchronization: No Automatic or manual option for synching code needed 
 		//for Content item view. Only code for 'forced' sync if group not found:
 		//-----------------------------------------------------------------------
-		
-		//get Perception group id
-		int perceptiongroupid;
-		try {
-			perceptiongroupid = new Integer(qmwise.getStub().getGroupByName(course.getBatchUid()).getGroup_ID()).intValue();
-		} catch(Exception e) {
-			QMWiseException qe = new QMWiseException(e);
-			if(qe.getQMErrorCode() == 1201) {
-				//group doesn't exist -- force sync
-				System.out.println("Perception: course " + course_id + 
-					": Perception group doesn't exist -- forcing synchronization");
-				UserSynchronizer us = new UserSynchronizer();
-				try {
-					us.synchronizeCourse(course_id);
-					configReader.setCourseSyncDate();
-					//get fresh group					
-					perceptiongroupid = new Integer(qmwise.getStub().getGroupByName(
-						course.getBatchUid()).getGroup_ID()).intValue();
-						
-				} catch (Exception ne) {
-					System.out.println("Perception: course " + course_id+ ": synchronization failed: " + ne.getMessage());
-	%>
-	<bbUI:receipt type="FAIL"
-		title="Error synchronizing course users with Perception">
-		<%=ne.getMessage()%>
-	</bbUI:receipt>
-	<%
-					return;
-				}
-			} 
-			else {
-	%>
-	<bbUI:receipt type="FAIL"
-		title="Error retrieving course group from Perception">
-		<%=qe.getMessage()%>
-	</bbUI:receipt>
-	<%
-				return;
-				
-			}   //end of if(qe.getQMErrorCode...
-		} //end of large catch
-
-		
-		
-		
+%>
+		<%@ include file="../common/gsynchronization.jspf" %>
+<%			
 		//-----------------------------------------------------------------------
 		//view (still) specific to current user, i.e. Student can only Take assessments
 		// and Staff can "Test Assessments"
@@ -402,7 +360,7 @@
 				</tr>
 				<tr id='<%=idStr%>' style="display: none;">
 					<td><i>URL:</i></td>
-					<td colspan="6"><code><%=basePath+"links/main.jsp?course_id="+course_id+"&amp;schedule_name="+URLEncoder.encode(schedules.get(i).getSchedule_Name())%></code></td>
+					<td colspan="6"><code><%=basePath+"links/main.jsp?course_id="+courseId+"&amp;schedule_name="+URLEncoder.encode(schedules.get(i).getSchedule_Name())%></code></td>
 				</tr>
 	<%		 			}
 	%>

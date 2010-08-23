@@ -90,6 +90,7 @@
 
 		CourseDbLoader courseLoader = (CourseDbLoader) bbPm.getLoader(CourseDbLoader.TYPE);
 		Course course = courseLoader.loadById(courseIdObject);
+		PropertiesBean pb = new PropertiesBean();
 
 		%>
 		
