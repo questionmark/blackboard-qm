@@ -3447,7 +3447,7 @@ public class QMWISeSoapStub extends org.apache.axis.client.Stub implements com.q
         else {
             extractAttachments(_call);
             try {
-                return (com.questionmark.QMWISe.ScheduleV42[]) _resp;
+                return (com.questionmark.QMWISe.ScheduleV42[]) _resp;	//return the QMWISe response.
             } catch (java.lang.Exception _exception) {
                 return (com.questionmark.QMWISe.ScheduleV42[]) org.apache.axis.utils.JavaUtils.convert(_resp, com.questionmark.QMWISe.ScheduleV42[].class);
             }
