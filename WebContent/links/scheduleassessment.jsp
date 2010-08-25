@@ -120,8 +120,8 @@
 					if(endCal.before(startCal) || endCal.equals(startCal))
 						throw new Exception("The end date must be after the start date");
 				}
-				schedule.setSchedule_Starts(startCal);
-				schedule.setSchedule_Stops(endCal);
+			schedule.updateSchedule_Starts_fromCalendar(startCal);
+			schedule.updateSchedule_Stops_fromCalendar(endCal);
 
 				schedule.setGroup_ID(groupId);
 				schedule.setGroup_Tree_ID(groupId); //required. 0 is not accepted so needs to be the same as group id
