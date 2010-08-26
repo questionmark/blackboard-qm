@@ -128,28 +128,6 @@
 		</bbUI:breadcrumbBar>
 	
 	
-	<!--put in variables to display right here, DEBUGGING CODE
-	
-	<p>
-			
-		<%	
-			out.println("course id: from context:-  " + courseId + "\n");
-			out.println("content id: from context:-  " + content_id + "\n");
-
-			out.println("Parent id from persisted object: " + persistantParentId+ "\n");
-			
-			out.println("Schedule name from persisted object: " + persistentScheduleName + "\n");
-			
-			out.println("group name from context: " + request.getParameter("group") + "\n");
-
-			out.println("Content handler string from persisted object: "
-					+ handler + "\n");
-			
-			out.println("This is your system role user: " + sessionUser.getSystemRole().toExternalString());
-		%>
-	</p>
-	-->
-	
 	<%
 
 		//create a ConfigFileReader, to check whether this course needs 
