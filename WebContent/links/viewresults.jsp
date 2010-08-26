@@ -16,6 +16,7 @@
 		org.apache.axis.*,
 		java.rmi.RemoteException,
 		javax.xml.namespace.QName,
+		org.apache.commons.lang.StringEscapeUtils,
 		com.questionmark.*,
 		com.questionmark.QMWISe.*
 	"
@@ -27,6 +28,16 @@
 <%
 	String path = request.getContextPath();
 	String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+path+"/";
+	
+	
+	//Qm result related members initialised here.
+	
+	Result[] results = new Result[0];	//initialised to empy, zero length array to avoid NPE
+	String[] reports = new String[0];	//initialised to empy, zero length array to avoid NPE
+	//date format
+	DateFormat pdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+	int resultsPerPage = 0;
+	
 %>
 <bbData:context id="ctx">
 	<bbUI:docTemplateHead title="Questionmark Perception connector" />
@@ -54,7 +65,7 @@
 		}
 
 		//connect to QMWise
-		QMWise qmwise;
+		QMWise qmwise = null;
 		try {
 			qmwise = new QMWise();
 		} catch(Exception e) {
@@ -144,62 +155,88 @@
 			//-----------------------------------------------------------------------
 			// Results
 			//-----------------------------------------------------------------------
-			Result[] results;
+			
 			try {
+				//Get results via qmwise call
 				results = qmwise.getStub().getResultListByGroup(course.getBatchUid());
+				
 			} catch(Exception e) {
+				
 				QMWiseException qe = new QMWiseException(e);
 				%>
-				<bbUI:receipt type="FAIL" title="Error getting results list">
-					<%=qe.getMessage()%>
-				</bbUI:receipt>
-				<%
-				return;
-			}
-			//sort results by date
-			Arrays.sort(results, new ResultComparator());
-
-			//get report for each result
-			String[] reports = new String[results.length];
-
-			//date format
-			DateFormat pdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-
-			int resultsPerPage;
-			if(request.getParameter("resultsPerPage") != null)
-				resultsPerPage = new Integer(request.getParameter("resultsPerPage")).intValue();
-			else
-				resultsPerPage = 10;
+				
+				//catch invalid group id error, this occurs when the incorrect or no group id is returned from the returning
+				// via PIP
+				if (qe.getQMErrorCode() == 202) {
+					%>
+					<h3>Error getting results list - Group ID invalid - 0 or cannot be converted to an integer</h3>
+						<p>Course id returned: <%=StringEscapeUtils.escapeHtml(course.getBatchUid())%></p>
+						<p><%=StringEscapeUtils.escapeHtml(qe.getMessage())%></p>				
+					<%
+					//return;
+					
+				} else {
 			
-			if(resultsPerPage < 10) resultsPerPage = 10;
-			%>
-			<h1 id="Results">Results per page (minimum 10)</h1>
-	<% 		if (results.length == 0) { %>
-				<p>There are not yet results for this course.</p>
-	<% 
+					%>
+					<h3>Error getting results list</h3>
+						<p><%=StringEscapeUtils.escapeHtml(qe.getMessage())%></p>				
+					<%
+					//return;
+				}
+				
 			}
-			else 
-			{ 
-	%>
+			
+			
+			if ( results.length > 0 ){
+				
+				//sort results by date
+				Arrays.sort(results, new ResultComparator());
+				
+				//get report for each result
+				reports = new String[results.length];				
+				
+				if(request.getParameter("resultsPerPage") != null) {
+					resultsPerPage = new Integer(request.getParameter("resultsPerPage")).intValue();
+				}
+				else {
+					resultsPerPage = 10;
+				}
+				
+				if(resultsPerPage < 10) resultsPerPage = 10;
+				
+			}			
+
+			%>
+			<h1 id="Results">Results</h1>
+			<% 		
+				if (results.length == 0) { 
+					%>
+						<p>There are not yet results for this course.</p>
+					<% 
+				}
+				else { 
+			%>
 		
-		<form action='<%=path+"/links/viewresults.jsp"%>' method="GET" > 
-			<input type="hidden" name="course_id" value="<%=courseId%>" />
-			Results to show per page: <input type="text" size="4" name="resultsPerPage" value="<%=resultsPerPage %>" />
-			<input type="submit" value="Update table" />
-		</form>
-		
-		<table border="2" cellpadding="1">
-			<tr>
-				<!--<th>Assessment ID</th>-->
-				<!--<th>Schedule Name</th> requires QMWISe fix -->
-				<th>Participant</th>
-				<th>Score</th>
-				<th>Time taken</th>
-				<th>Started</th>
-				<th>Finished</th>
-				<th>Report</th>
-			</tr>
-	<%
+				<form action='<%=path+"/links/viewresults.jsp"%>' method="GET" >
+					<input type="hidden" name="course_id" value="<%=courseId%>" />
+					Results to show per page (minimum 10): <input type="text" size="4" name="resultsPerPage" value="<%=resultsPerPage %>" />
+					<input type="submit" value="Update table" />
+				</form>
+				
+				<table border="2" cellpadding="1">
+					<tr>
+						<!--<th>Assessment ID</th>-->
+						<!--<th>Schedule Name</th> requires QMWISe fix -->
+						<th>Participant</th>
+						<th>Score</th>
+						<th>Time taken</th>
+						<th>Started</th>
+						<th>Finished</th>
+						<th>Report</th>
+					</tr>
+					
+			<%
+			
 			int listStart;
 			
 			if(request.getParameter("resultPage") != null)
@@ -220,7 +257,7 @@
 				} catch(ParseException e) {
 					%>
 					<bbUI:receipt type="FAIL" title="Error parsing date from Perception">
-						<%=e.getMessage()%>
+						<%=StringEscapeUtils.escapeHtml(e.getMessage())%>
 					</bbUI:receipt>
 					<%
 					return;
@@ -234,48 +271,48 @@
 					reports[i]="error: "+ qe.getMessage();
 				}
 				
-	%>
-			<tr>
-				<!--<td><%=results[i].getAssessment_ID()%></td>-->
-				<!--<td><%=results[i].getSchedule_Name()%></td> Requires QMWISe fix-->
-				<td><%=results[i].getParticipant() + " (" + results[i].getSpecial_1() + " " + results[i].getSpecial_2() + ")"%></td>
-				<td><%=!results[i].isStill_Going() ? results[i].getTotal_Score() + "/" + results[i].getMax_Score() + " (" + results[i].getPercentage_Score() + "%)" : ""%></td>
-				<td><%=!results[i].isStill_Going() ? results[i].getTime_Taken() + "s" : ""%></td>
-				<td><%=started.toString()%></td>
-				<td><%=!results[i].isStill_Going() ? finished.toString() : "Unfinished"%></td>
-				<% 
-				if (reports[i].startsWith("error:")) { %>
-				<td>No report available (<%=reports[i]%>)</td>
-				<% }
-				else {
-				%>
-				<td><a href="<%=reports[i]%>" target="_blank">View report</a></td>
-				<% }
-				%>
-			</tr>
-	<%	 	}
+			%>
+				<tr>
+					<!--<td><%=results[i].getAssessment_ID()%></td>-->
+					<!--<td><%=results[i].getSchedule_Name()%></td> Requires QMWISe fix-->
+					<td><%=results[i].getParticipant() + " (" + results[i].getSpecial_1() + " " + results[i].getSpecial_2() + ")"%></td>
+					<td><%=!results[i].isStill_Going() ? results[i].getTotal_Score() + "/" + results[i].getMax_Score() + " (" + results[i].getPercentage_Score() + "%)" : ""%></td>
+					<td><%=!results[i].isStill_Going() ? results[i].getTime_Taken() + "s" : ""%></td>
+					<td><%=started.toString()%></td>
+					<td><%=!results[i].isStill_Going() ? finished.toString() : "Unfinished"%></td>
+					<% 
+					if (reports[i].startsWith("error:")) { %>
+					<td>No report available (<%=reports[i]%>)</td>
+					<% }
+					else {
+					%>
+					<td><a href="<%=reports[i]%>" target="_blank">View report</a></td>
+					<% }
+					%>
+				</tr>
+	<%	 }
 	%>
 	</table>
 	<%
 				
-				int numPages = new Double(Math.ceil(results.length/new Double(resultsPerPage))).intValue();
-				
-				out.println("<p>Page: ");
-				
-					for(int i = 1; i <= numPages; i++) {
-						if(request.getParameter("resultPage") != null && new Integer(request.getParameter("resultPage")).intValue() == i) {
-							out.println("<strong>" + i + "</strong> ");
-						} else {
-							out.println("<a href=\""+path+"/links/viewresults.jsp?course_id=" + courseId + 
-								"&amp;resultPage=" + i +
-								"&amp;resultsPerPage=" + resultsPerPage +
-								"\">" + i + "</a> ");
-						}
-					}
-				
-				out.println("</p>");
+		int numPages = new Double(Math.ceil(results.length/new Double(resultsPerPage))).intValue();
+		
+		out.println("<p>Page: ");
+		
+			for(int i = 1; i <= numPages; i++) {
+				if(request.getParameter("resultPage") != null && new Integer(request.getParameter("resultPage")).intValue() == i) {
+					out.println("<strong>" + i + "</strong> ");
+				} else {
+					out.println("<a href=\""+path+"/links/viewresults.jsp?course_id=" + courseId + 
+						"&amp;resultPage=" + i +
+						"&amp;resultsPerPage=" + resultsPerPage +
+						"\">" + i + "</a> ");
+				}
+			}
+		
+		out.println("</p>");
 			 	
-				} //fi results 
+	} //fi results 
 	
 	%>
 			<bbUI:spacer height="20" />
@@ -287,7 +324,7 @@
 			//-----------------------------------------------------------------------
 
 			//get Perception user id
-			int perceptionuserid;
+			int perceptionuserid = 0;
 			try {
 				perceptionuserid = new Integer(qmwise.getStub().getParticipantByName(sessionUser.getUserName()).getParticipant_ID()).intValue();
 			} catch(Exception e) {
@@ -298,6 +335,7 @@
 				</bbUI:receipt>
 				<%
 				return;
+
 			}
 	%>			
 			
