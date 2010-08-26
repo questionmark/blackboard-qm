@@ -64,17 +64,19 @@
 		CourseSettings courseSettings = new CourseSettings(courseId);
 		
 		//connect to QMWise
-		QMWise qmwise;
+		QMWise qmwise = null;
 		try {
 			qmwise = new QMWise();
 		} catch(Exception e) {
 			QMWiseException qe = new QMWiseException(e);
 			%>
-	<bbUI:receipt type="FAIL" title="Error connecting to Perception server">
-		<%=qe.getMessage()%>
-	</bbUI:receipt>
-	<%
-			return;
+				<p>
+					<em>Error connecting to Perception server</em>
+					<br />
+					<%=StringEscapeUtils.escapeHtml(qe.getMessage())%>
+				</p>	
+			<%
+			//return;
 		}
 
 		//Retrieve the Db persistence manager from the persistence service
@@ -159,17 +161,42 @@
 
 			<h1 id="Schedules">Schedules</h1>
 			<%
-					ScheduleV42[] schedulesarray;
+					ScheduleV42[] schedulesarray = null;
 					try {
 						schedulesarray = qmwise.getStub().getScheduleListByParticipantV42(new Integer(UserSynchronizer.getPhantomUserId()).intValue());
-					} catch(Exception e) {
-						QMWiseException qe = new QMWiseException(e);
-			%>
-			<bbUI:receipt type="FAIL" title="Error getting group schedule list">
-				<%=qe.getMessage()%>
-			</bbUI:receipt>
-			<%
-						return;
+					} catch (Exception e){			
+						if( e instanceof QMWiseException ){
+							QMWiseException qe = new QMWiseException(e);
+							if(qe.getQMErrorCode() == 1301){
+							String assessmentErrorOutput = "Perception: course " + courseId + 
+							": Error getting group schedule list. Cause: Assessment not found, check whether assessment exists in Perception."
+							+ " For more information please check Perception server logs - QMWISe trace log. Message: "
+							+ qe.getMessage();
+							System.out.println(assessmentErrorOutput);					
+							%>
+								<h1>Error getting group schedule list, assessment missing!</h1>
+								<p><%=StringEscapeUtils.escapeHtml(assessmentErrorOutput)%></p>
+							<%						
+						} else {
+							String qmErrorOutput = "Perception: course " + courseId + ": Error getting group schedule list. Cause: " + qe.getMessage();
+						
+							System.out.println(qmErrorOutput);
+							%>
+								<h1>Error getting group schedule list, QMWISe error!</h1>
+								<p><%=StringEscapeUtils.escapeHtml(qmErrorOutput)%></p>
+							<%
+						}
+						} else {
+							String errorMessage = e.getMessage();
+							System.out.println("Unknown Exception returned: details: " + e.getMessage());
+							%><p>Error getting schedules, unknown exception</p>
+								<p><%=StringEscapeUtils.escapeHtml(errorMessage)%></p>	
+							<%						
+				
+						}
+						// Return disabled to allow for the page to continue loading.
+						//return;		
+				
 					}
 
 					Vector<ScheduleV42> schedules = new Vector<ScheduleV42>();
@@ -209,13 +236,25 @@
 							);
 						} catch(Exception e) {
 							QMWiseException qe = new QMWiseException(e);
-			%>
-			<bbUI:receipt type="FAIL" title="Error getting assessment URL">
-				<%=qe.getMessage()%>
-			</bbUI:receipt>
-			<%
-							return;
+							if(qe.getQMErrorCode() == 1301){
+								String assessmentErrorOutput = "Perception: course " + courseId + 
+								": Error getting group schedule list. Cause: Assessment not found, check whether assessment exists in Perception."
+								+ " For more information please check Perception server logs - QMWISe trace log. Message: "
+								+ qe.getMessage();
+								System.out.println(assessmentErrorOutput);
+								
+								//Set the schedule url to blank and check for blank url later on to decide whether schedule is active or broken.						
+								scheduleurls[i] = "ASSESSMENT_ERROR: Assessment not found, check whether assessment exists in Perception";
+														
+							}
+							else {
+								
+								//Set the schedule url to blank and check for blank url later on to decide whether schedule is active or broken.						
+								scheduleurls[i] = "ERROR: " + qe.getMessage().substring(0, 40);						
+								
+							}
 						}
+
 
 						Long schedule_start = schedules.get(i).readSchedule_Starts_asCalendar().getTime().getTime();
 						Long schedule_stop = schedules.get(i).readSchedule_Stops_asCalendar().getTime().getTime();
@@ -240,7 +279,6 @@
 							}
 				</script>
 				<tr>
-					<!--<th>Assessment ID</th>-->
 					<th>Schedule name</th>
 					<th>Maximum attempts</th>
 					<th>Start datetime</th>
@@ -248,7 +286,6 @@
 					<th>Active?</th>
 					<th>Try Out</th>
 					<th>Show URL</th>
-					<!--<th>Group</th>-->
 				</tr>
 			<%
 						for(int i = 0; i < schedules.size(); i++) {
@@ -264,8 +301,26 @@
 					<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).readSchedule_Starts_asCalendar().getTime().toString()%></td>
 					<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).readSchedule_Stops_asCalendar().getTime().toString()%></td>
 					<td><%=schedulesactive[i] ? "active" : "inactive"%></td>
-					<td><a href="<%=scheduleurls[i]%>" target="_blank">Test
-					assessment</a></td>
+					<% 
+					
+					if (scheduleurls[i].contains("ASSESSMENT_ERROR")) {						
+						%>
+							<td bgcolor="yellow"><i>Schedule Disabled: <%=StringEscapeUtils.escapeHtml(scheduleurls[i])%> </i></td>
+						<% 
+						
+					} else if(scheduleurls[i].contains("ERROR")){
+						%>
+							<td bgcolor="yellow"><i>Schedule Disabled: <%=StringEscapeUtils.escapeHtml(scheduleurls[i])%> </i></td>
+						<% 
+					}
+					else {
+						%>							
+							<td><a href="<%=StringEscapeUtils.escapeHtml(scheduleurls[i])%>" target="_blank">Test assessment</a></td>
+						<% 
+					} 
+					
+					%>
+						
 					<td><input type="checkbox" name="switchBox"
 						onClick="showhideScheduleURL(this,'<%=idStr%>')" /></td>
 					<!--<td><%=schedules.get(i).getGroup_ID()%></td>-->
@@ -296,7 +351,7 @@
 					//-----------------------------------------------------------------------
 
 					//get Perception user id
-					int perceptionuserid;
+					int perceptionuserid = 0;
 					try {
 						perceptionuserid = new Integer(qmwise.getStub().getParticipantByName(
 							sessionUser.getUserName()).getParticipant_ID()).intValue();
@@ -313,7 +368,7 @@
 						return;
 					}
 
-					ScheduleV42[] schedulesarray;
+					ScheduleV42[] schedulesarray = null;
 					try {
 						schedulesarray = qmwise.getStub().getScheduleListByParticipantV42(perceptionuserid);
 					} catch(Exception e) {
@@ -389,12 +444,27 @@
 									new Parameter("bb_courseid", course.getBatchUid())
 								};
 								try {
+									
+									//Try to trigger a missing assessment exception using the following
+									String assessmentTest = qmwise.getStub().getAccessAssessment(
+											schedules.get(i).getAssessment_ID(),
+											sessionUser.getUserName(),
+											"", //participant details
+											"" //group name
+											);
+									
+									//If the above fails the exception code will treat it as a qmwise assessment error
+									// and disable the schedule for the participant..
+									
+									//If not then the participant gets a 'valid' perception assessment url as normal!
+									
 									scheduleurls[i] = qmwise.getStub().getAccessScheduleNotify(
 										new Integer(schedules.get(i).getSchedule_ID()).toString(),
 										sessionUser.getUserName(),
 										request.getScheme() + "://" + request.getServerName() 
 											+ request.getContextPath() + "/links/callback.jsp",	
 												"blackboard.pip", parameters);
+									
 								} catch(Exception ne) {
 									//this method hasn't been programmed well 
 									//and doesn't have unique error codes for 
@@ -402,20 +472,39 @@
 									//"schedule hasn't started or already 
 									//finished" one by checking that first, so 
 									//we can hopefully assume that this 
-									//exception is saying "no attempts left"
-									scheduleurls[i] = null;
+									//exception is saying "no attempts left" - wrong
+									
+									//Let's handle this correctly:
+									QMWiseException qe = new QMWiseException(ne);
+									
+									//If assessment missing error, then..
+									
+									if (qe.getQMErrorCode() == 1301) {
+										schedules.get(i).setSchedule_Name(schedules.get(i).getSchedule_Name() + " QMWISE_ASSESSMENT_ERROR ");
+										scheduleurls[i] = "QMWISE_ASSESSMENT_ERROR";
+									}
+									else {
+										schedules.get(i).setSchedule_Name(schedules.get(i).getSchedule_Name() + " QMWISE ERROR ");
+										scheduleurls[i] = "ERROR";
+									}		
+									
+									schedulesactive[i] = false;
+		
+									// No notification needed to give student. No error message displayed.
+									
 								}
-							} catch(Exception e) {
-								QMWiseException qe = new QMWiseException(e);
-			%>
-			<bbUI:receipt type="FAIL" title="Error getting assessment URL">
-				<%=qe.getMessage()%>
-			</bbUI:receipt>
-			<%
-								return;
-							}
+							} catch(Exception e) {								
+								scheduleurls[i] = "ERROR";
+								schedulesactive[i] = false;
+								
+								// No notification needed to give student. No error message displayed.
+								
+								
+								}
+							
 						}
 					}
+
 
 			%>
 			
@@ -447,25 +536,15 @@
 			
 			<% 			if(schedulesactive[i]) { 
 			%> 	
-			<% 				if(scheduleurls[i] == null) { 
-			%> 					No attempts remaining 
-			<% 				}
-							else 
-							{ 
-			%>		
-								<form><input type="button" value="Take assessment"
-									onclick="window.open('<%=scheduleurls[i]%>');">
-								</form>
-			<%	 			}
+			
+							<form><input type="button" value="Take assessment"
+								onclick="window.open('<%=scheduleurls[i]%>');">
+							</form>
+							
+			<%	 		}
 			%> 
-			<% 			} 
-						else
-						{ ////technically shouldn't arrive at this line but hey.
-			%>				 inactive 
-			<% 			} 
-			%>
+				
 						</td>
-						<!--<td><%=schedules.get(i).getGroup_ID()%></td>-->
 					</tr>
 			<% 		} //end of for loop
 			

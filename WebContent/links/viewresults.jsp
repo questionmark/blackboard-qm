@@ -163,8 +163,7 @@
 			} catch(Exception e) {
 				
 				QMWiseException qe = new QMWiseException(e);
-				%>
-				
+
 				//catch invalid group id error, this occurs when the incorrect or no group id is returned from the returning
 				// via PIP
 				if (qe.getQMErrorCode() == 202) {
@@ -188,7 +187,7 @@
 					<%
 					//return;
 				}
-				
+			
 			}
 			
 			

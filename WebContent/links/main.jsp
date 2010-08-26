@@ -62,17 +62,19 @@
 		CourseSettings courseSettings = new CourseSettings(courseId);
 		
 		//connect to QMWise
-		QMWise qmwise;
+		QMWise qmwise = null;
 		try {
 			qmwise = new QMWise();
 		} catch(Exception e) {
 			QMWiseException qe = new QMWiseException(e);
-	%>
-		<bbUI:receipt type="FAIL" title="Error connecting to Perception server">
-			<%=qe.getMessage()%>
-		</bbUI:receipt>
-	<%
-			return;
+			%>					
+				<p>
+					<em>Error connecting to Perception server</em>
+					<br />
+					<%=StringEscapeUtils.escapeHtml(qe.getMessage())%>
+				</p>			
+			<%
+			//return;
 		}
 
 		//old version test if this works or is deprecated in bb8 api.
@@ -187,68 +189,118 @@
 				Hidden schedules can still be accessed individually using the schedule's URL below.</i></p>
 			</bbUI:dataElement>
 			<input type="hidden" name="course_id" value="<%=courseId%>" />
-		</bbUI:step> <bbUI:stepSubmit title="Submit" number="2" /></form>
-	
-	
-		<h1 id="Schedules">Schedules</h1>
-		<%
-				ScheduleV42[] schedulesarray = null;
-				try {
-					schedulesarray = qmwise.getStub().getScheduleListByParticipantV42(new Integer(UserSynchronizer.getPhantomUserId()).intValue());
-				} catch(Exception e) {
+		</bbUI:step>
+	 	<bbUI:stepSubmit title="Submit" number="2" />
+	 </form>
+
+	<h1 id="Schedules">Schedules</h1>
+	<%
+			ScheduleV42[] schedulesarray = null;
+			try {				
+				schedulesarray = qmwise.getStub().getScheduleListByParticipantV42(new Integer(UserSynchronizer.getPhantomUserId()).intValue());
+			} catch (Exception e){			
+				if( e instanceof QMWiseException ){
 					QMWiseException qe = new QMWiseException(e);
+					if(qe.getQMErrorCode() == 1301){
+						String assessmentErrorOutput = "Perception: course " + courseId + 
+						": Error getting group schedule list. Cause: Assessment not found, check whether assessment exists in Perception."
+						+ " For more information please check Perception server logs - QMWISe trace log. Message: "
+						+ qe.getMessage();
+						System.out.println(assessmentErrorOutput);					
+						%>							
+							<p>
+								<em>Error getting group schedule list, assessment missing!</em>
+								<br />
+								<%=StringEscapeUtils.escapeHtml(assessmentErrorOutput)%>
+							</p>
+						<%						
+					} else {
+						String qmErrorOutput = "Perception: course " + courseId + ": Error getting group schedule list. Cause: " + qe.getMessage();
+						
+						System.out.println(qmErrorOutput);
+						%>
+							<p>
+								<em>Error getting group schedule list, QMWISe error!</em>
+								<br />
+								<%=StringEscapeUtils.escapeHtml(qmErrorOutput)%>
+							</p>
+						<%
+					}
+				} else {
+					String errorMessage = e.getMessage();
+					System.out.println("Unknown Exception returned: details: " + e.getMessage());
 					%>
-		<bbUI:receipt type="FAIL" title="Error getting group schedule list">
-			<%=qe.getMessage()%>
-		</bbUI:receipt>
-		<%
+						<p>
+							<em>Error getting schedules, unknown exception</em>
+							<br />							
+							<%=StringEscapeUtils.escapeHtml(errorMessage)%>
+						</p>	
+					<%						
+				
+				}
+				// Return disabled to allow for the page to continue loading.
+				//return;
+				
+			}
+
+			Vector<ScheduleV42> schedules = new Vector<ScheduleV42>();
+
+			for(int i = 0; i < schedulesarray.length; i++) {
+				if(schedulesarray[i].getGroup_ID() == perceptiongroupid)
+					schedules.add(schedulesarray[i]);
+			}
+
+			ScheduleV42[] zeroschedulesarray = null;
+			try {
+				zeroschedulesarray = qmwise.getStub().getScheduleListByParticipantV42(0);
+			} catch(Exception e) {
+				QMWiseException qe = new QMWiseException(e);
+				%>
+					<p>
+						<em>Error getting zero user schedule list</em>
+						<br />
+						<%=StringEscapeUtils.escapeHtml(qe.getMessage())%>
+					</p>
+	
+				<%
 					return;
-				}
+			}
 	
-				Vector<ScheduleV42> schedules = new Vector<ScheduleV42>();
-	
-				for(int i = 0; i < schedulesarray.length; i++) {
-					if(schedulesarray[i].getGroup_ID() == perceptiongroupid)
-						schedules.add(schedulesarray[i]);
-				}
-	
-				ScheduleV42[] zeroschedulesarray;
-				try {
-					zeroschedulesarray = qmwise.getStub().getScheduleListByParticipantV42(0);
-				} catch(Exception e) {
-					QMWiseException qe = new QMWiseException(e);
-					%>
-		<bbUI:receipt type="FAIL" title="Error getting zero user schedule list">
-			<%=qe.getMessage()%>
-		</bbUI:receipt>
-		<%
-					return;
-				}
-	
-				for(int i = 0; i < zeroschedulesarray.length; i++)
-					if(zeroschedulesarray[i].getGroup_ID() == perceptiongroupid)
-						schedules.add(zeroschedulesarray[i]);
+			for(int i = 0; i < zeroschedulesarray.length; i++)
+				if(zeroschedulesarray[i].getGroup_ID() == perceptiongroupid)
+					schedules.add(zeroschedulesarray[i]);
 	
 				String[] scheduleurls = new String[schedules.size()];
 				boolean[] schedulesactive = new boolean[schedules.size()];
 	
-				for(int i = 0; i < schedules.size(); i++) {
-					try {
-						scheduleurls[i] = qmwise.getStub().getAccessAssessment(
-							schedules.get(i).getAssessment_ID(),
-							sessionUser.getUserName(),
-							"", //participant details
-							"" //group name
-						);
-					} catch(Exception e) {
-						QMWiseException qe = new QMWiseException(e);
-						%>
-		<bbUI:receipt type="FAIL" title="Error getting assessment URL">
-			<%=qe.getMessage()%>
-		</bbUI:receipt>
-		<%
-						return;
+			for(int i = 0; i < schedules.size(); i++) {
+				try {
+					scheduleurls[i] = qmwise.getStub().getAccessAssessment(
+						schedules.get(i).getAssessment_ID(),
+						sessionUser.getUserName(),
+						"", //participant details
+						"" //group name
+					);
+				} catch(Exception e) {
+					QMWiseException qe = new QMWiseException(e);
+					if(qe.getQMErrorCode() == 1301){
+						String assessmentErrorOutput = "Perception: course " + courseId + 
+						": Error getting group schedule list. Cause: Assessment not found, check whether assessment exists in Perception."
+						+ " For more information please check Perception server logs - QMWISe trace log. Message: "
+						+ qe.getMessage();
+						System.out.println(assessmentErrorOutput);
+						
+						//Set the schedule url to blank and check for blank url later on to decide whether schedule is active or broken.						
+						scheduleurls[i] = "ASSESSMENT_ERROR: Assessment not found, check whether assessment exists in Perception";
+												
 					}
+					else {
+						
+						//Set the schedule url to blank and check for blank url later on to decide whether schedule is active or broken.						
+						scheduleurls[i] = "ERROR: " + qe.getMessage().substring(0, 40);						
+						
+					}
+				}
 	
 					Long schedule_start = schedules.get(i).readSchedule_Starts_asCalendar().getTime().getTime();
 					Long schedule_stop = schedules.get(i).readSchedule_Stops_asCalendar().getTime().getTime();
@@ -297,8 +349,25 @@
 				<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).readSchedule_Starts_asCalendar().getTime().toString()%></td>
 				<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).readSchedule_Stops_asCalendar().getTime().toString()%></td>
 				<td><%=schedulesactive[i] ? "active" : "inactive"%></td>
-				<td><a href="<%=scheduleurls[i]%>" target="_blank">Test
-				assessment</a></td>
+						<% 
+						
+						if (scheduleurls[i].contains("ASSESSMENT_ERROR")) {						
+							%>
+								<td bgcolor="yellow"><i>Schedule Disabled: <%=StringEscapeUtils.escapeHtml(scheduleurls[i])%> </i></td>
+							<% 
+							
+						} else if(scheduleurls[i].contains("ERROR")){
+							%>
+								<td bgcolor="yellow"><i>Schedule Disabled: <%=StringEscapeUtils.escapeHtml(scheduleurls[i])%> </i></td>
+							<% 
+						}
+						else {
+							%>							
+								<td><a href="<%=StringEscapeUtils.escapeHtml(scheduleurls[i])%>" target="_blank">Test assessment</a></td>
+							<% 
+						} 
+						
+						%>
 				<td><input type="checkbox" name="switchBox"
 					onClick="showhideScheduleURL(this,'<%=idStr%>')" /></td>
 				<!--<td><%=schedules.get(i).getGroup_ID()%></td>-->
@@ -324,7 +393,7 @@
 		Calendar enddate = Calendar.getInstance();
 		enddate.add(Calendar.DAY_OF_MONTH, 7);
 
-		String adminid;
+		String adminid = null;
 		try {
 			adminid = qmwise.getStub().getAdministratorByName(sessionUser.getUserName()).getAdministrator_ID();
 		} catch(Exception e) {
@@ -337,53 +406,56 @@
 			return;
 		}
 
-		Assessment[] assessments;
-		try {
-			assessments = qmwise.getStub().getAssessmentListByAdministrator(adminid);
-		} catch(Exception e) {
-			QMWiseException qe = new QMWiseException(e);
-			%>
-			<bbUI:receipt type="FAIL" title="Error getting list of available assessments">
-				<%=qe.getMessage()%>
-			</bbUI:receipt>
-			<%
-			return;
-		}
-		
+			Assessment[] assessments = null;
+			try {				
+				assessments = qmwise.getStub().getAssessmentListByAdministrator(adminid);			
+			}
+			catch(Exception e) {
+				QMWiseException qe = new QMWiseException(e);
+				assessments = new Assessment[0];
+				%>
+					<p><em>Error getting list of available assessments</em></p>
+						<p><%=StringEscapeUtils.escapeHtml(qe.getMessage())%></p>
+						
+				<%
+				//return;
+			}
+			
+			
+			if(assessments.length == 0) {
+		%>
+	<p>There are no assessments defined in Perception so you cannot
+	schedule an assessment.</p>
+	<% } else { 
+		//if not empty,
 		//sort assessments by Session_Name
 		Arrays.sort(assessments, new AssessmentComparator());
-		
-
-		if(assessments.length == 0) { %>
-			<p>There are no assessments defined in Perception so you cannot schedule an assessment.</p>
-		<% } else { %>
-		
-		
-			<script type="text/javascript">
-				function disable_set_access() {
-					if(document.getElementById('set_access_period')) {
-						var disabled = !document.getElementById('set_access_period').checked;					
-						
-						document.getElementById('start_hour').disabled = disabled;
-						document.getElementById('start_minute').disabled = disabled;
-						
-						document.getElementById('end_hour').disabled = disabled;
-						document.getElementById('end_minute').disabled = disabled;
-					}
+	%>
+		<script type="text/javascript">
+			function disable_set_access() {
+				if(document.getElementById('set_access_period')) {
+					var disabled = !document.getElementById('set_access_period').checked;					
+					
+					document.getElementById('start_hour').disabled = disabled;
+					document.getElementById('start_minute').disabled = disabled;
+					
+					document.getElementById('end_hour').disabled = disabled;
+					document.getElementById('end_minute').disabled = disabled;
 				}
-				function disable_limit_attempts() {
-					if(document.getElementById('limit_attempts')) {
-						var checked = document.getElementById('limit_attempts').checked;
-						document.getElementById('limit').disabled = !checked;
-						document.getElementById('per_participant').checked = checked;
-						document.getElementById('per_participant').disabled = checked;
-						set_limit_attempts_hidden();
-					}
+			}
+			function disable_limit_attempts() {
+				if(document.getElementById('limit_attempts')) {
+					var checked = document.getElementById('limit_attempts').checked;
+					document.getElementById('limit').disabled = !checked;
+					document.getElementById('per_participant').checked = checked;
+					document.getElementById('per_participant').disabled = checked;
+					set_limit_attempts_hidden();
 				}
-				function set_limit_attempts_hidden() {
-					document.getElementById('per_participant_hidden').value = document.getElementById('per_participant').checked ? "1" : "0";
-				}
-			</script>
+			}
+			function set_limit_attempts_hidden() {
+				document.getElementById('per_participant_hidden').value = document.getElementById('per_participant').checked ? "1" : "0";
+			}
+		</script>
 
 			<form name="schedule_assessment" action="scheduleassessment.jsp" method="post">
 				<bbUI:step title="Enter Information" number="1">
@@ -391,7 +463,7 @@
 						<input type="text" name="schedule" /><br />
 						The schedule name must be unique if results are to be stored in the gradebook
 					</bbUI:dataElement>
-				<bbUI:dataElement label="Store results in gradebook?">
+				<bbUI:dataElement label="Store results in Grade Center?">
 					<select name="use_gradebook">
 						<option value="percent" selected="selected">as percentage scores</option>
 						<option value="point">as point scores</option>
@@ -450,7 +522,7 @@
 			//-----------------------------------------------------------------------
 
 			//get Perception user id
-			int perceptionuserid;
+			int perceptionuserid = 0;
 			try {
 				perceptionuserid = new Integer(qmwise.getStub().getParticipantByName(sessionUser.getUserName()).getParticipant_ID()).intValue();
 			} catch(Exception e) {
@@ -463,7 +535,7 @@
 				return;
 			}
 
-			ScheduleV42[] schedulesarray;
+			ScheduleV42[] schedulesarray = null;
 			try {
 				schedulesarray = qmwise.getStub().getScheduleListByParticipantV42(perceptionuserid);
 			} catch(Exception e) {
@@ -483,7 +555,7 @@
 					schedules.add(schedulesarray[i]);
 			}
 
-			ScheduleV42[] zeroschedulesarray;
+			ScheduleV42[] zeroschedulesarray = null;
 			try {
 				zeroschedulesarray = qmwise.getStub().getScheduleListByParticipantV42(0);
 			} catch(Exception e) {
@@ -548,62 +620,76 @@
 					} catch(Exception e) {
 						QMWiseException qe = new QMWiseException(e);
 						%>
-						<bbUI:receipt type="FAIL" title="Error getting assessment URL">
-							<%=qe.getMessage()%>
-						</bbUI:receipt>
+							<p>
+								<em>Error getting assessment URL</em>
+								<br />
+								<%=StringEscapeUtils.escapeHtml(qe.getMessage())%>
+								
+							</p>
 						<%
-						return;
+						//return;
+						
 					}
 				}
 			}
 
 			%>
-			<table border="2" cellpadding="1">
-				<tr>
-					<!--<th>Assessment ID</th>-->
-					<th>Schedule name</th>
-					<th>Remaining attempts</th>
-					<th>Start datetime</th>
-					<th>End datetime</th>
-					<th>Actions</th>
-					<!--<th>Group</th>-->
-				</tr>
-				
-		<%
-			for(int i = 0; i < schedules.size(); i++) {	
-				if(schedules.get(i) == null) continue;												
-				if(schedulesactive[i] == false) continue;
-				if(schedule_name != "" && schedule_name != null){
-					if(!schedules.get(i).getSchedule_Name().equals(schedule_name)) continue;	
-				}				
-						//this is what is different in the content item view. Want to see 
-						//just the schedule created through the content item creation form.
-		%>				
+	<table border="2" cellpadding="1">
+		<tr>
+			<!--<th>Assessment ID</th>-->
+			<th>Schedule name</th>
+			<th>Remaining attempts</th>
+			<th>Start datetime</th>
+			<th>End datetime</th>
+			<th>Actions</th>
 
-				<tr>
-					<!--<td><%=schedules.get(i).getAssessment_ID()%></td>-->
-					<td><%=schedules.get(i).getSchedule_Name()%></td>
-					<td><%=schedules.get(i).isRestrict_Attempts() ? schedules.get(i).getMax_Attempts() : "no limit"%></td>
-					<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).readSchedule_Starts_asCalendar().getTime().toString()%></td>
-					<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).readSchedule_Stops_asCalendar().getTime().toString()%></td>
-					<td><% if(schedulesactive[i]) { %>
-						<% if(scheduleurls[i] == null) { %>
-							No attempts remaining
-						<% } else { %>
-							<form>
-								<input type="button" value="Take assessment" onclick="window.open('<%=scheduleurls[i]%>');">
+		</tr>
+		<%
+				for(int i = 0; i < schedules.size(); i++) {	
+					if(schedules.get(i) == null) continue;												
+					if(schedulesactive[i] == false) continue;	//showing only active schedules to students			
+					if(schedule_name != null && schedule_name.length() > 0){
+						if(!schedules.get(i).getSchedule_Name().equals(schedule_name)) continue;	
+					}
+																	
+		%>
+		<tr>
+			<!--<td><%=schedules.get(i).getAssessment_ID()%></td>-->
+			<td><%=schedules.get(i).getSchedule_Name()%></td>
+			<td><%=schedules.get(i).isRestrict_Attempts() ? schedules.get(i).getMax_Attempts() : "no limit"%></td>
+			<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).readSchedule_Starts_asCalendar().getTime().toString()%></td>
+			<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).readSchedule_Stops_asCalendar().getTime().toString()%></td>
+			<td>
+			<% 
+			
+				if(schedulesactive[i]) { 
+					if(scheduleurls[i] == null) {
+						
+						%>No attempts remaining<%
+						
+					} else {
+						%>
+							<form><input type="button" value="Take assessment"
+								onclick="window.open('<%=scheduleurls[i]%>');">
 							</form>
-						<% } %>
-					<% } else { %>
-						inactive
-					<% } %></td>
-					<!--<td><%=schedules.get(i).getGroup_ID()%></td>-->
-				</tr>
-				<% } %>
-			</table>
-			<%
-		}
+						<% 
+					} 
+				} else {
+					
+					%>inactive<%
+					
+				} 
 			%>
+			</td>
+
+		</tr>
+			<%
+				} 
+			%>
+	</table>
+	<%
+		} //End of student view (else student)
+	%>
 	</bbUI:docTemplateBody>
 
 </bbData:context>
