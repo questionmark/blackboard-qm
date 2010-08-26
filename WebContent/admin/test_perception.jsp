@@ -18,7 +18,7 @@
 		</bbUI:titleBar>
 
 		<%
-		QMWise qmwise;
+		QMWise qmwise = null;
 
 		try {
 			qmwise = new QMWise();
