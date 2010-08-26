@@ -197,46 +197,46 @@
 			Calendar enddate = Calendar.getInstance();
 			enddate.add(Calendar.DAY_OF_MONTH, 7);
 
-			String adminid;
+			String adminid = null;
 			try {
 				adminid = qmwise.getStub().getAdministratorByName(sessionUser.getUserName()).getAdministrator_ID();
 			} catch(Exception e) {
 				QMWiseException qe = new QMWiseException(e);
 		%>
-		<bbUI:receipt type="FAIL" title="Error getting Perception administrator ID">
-			<%=qe.getMessage()%>
-		</bbUI:receipt>
+			<p>
+				<em>Error getting Perception administrator ID</em>
+				<br />
+				<%=StringEscapeUtils.escapeHtml(qe.getMessage())%>
+			</p>
+
 		<%
-				return;
+				//return;
 			}
 
-			Assessment[] assessments;
-			try {
-				assessments = qmwise.getStub().getAssessmentListByAdministrator(adminid);
-			} catch(Exception e) {
+			Assessment[] assessments = null;
+			try {				
+				assessments = qmwise.getStub().getAssessmentListByAdministrator(adminid);			
+			}
+			catch(Exception e) {
 				QMWiseException qe = new QMWiseException(e);
-		%>
-		
-		<bbUI:receipt type="FAIL" title="Error getting list of available assessments">
-			<%=qe.getMessage()%>
-		</bbUI:receipt>
-		
-		<%
-				return;
+				assessments = new Assessment[0];
+				%>
+					<p><em>Error getting list of available assessments</em></p>
+						<p><%=StringEscapeUtils.escapeHtml(qe.getMessage())%></p>
+						
+				<%
+				//return;
 			}
 
-			//sort assessments by Session_Name
-			Arrays.sort(assessments, new AssessmentComparator());
-			
-			if(assessments.length == 0) { 
-		%>		
-		
-		<p>There are no assessments defined in Perception so you cannot schedule an assessment.</p>
-		
-		<% 	
-			} else { 
-		
-		%>
+			if(assessments.length == 0) {
+				%>
+			<p>There are no assessments defined in Perception so you cannot
+			schedule an assessment.</p>
+			<% } else { 
+				//if not empty,
+				//sort assessments by Session_Name
+				Arrays.sort(assessments, new AssessmentComparator());
+			%>
 	
 		<script type="text/javascript">
 			function disable_set_access() {

@@ -399,11 +399,14 @@
 		} catch(Exception e) {
 			QMWiseException qe = new QMWiseException(e);
 	%>
-		<bbUI:receipt type="FAIL" title="Error getting Perception administrator ID">
-			<%=qe.getMessage()%>
-		</bbUI:receipt>
+		<p>
+			<em>Error getting Perception administrator ID</em>
+			<br />
+			<%=StringEscapeUtils.escapeHtml(qe.getMessage())%>
+		</p>
+
 	<%
-			return;
+			//return;
 		}
 
 			Assessment[] assessments = null;
