@@ -239,7 +239,6 @@
 				// Return disabled to allow for the page to continue loading.
 				//return;
 			
-				
 			}
 
 			Vector<ScheduleV42> schedules = new Vector<ScheduleV42>();
@@ -334,7 +333,6 @@
 			<th>Active?</th>
 			<th>Try Out</th>
 			<th>Show URL</th>
-			
 		</tr>
 		<%
 				for(int i = 0; i < schedules.size(); i++) {
