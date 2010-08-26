@@ -32,6 +32,7 @@ Course course;
 //get LineitemDbLoader
 LineitemDbLoader lineitemLoader = (LineitemDbLoader) bbPm.getLoader(LineitemDbLoader.TYPE);
 Lineitem lineitem;
+String scoreType; 
 
 try {
 	@SuppressWarnings("unchecked")
@@ -100,6 +101,15 @@ if(lineitem.getPointsPossible() == 0f) {
 	}
 }
 
+if(lineitem.getPointsPossible() == 100f) {
+	// read the percentage score from the request
+	scoreType="Score_Percentage";
+} else {
+	// read the point score from the request
+	scoreType="Score_Attained";
+}
+
+
 // get the membership loader
 CourseMembershipDbLoader coursemembershipdbloader = (CourseMembershipDbLoader) bbPm.getLoader(CourseMembershipDbLoader.TYPE);
 CourseMembership coursemembership;
@@ -133,12 +143,12 @@ Score score;
 
 try {
 	score = scoredbloader.loadByCourseMembershipIdAndLineitemId(coursemembership.getId(), lineitem.getId());
-	if(new Float(score.getGrade()).floatValue() >= new Float(request.getParameter("Score_Attained")).floatValue()) {
+	if(new Float(score.getGrade()).floatValue() >= new Float(request.getParameter(scoreType)).floatValue()) {
 		//new score is less than old score -- ignore
 		out.println("Perception: Callback: ignored a score since it was less than or equal to old score");
 		return;
 	}
-	score.setGrade(request.getParameter("Score_Attained"));
+	score.setGrade(request.getParameter(scoreType));
 	score.setDateChanged();
 } catch(KeyNotFoundException e) {
 	//doesn't exist -- make a new one
@@ -146,7 +156,7 @@ try {
 	score.setCourseMembershipId(coursemembership.getId());
 	score.setDateAdded();
 	score.setLineitemId(lineitem.getId());
-	score.setGrade(request.getParameter("Score_Attained"));
+	score.setGrade(request.getParameter(scoreType));
 } catch(Exception e) {
 	out.println("Perception: Callback: Error getting old score: " + e);
 	return;
