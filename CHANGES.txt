@@ -1,10 +1,13 @@
 
-Version 8.0.3
+Version 8.0.4
 -------------
 
-[#300] Fixed synchronization bugs with some special characters
+[#299] Fixed timezone problems in schedule creation
+[#298] Fixed exception handling to prevent connector blank pages
+[#300] Added workaround for special characters in student names
 [#208] Fixed page controls on the viewresults page
-
+[#254] Fixed bugs in page navigation
+[#293] Workaround for Gradebook not being updated with some v5 configurations
 
 Version 8.0.2
 -------------
