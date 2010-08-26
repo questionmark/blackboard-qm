@@ -168,9 +168,11 @@
 				//catch invalid group id error, this occurs when the incorrect or no group id is returned from the returning
 				// via PIP
 				if (qe.getQMErrorCode() == 202) {
-					%>
-					<h3>Error getting results list - Group ID invalid - 0 or cannot be converted to an integer</h3>
-						<p>Course id returned: <%=StringEscapeUtils.escapeHtml(course.getBatchUid())%></p>
+					%>					
+						<p>
+							<em>Error getting results list - Group ID invalid - 0 or cannot be converted to an integer</em>
+							<br />Course id returned: <%=StringEscapeUtils.escapeHtml(course.getBatchUid())%>
+						</p>
 						<p><%=StringEscapeUtils.escapeHtml(qe.getMessage())%></p>				
 					<%
 					//return;
@@ -178,8 +180,11 @@
 				} else {
 			
 					%>
-					<h3>Error getting results list</h3>
-						<p><%=StringEscapeUtils.escapeHtml(qe.getMessage())%></p>				
+						<p>
+							<em>Error getting results list</em>
+							<br />
+							<%=StringEscapeUtils.escapeHtml(qe.getMessage())%>
+						</p>				
 					<%
 					//return;
 				}
