@@ -299,8 +299,10 @@
 							
 							<bbNG:dataElement label="Schedule description">	
 								<textarea  cols="40" rows="3" title="Additional Comments" onfocus="this.value='';this.onfocus=null;" 
-									name="schedule_text_area" id="addComments" >Enter a short description for this Content item, N.B. Plaintext only.
-								</textarea>				
+									name="schedule_text_area" id="addComments" >
+								</textarea>		
+								<br />
+								Enter a short description for this Content item, N.B. Plaintext only.		
 							</bbNG:dataElement>
 							<bbNG:dataElement label="Store results in Grade Center?">
 								<select name="use_gradebook">
