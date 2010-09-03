@@ -30,16 +30,7 @@
 
 <bbData:context id="ctx">
 
-		<bbUI:docTemplate>
-		
-			<bbUI:titleBar iconUrl='<%=path+"/images/qm.gif"%>' >
-				Questionmark Perception connector
-			</bbUI:titleBar>
-	
-			<bbUI:breadcrumbBar environment="COURSE" isContent="false">
-				<bbUI:breadcrumb>SCHEDULE CREATED</bbUI:breadcrumb>
-			</bbUI:breadcrumbBar>			
-		
+		<bbUI:docTemplate>		
 		
 			<%
 			QMWise qmwise;
@@ -194,9 +185,9 @@
 			String recallurl = "main.jsp?course_id=" + request.getParameter("course_id") + "#Schedules";
 			%>
 
-			<bbUI:receipt type="SUCCESS" title="Success" recallUrl="<%=recallurl%>">
-				The schedule was successfully created
-			</bbUI:receipt>
+		<bbUI:receipt  iconUrl='<%=path+"/images/qm.gif"%>' type="SUCCESS" title="Schedule Creation Successful" recallUrl="<%=recallurl%>">
+			<p>The schedule was successfully created</p>
+		</bbUI:receipt>
 
 		</bbUI:docTemplate>
 
