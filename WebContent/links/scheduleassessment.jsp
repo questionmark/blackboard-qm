@@ -33,7 +33,7 @@
 <%@page import="org.apache.log4j.helpers.SyslogWriter"%><bbData:context id="ctx">
 	<bbUI:docTemplateHead title="Questionmark Perception connector" />	
 	<bbUI:docTemplate>
-		<bbUI:titleBar iconUrl='<%=path+"/images/qm.gif"%>'>Schedule Creation Successful</bbUI:titleBar>
+		
 		<%
 		QMWise qmwise;
 		int groupId;
@@ -195,8 +195,8 @@
 		String recallurl = "main.jsp?course_id=" + request.getParameter("course_id") + "#Schedules";
 		%>
 
-		<bbUI:receipt type="SUCCESS" title="Success" recallUrl="<%=recallurl%>">
-			The schedule was successfully created
+		<bbUI:receipt  iconUrl='<%=path+"/images/qm.gif"%>' type="SUCCESS" title="Schedule Creation Successful" recallUrl="<%=recallurl%>">
+			<p>The schedule was successfully created</p>
 		</bbUI:receipt>
 
 	</bbUI:docTemplate>

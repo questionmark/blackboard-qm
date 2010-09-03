@@ -335,17 +335,16 @@
 								+ course_id
 								+ "&amp;mode=quick";
 		%>
-		<bbUI:receipt type="pass" title="Questionmark Perception" recallUrl="<%=okUrl %>">
-					<p>
-						<i>Schedule creation was successful.</i>						
-					</p>
+
+		<bbUI:receipt  iconUrl='<%=path+"/images/qm.gif"%>' type="SUCCESS" title="Schedule Creation Successful" recallUrl="<%=okUrl%>">
+			<p>The schedule was successfully created</p>
 		</bbUI:receipt>
 		<%
 					}
 
 							catch (PersistenceException pE) {
 				%>
-				<bbUI:receipt type="FAIL" title="content item creation unsuccessful" recallUrl="" buttonName="failOk" buttonAlt="OK">
+				<bbUI:receipt type="FAIL" title="Content item creation unsuccessful" recallUrl="" buttonName="failOk" buttonAlt="OK">
 					Sorry but there was a problem creating this content item, see below:<br>
 					<%
 						out.println("Persistence Exception caught, Message: "
