@@ -36,6 +36,7 @@
 <%@ taglib uri="/bbNG" prefix="bbNG" %>
 <%@ taglib uri="/bbData" prefix="bbData" %>
 
+
 <bbNG:jspBlock>
 
 <%	
@@ -95,7 +96,7 @@
 		%>
 		
 		
-		<bbNG:receipt type="FAIL" title="Oops! No course ID was found, terminated script. Please remove this schedule manually from Perception.">
+		<bbNG:receipt iconUrl='<%=path+"/images/qm.gif"%>' type="FAIL" title="Oops! No course ID was found, terminated script. Please remove this schedule manually from Perception.">
 					No course ID was given with the request
 		</bbNG:receipt>
 		
@@ -258,8 +259,12 @@
 				QMWiseException qe = new QMWiseException(e);
 				System.out.println("Error getting list of schedules for this group: " + qe.getMessage());
 				%>
-					<h1>Error getting list of schedules for this group</h1>
-					<p><%=StringEscapeUtils.escapeHtml(qe.getMessage())%></p>
+					
+					<p>
+						<em>Error getting list of schedules for this group</em>
+						<br />
+						<%=StringEscapeUtils.escapeHtml(qe.getMessage())%>
+					</p>
 	
 				<%
 				//return;
@@ -291,7 +296,7 @@
 			}
 			
 			//We get a schedule array back as response, so initialise one..
-			Schedule[] responseScheduleIdArray = null;
+			Schedule[] responseScheduleArray = null;
 
 			/**Empty array check, if the schedules list coming back is empty, 
 			//	Error, no schedule found in Perception with the name, print schedule name,
@@ -303,28 +308,13 @@
 				
 					try {
 						//QMWISe deleteScheduleList, returns an array of schedules which have been deleted
-						String[] newArray = new String[deleteScheduleIdArray.size()];						
-						responseScheduleIdArray = qmwise.getStub().deleteScheduleList(deleteScheduleIdArray.toArray(newArray));
+						String[] newArray = new String[deleteScheduleIdArray.size()];		
 						
 						//For the logs
 						
-						System.out.println("Found schedules in Questionmark Perception matching content item name, deleting...");
+						System.out.println("Found participant schedules in Questionmark Perception for the selected schedule, deleting...");
 						
-						if((responseScheduleIdArray != null) && (responseScheduleIdArray.length > 0)){
-							for(int i = 0; i < responseScheduleIdArray.length; i++){
-								System.out.println("Schedule deleted, Name: " + responseScheduleIdArray[i].getSchedule_Name()
-										+ " ID: " + responseScheduleIdArray[i].getSchedule_ID());
-							}
-							
-							schedule_deleted = true;
-							
-
-							%> 
-								<bbNG:receipt type="SUCCESS" title="Success" recallUrl="<%=recallurl%>">
-									The schedule "<%=schedule_name%>" was successfully deleted!
-								</bbNG:receipt>
-							<%		
-						}
+						responseScheduleArray = qmwise.getStub().deleteScheduleList(deleteScheduleIdArray.toArray(newArray));
 						
 					} catch (Exception e) {
 						QMWiseException qe = new QMWiseException(e);
@@ -339,21 +329,59 @@
 						<%
 						return;
 					}
-			}
-			
-			else {
+					
+					//if the responsearray is empty, nothing got deleted, even when QMWISe exception not thrown..
+					if((responseScheduleArray == null) || (responseScheduleArray.length == 0)){
+						System.out.println("Issues with deleting the following participant schedules:");
+						for(String _deleteScheduleID: deleteScheduleIdArray){
+							System.out.println(_deleteScheduleID + ",");
+						}
+						System.out.println("Please refer to the logs in Questionmark Perception or contact your Perception administrator to assist with the deletion process");
+
+						%> 
+							<bbNG:receipt iconUrl='<%=path+"/images/qm.gif"%>' type="FAIL" title="Error deleting schedule" recallUrl="<%=recallurl%>">
+								<p>
+									<em>The schedule <b><%=schedule_name%></b> could not be deleted for all participants.</em>
+									<br />
+									For more information on this error, please refer to your Blackboard tomcat logs.
+									<br />
+									Or contact your Blackboard Administrator for further assistance.
+								</p>
+							</bbNG:receipt>
+						<%		
+						return;
+							
+					}
+					else{
+						
+						for(int i = 0; i < responseScheduleArray.length; i++){
+							System.out.println("Schedule deleted, Name: " + responseScheduleArray[i].getSchedule_Name()
+									+ " ID: " + responseScheduleArray[i].getSchedule_ID());
+						}
+						
+						schedule_deleted = true;
+					
+						%> 
+							<bbNG:receipt iconUrl='<%=path+"/images/qm.gif"%>' type="SUCCESS" title="Success" recallUrl="<%=recallurl%>">
+								The schedule "<%=schedule_name%>" was successfully deleted!
+							</bbNG:receipt>
+						<%							
+					}						
+
+			} else {
 				
 				String errorMsg = "Error, no schedules could be found by this name: " 
 						+ schedule_name + " on the Perception database. Please check your Perception error logs.";
 				
 				System.out.println(errorMsg);
 				%> 
-					<h1>Error deleting schedule!</h1>
-					<br/>
-					<%=errorMsg%>
-					
+					<p>
+						<em>Error deleting schedule!</em>
+						<br/>
+						<%=StringEscapeUtils.escapeHtml(errorMsg)%>					
+					</p>					
 				<%
-				//return;
+				return;
 			}	
 			
 	}
