@@ -4,7 +4,7 @@
 		<name value="Questionmark Perception"/>
 		<description value="Plugin to connect Blackboard to the Questionmark Perception assessment platform"/>
 		<handle value="qmpp"/>
-		<version value="9.0.21"/>
+		<version value="9.0.22"/>
 		<requires>
 			<bbversion value="9.0.0"/>
 		</requires>
@@ -32,7 +32,7 @@
                     <view value="content/viewschedule.jsp"/>
                     <create value="content/createscheduleform.jsp"/>
                     <modify value="content/modify.jsp"/>
-                    <remove value="content/remove.jsp"/>
+                    <remove value="links/deleteschedule.jsp"/>
                     <can-copy value="false"/>
 				</http-actions>
 

@@ -420,13 +420,7 @@
 						row.style.display = box.checked? "table-row":"none";
 					}
 
-					
-					function deleteRow(rowID)
-					{
-						var row = rowID.parentNode.parentNode.rowIndex;
-						document.getElementById('scheduleTable').deleteRow(row);
-					}
-						
+
 			</script>
 		</bbNG:jsBlock>
 		<tr>
@@ -483,7 +477,7 @@
 												
 						<td>
 							<form id="deleteScheduleForm" 
-								action='<%=path+"/links/removeproc.jsp"%>' method="post">
+								action='<%=path+"/links/deleteschedule.jsp"%>' method="post">
 									
 								<input type="hidden" name="schedule_name" 
 									value="<%=schedules.get(i).getSchedule_Name()%>" />
