@@ -432,6 +432,7 @@
 			<th>Active?</th>
 			<th>Try Out</th>
 			<th>Show URL</th>
+			<th>Edit Schedule</th>
 			<th>Delete Schedule</th>			
 		</tr>
 		<%
@@ -473,6 +474,25 @@
 						<td>
 							<input align="middle" type="checkbox" name="switchBox"
 								onClick="showhideScheduleURL(this,'<%=idStr%>')" />
+						</td>
+						<td>
+							<form id="editScheduleForm" 
+								action='<%=path+"/links/editschedule.jsp"%>' method="post">
+									
+								<input type="hidden" name="schedule_name" 
+									value="<%=schedules.get(i).getSchedule_Name()%>" />
+								
+								<input type="hidden" name="schedule_group_id"
+									value="<%=schedules.get(i).getGroup_ID()%>"/>
+								
+								<input type="hidden" name="schedule_group_name"
+									value="<%=schedules.get(i).getGroup_Name()%>"/>
+									
+								<input type="hidden" name="course_id" value="<%=courseId%>" />	
+								
+								<input type="submit" name="edit_schedule" value="Edit"/>
+																
+							</form>
 						</td>
 												
 						<td>
