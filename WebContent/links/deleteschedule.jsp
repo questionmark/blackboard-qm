@@ -347,7 +347,7 @@
 									<p>
 										<em>The schedule <b><%=schedule_name%></b> could not be deleted for all participants.</em>
 										<br />
-										For more information on this error, please refer to your Blackboard tomcat logs.
+										
 										<br />
 										Or contact your Blackboard Administrator for further assistance.
 										<br/>
@@ -474,9 +474,7 @@
 									<p>
 										<em>The schedule <b><%=schedule_name%></b> could not be deleted for all participants.</em>
 										<br />
-										For more information on this error, please refer to your Blackboard tomcat logs.
-										<br />
-										Or contact your Blackboard Administrator for further assistance.
+										To complete the deletion process, please log in to Enterprise Manager or contact your Perception administrator. 
 									</p>
 								</bbNG:receipt>
 							<%		
