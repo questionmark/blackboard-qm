@@ -424,8 +424,6 @@
 			</script>
 		</bbNG:jsBlock>
 		<tr>
-			
-			<th>Schedule name</th>
 			<th>Maximum attempts</th>
 			<th>Start datetime</th>
 			<th>End datetime</th>
@@ -507,6 +505,12 @@
 								
 								<input type="hidden" name="schedule_group_name"
 									value="<%=schedules.get(i).getGroup_Name()%>"/>
+								
+								<input type="hidden" name="schedule_start_time" 
+									value="<%=schedules.get(i).getSchedule_Starts()%>"/>
+								
+								<input type="hidden" name="schedule_stop_time"
+									value="<%=schedules.get(i).getSchedule_Stops()%>"/>								
 									
 								<input type="hidden" name="course_id" value="<%=courseId%>" />	
 								
