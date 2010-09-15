@@ -14,6 +14,7 @@
 		java.text.*,
 		java.net.*,
 		blackboard.base.*,
+		blackboard.base.FormattedText.Type,
 		blackboard.platform.*,
 		blackboard.platform.session.*,
 		blackboard.platform.persistence.*,
@@ -33,10 +34,13 @@
 		javax.xml.namespace.QName,
 		com.questionmark.*,
 		com.questionmark.QMWISe.*"
+		
 %>
+
 <%@ taglib uri="/bbUI" prefix="bbUI" %>
 <%@ taglib uri="/bbData" prefix="bbData" %>
 <%@taglib uri="/bbNG" prefix="bbNG"%>
+
 <%
 	if(!PlugInUtil.authorizeForCourseControlPanelContent(request, response))
 		return;
@@ -49,7 +53,7 @@
 
 
 
-<%@page import="blackboard.base.FormattedText.Type"%><bbNG:learningSystemPage ctxId="ctx" title="Questionmark Perception connector" onLoad="disable_set_access()">
+<bbNG:learningSystemPage ctxId="ctx" title="Questionmark Perception connector" onLoad="disable_set_access()">
 	
 	<bbNG:pageHeader>
 		<bbNG:breadcrumbBar environment="COURSE" isContent="true">
