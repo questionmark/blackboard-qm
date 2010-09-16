@@ -430,8 +430,7 @@
 			<th>Active?</th>
 			<th>Try Out</th>
 			<th>Show URL</th>
-			<th>Edit Schedule</th>
-			<th>Delete Schedule</th>			
+			<th>Edit Schedule</th>		
 		</tr>
 		<%
 				for(int i = 0; i < schedules.size(); i++) {
@@ -491,33 +490,7 @@
 								<input type="submit" name="edit_schedule" value="Edit"/>
 																
 							</form>
-						</td>
-												
-						<td>
-							<form id="deleteScheduleForm" 
-								action='<%=path+"/links/deleteschedule.jsp"%>' method="post">
-									
-								<input type="hidden" name="schedule_name" 
-									value="<%=schedules.get(i).getSchedule_Name()%>" />
-								
-								<input type="hidden" name="schedule_group_id"
-									value="<%=schedules.get(i).getGroup_ID()%>"/>
-								
-								<input type="hidden" name="schedule_group_name"
-									value="<%=schedules.get(i).getGroup_Name()%>"/>
-								
-								<input type="hidden" name="schedule_start_time" 
-									value="<%=schedules.get(i).getSchedule_Starts()%>"/>
-								
-								<input type="hidden" name="schedule_stop_time"
-									value="<%=schedules.get(i).getSchedule_Stops()%>"/>								
-									
-								<input type="hidden" name="course_id" value="<%=courseId%>" />	
-								
-								<input type="submit" name="delete_schedule" value="Delete"/>
-																
-							</form>
-						</td>
+						</td>											
 					</tr>
 					<tr id='<%=idStr%>' style="display: none;">
 						<td><i>URL:</i></td>
