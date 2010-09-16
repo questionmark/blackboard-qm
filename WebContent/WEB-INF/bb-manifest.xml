@@ -32,7 +32,7 @@
                     <view value="content/viewschedule.jsp"/>
                     <create value="content/createscheduleform.jsp"/>
                     <modify value="content/editschedule.jsp"/>
-                    <remove value="links/deleteschedule.jsp"/>
+                    <remove value="content/deleteschedule.jsp"/>
                     <can-copy value="false"/>
 				</http-actions>
 
