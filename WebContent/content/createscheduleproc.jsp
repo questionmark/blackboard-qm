@@ -11,9 +11,28 @@
 <%@ page
 	language="java"
 	pageEncoding="UTF-8"
-	import="java.util.*,java.text.*,blackboard.platform.*,blackboard.platform.session.*,blackboard.platform.persistence.*,blackboard.platform.plugin.*,blackboard.platform.security.authentication.*,blackboard.persist.*,blackboard.persist.user.*,blackboard.persist.course.*,blackboard.persist.content.*,blackboard.persist.content.ContentDbLoader,blackboard.persist.Id,blackboard.data.course.*,blackboard.data.user.*,blackboard.data.content.*,blackboard.base.*,blackboard.data.gradebook.*,blackboard.persist.gradebook.*,org.apache.axis.*,java.rmi.RemoteException,javax.xml.namespace.QName,com.questionmark.*,com.questionmark.QMWISe.*"
-		
-		
+	import="java.util.*,
+	java.text.*,
+	blackboard.platform.*,
+	blackboard.platform.session.*,
+	blackboard.platform.persistence.*,
+	blackboard.platform.plugin.*,
+	blackboard.platform.security.authentication.*,
+	blackboard.persist.*,blackboard.persist.user.*,
+	blackboard.persist.course.*,blackboard.persist.content.*,
+	blackboard.persist.content.ContentDbLoader,
+	blackboard.persist.Id,blackboard.data.course.*,
+	blackboard.data.user.*,
+	blackboard.data.content.*,
+	blackboard.base.*,
+	blackboard.data.gradebook.*,
+	blackboard.persist.gradebook.*,
+	org.apache.axis.*,
+	java.rmi.RemoteException,
+	javax.xml.namespace.QName,com.questionmark.*,
+	com.questionmark.QMWISe.*,
+	blackboard.base.FormattedText.Type,
+	org.apache.commons.lang.StringEscapeUtils"
 %>
 
 <%@ taglib uri="/bbUI" prefix="bbUI" %>
@@ -28,42 +47,41 @@
 	//Authenticate for use.	
 	if (!PlugInUtil.authorizeForCourseControlPanel(request, response)) {
 		//If user is not authorised to see this page then return blank page
-%>	
-<%@page import="blackboard.base.FormattedText.Type"%>
-<%@page import="org.apache.commons.lang.StringEscapeUtils"%><h1>You are not authorised to view this page</h1>			
-				<%
-								//Stop the script
-									return;
-								}
+		%>	
+			<h1>You are not authorised to view this page</h1>			
+		<%
+		//Stop the script
+		return;
+	}
 
-								String course_id = request.getParameter("course_id");
-								String parent_id = request.getParameter("parent_id"); //  id of the parent folder
-								String schedule_name = request.getParameter("schedule");
-								//FormattedText ftext = request.getParameter("
-								String schedule_description = request.getParameter("schedule_text_area");
-								
-								if (schedule_description.length() > 4000){
-								%>
-									<bbUI:receipt type="FAIL" title="Schedule description is too long!" buttonAlt="Ok" >
-										 Cannot exceed more than 4000 characters. Please click ok to try again
-									</bbUI:receipt>
-								<%
-								return;
-								}
-									
-								//out.println("description string is: " + schedule_description);
+	String course_id = request.getParameter("course_id");
+	String parent_id = request.getParameter("parent_id"); //  id of the parent folder
+	String schedule_name = request.getParameter("schedule");
+	//FormattedText ftext = request.getParameter("
+	String schedule_description = request.getParameter("schedule_text_area");
+	
+	if (schedule_description.length() > 4000){
+	%>
+		<bbUI:receipt type="FAIL" title="Schedule description is too long!" buttonAlt="Ok" >
+			 Cannot exceed more than 4000 characters. Please click ok to try again
+		</bbUI:receipt>
+	<%
+	return;
+	}
+		
+	//out.println("description string is: " + schedule_description);
 
-								//Retrieve the Db persistence manager from the persistence service
-								BbPersistenceManager bbPm = PersistenceServiceFactory.getInstance()
-										.getDbPersistenceManager();
+	//Retrieve the Db persistence manager from the persistence service
+	BbPersistenceManager bbPm = PersistenceServiceFactory.getInstance()
+			.getDbPersistenceManager();
 
-								//load course by short course name to get its Blackboard ID
-								CourseDbLoader courseLoader = (CourseDbLoader) bbPm
-										.getLoader(CourseDbLoader.TYPE);
-								Course course;
-								User user;
-								
-				%>
+	//load course by short course name to get its Blackboard ID
+	CourseDbLoader courseLoader = (CourseDbLoader) bbPm
+			.getLoader(CourseDbLoader.TYPE);
+	Course course;
+	User user;
+	
+%>
 
 
 <bbData:context id="ctx">
