@@ -137,7 +137,7 @@
 	//Initialised bb-phantom schedule object
 	ScheduleV42 bbSchedule = null;
 	//Initialise New String array to store all the schedule ID's to be edited
-	Vector<String> editGroupSchedules = new Vector<String>();
+	Vector<ScheduleV42> editGroupSchedules = new Vector<ScheduleV42>();
 	
 	//Dates and times
 	
@@ -333,87 +333,6 @@
 			//Administrator or TA
 			//-----------------------------------------------------------------------
 
-				ScheduleV42[] schedulesarray = null;
-				try {				
-					//Get back an array of schedules for the bb-phantom user
-					schedulesarray = qmwise.getStub().getScheduleListByParticipantV42(new Integer(UserSynchronizer.getPhantomUserId()).intValue());
-					
-				} catch (QMWiseException qe){		
-						String qmErrorOutput = "";
-						if(qe.getQMErrorCode() == 1301){
-							qmErrorOutput = "Perception: course " + courseId + 
-							": Error getting schedule list. Cause: Assessment not found, check whether assessment exists in Perception."
-							+ " For more information please check Perception server logs - QMWISe trace log. Message: "
-							+ qe.getMessage();
-							System.out.println(qmErrorOutput);										
-						} else {
-							qmErrorOutput = "Perception: course " + courseId + ": Error getting schedule list. Cause: " + qe.getMessage();
-							System.out.println(qmErrorOutput);							
-						}
-						
-						%>
-							<bbNG:receipt iconUrl='<%=path+"/images/qm.gif"%>' type="FAIL" title="Cannot edit schedule">
-								<p>
-									<em>Error editing schedule <b><%=schedule_name%></b></em>
-									<br />
-									For more information on this error, please refer to your Blackboard tomcat logs.
-									<br />
-									Or contact your Blackboard Administrator for further assistance.
-									<br/>
-										<b>Please log into Enterprise Manager to edit this schedule.</b>
-									 <br/>
-									<%=StringEscapeUtils.escapeHtml(qmErrorOutput)%>									
-								</p>
-							</bbNG:receipt>	
-						<%	
-					
-				} //end of catch block.
-			
-				
-				
-				//Pass through the array returned by getting all schedules for bb-phantom, find the one 
-				//that shares the name with this item, and save this schedule as 'bbSchedule'
-				//We will then use the details of this schedule to populate the fields in the edit schedule form 
-				//such as Maximum attempts and Start / End Dates. 
-				
-				for(ScheduleV42 schedule: schedulesarray){
-					//Grab the schedule for 'bb-phantom' user - but make sure to grab it for only this group!
-					if(schedule.getGroup_ID() == perception_group_ID 
-						&& schedule.getSchedule_Name().equals(schedule_name)){						
-						try{
-							//Once found save the bb-phantom Schedule as 'bbSchedule' to get schedule details.
-							//N.B there should be only ONE schedule for bb-phantom user for each schedule which is unique for this group.
-							//Assign this object to bb-phantom schedule object.
-							bbSchedule = schedule;							
-							//Log this for debugging.
-							System.out.println("Perception: Found schedule for 'bb-phantom' user, Schedule Name: " + bbSchedule.getSchedule_Name()
-									+ " ID: " + bbSchedule.getSchedule_ID());						
-						}  catch (NullPointerException npe) {
-							//If the schedulesarray from qmwise call is still null then catch this:
-							//So if qmwise call fails, terminate this script, that is to say we don't have a phantom schedule, hence we cannot go any further.
-							System.out.println("Perception: Error editing schedule for: " + schedule_name + "\n" + "Could not find bb-phantom schedule\n" + npe.getMessage());
-							System.out.println("Perception: Terminating edit script...Please manually edit this schedule in Enerprise Manager ");
-							%> 
-								<bbNG:receipt iconUrl='<%=path+"/images/qm.gif"%>' type="FAIL" title="Cannot edit schedule">
-									<p>
-										<em>Error editing schedule <b><%=schedule_name%></b></em>
-										<br />
-										Could not find the schedule for bb-phantom user.
-										<br />
-										For more information on this error, please refer to your Blackboard tomcat logs.
-										<br />
-										Or contact your Blackboard Administrator for further assistance.
-										<br/>
-											<b>Please log into Enterprise Manager to edit this schedule.</b>
-										 <br/>
-										<%=StringEscapeUtils.escapeHtml(npe.getMessage())%>									
-									</p>
-								</bbNG:receipt>
-							<%						
-						}
-					}
-				}
-
 				//Now to get participant schedules..
 				
 				//Start by getting a schedule list by group from QMWISe
@@ -466,14 +385,39 @@
 						//further down this script.
 						if(!schedule_name.equals(schedule.getSchedule_Name())) continue;
 						//Set id of schedule to string array to pass onto qmwise later.	
-						editScheduleID = Integer.toString(schedule.getSchedule_ID());
-						editGroupSchedules.add(editScheduleID);
+						editGroupSchedules.add(schedule);
+						
+						//contain all of the schedules i am interested in..
+						
+						if( schedule.getParticipant_ID() == 0 || schedule.getParticipant_ID() == new Integer(UserSynchronizer.getPhantomUserId()).intValue() )  {
+							//got a group schedule
+							bbSchedule = schedule;
+						}
 					}
 					
 				}
-				//else:
-				//No Group schedules for individual participants!
-
+				
+				if(bbSchedule == null){
+					//break and stop script, could not find schedule.
+					System.out.println("Could not find this schedule in group schedules: " + schedule_name);
+					%>
+						<bbNG:receipt iconUrl='<%=path+"/images/qm.gif"%>' type="FAIL" title="Cannot edit schedule">
+							<p>
+								<em>Error editing schedule <b><%=schedule_name%></b></em>
+								<br />
+								<em>Could not find a schedule by this name on the Perception repository.</em>
+								<br />
+								For more information on this error, please refer to your Blackboard tomcat logs.
+								<br />
+								Or contact your Blackboard Administrator for further assistance.
+								<br/>
+									<b>Please log into Enterprise Manager to edit the above schedule for all participants </b>
+								 <br/>							
+							</p>
+						</bbNG:receipt>							
+		
+					<%
+				}
 				
 				/**Get schedule details to display on the following edit form:
 				*/
@@ -554,7 +498,7 @@
 		</script>
 	</bbNG:jsBlock>
 	
-	<form name="edit_schedule" action='<%=path+"/links/editscheduleproc.jsp"%>' method="post">
+	<form name="edit_schedule" action='<%=path+"/content/editscheduleproc.jsp"%>' method="post">
 	
 		<bbNG:dataCollection>
 		
@@ -579,18 +523,27 @@
 					
 				</bbNG:step>
 				
-				<bbNG:step title="Edit Attempts" hideNumber="true"
-					instructions="Reset schedule attempts for <strong>All</strong>  participants">
+				<%
+					if(limited_attempts){
+						%>
+							<bbNG:step title="Edit Attempts" hideNumber="true"
+								instructions="Reset schedule attempts for <strong>All</strong>  participants">
 					
-					<bbNG:dataElement label="Reset maximum attempts?">
-						<input type="checkbox" id="limit_attempts" name="limit_attempts"
-							value="true" onclick="disable_limit_attempts()" />
-						<input type="text" id="limit" name="limit" size="4" disabled
-							value="<%=schedule_max_attempts%>" />
-					</bbNG:dataElement>
+								<bbNG:dataElement label="Reset maximum attempts?">
+									<input type="checkbox" id="limit_attempts" name="limit_attempts"
+										value="true" onclick="disable_limit_attempts()" />
+									<input type="text" id="limit" name="limit" size="4" disabled
+										value="<%=schedule_max_attempts%>" />
+								</bbNG:dataElement>
 					
-					
-				</bbNG:step>
+							</bbNG:step>
+							
+						<%
+					}
+				
+				%>
+				
+
 				
 				<bbNG:step title="Set / Change Access Period" hideNumber="true"
 					instructions="Set or modify this schedule's availability">
