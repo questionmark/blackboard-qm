@@ -394,15 +394,21 @@
 
 
 		} else {
+			System.out.println("Insufficient rights - Incorrect role in the system. ");
 			//-----------------------------------------------------------------------
-			// if by some chance you are not admin or instructor but are able to create content item.
+			// if by some chance you are not admin or instructor but are able to edit content item.
 			//-----------------------------------------------------------------------
 			%>
-			<h1>Insufficient rights - Incorrect role</h1>
-				<p>We are sorry but you don't have sufficient rights to be able to schedule an assessment, 
-					please login as course instructor or administrator.</p>			
+				<bbNG:receipt iconUrl='<%=path+"/images/qm.gif"%>' type="FAIL" title="Cannot edit schedule">
+					<p>
+						<em>Insufficient rights - Incorrect role</em>							
+					</p>
+					<p>
+						We are sorry but you don't have sufficient rights to be able to schedule an assessment, please login as course instructor or administrator.
+					</p>	
+				</bbNG:receipt>							
+
 			<%
-			return;
 		}
 	%>		
 
