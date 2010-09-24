@@ -367,25 +367,6 @@
 	
 	//---------------------------End of getting request objects-----------------------------------------
 	
-	//Test
-	
-	for(Enumeration en=request.getParameterNames(); en.hasMoreElements(); )
-		{
-		   String paramName = (String) en.nextElement();
-	
-		   String[] values = request.getParameterValues(paramName);
-	
-		   out.print("\n\n request params key=" + paramName
-		                    + ", value=");
-	
-		   if(null == values || 0 == values.length)
-		       out.println("NULL");
-		   else
-		       out.println(java.util.Arrays.asList(values));
-		}
-	
-	
-	
 	
 	/*Getting schedule and group information depending on content item edit request or from control panel.*/
 	
@@ -651,11 +632,7 @@
 						new_sched_max_attempts != bbSchedule.getMax_Attempts()){
 					//If new attempts are different as well, make the change!
 					schedule.setMax_Attempts(new_sched_max_attempts);	
-					
-					//test 
-					out.println("New schedule attempts for schedule: " + schedule.getSchedule_ID() + " : "
-							+ schedule.getMax_Attempts());%><br /><%
-					
+						
 				}
 				
 				//If the set / change access box is ticked, check previous dates, 
@@ -677,12 +654,6 @@
 					if(changeDate){
 						schedule.updateSchedule_Starts_fromCalendar(startCal);
 						schedule.updateSchedule_Stops_fromCalendar(endCal);
-						
-						//test
-						out.println("New schedule start date: " + 
-								schedule.readSchedule_Starts_asCalendar().getTime().getTime());%><br /><%
-						out.println("New schedule stop date: " + 
-								schedule.readSchedule_Stops_asCalendar().getTime().getTime());%><br /><%	
 					}					
 				}
 				
@@ -718,9 +689,6 @@
 			<%
 			
 		}
-		
-
-		
 		
 		//Now to make changes on Blackboard, only if changes on perception are confirmed.
 
@@ -796,16 +764,6 @@
 	}
 
 %>
-<p>
-	<%out.println("schedule: " + old_schedule_name); %><br />
-	<%out.println("content item: " + contentItem.getCourseId());%><br />
-	<%out.println("coursemembership: " + crsMembership.getRole().toExternalString());%><br />
-	<%out.println("schedule attempts: " + schedule_max_attempts );%><br />
-	<em>Changed properties:</em>
-	<%out.println("New schedule name: " + contentItem.getTitle());%><br />
-	<%out.println("New schedule description: " + contentItem.getBody().getText());%><br />
-	
-</p>
 
 
 
