@@ -66,7 +66,7 @@
 			 Cannot exceed more than 4000 characters. Please click ok to try again
 		</bbUI:receipt>
 	<%
-	return;
+	
 	}
 		
 	//out.println("description string is: " + schedule_description);
@@ -78,8 +78,8 @@
 	//load course by short course name to get its Blackboard ID
 	CourseDbLoader courseLoader = (CourseDbLoader) bbPm
 			.getLoader(CourseDbLoader.TYPE);
-	Course course;
-	User user;
+	Course course = null;
+	User user = null;
 	
 %>
 
@@ -247,13 +247,12 @@
 							try {
 								course = courseLoader.loadByBatchUid(((String) request.getParameter("group")));
 							} catch (KeyNotFoundException e) {
-		%>
-		<bbUI:receipt type="FAIL"
-			title="Error getting Blackboard course details">
-			<%=e.getMessage()%>
-		</bbUI:receipt>
-		<%
-			return;
+								%>
+									<bbNG:receipt type="FAIL"
+										title="Error getting Blackboard course details">
+										<%=e.getMessage()%>
+									</bbNG:receipt>
+								<%									
 							}
 
 							LineitemDbPersister lineitemdbpersister = (LineitemDbPersister) bbPm
