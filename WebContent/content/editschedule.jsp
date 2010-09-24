@@ -8,6 +8,7 @@
 	import="java.util.*,
 	java.text.*,
 	blackboard.platform.*,
+	blackboard.platform.context.Context,
 	blackboard.platform.session.*,
 	blackboard.platform.persistence.*,
 	blackboard.platform.plugin.*,
@@ -30,7 +31,7 @@
 	com.questionmark.*,
 	com.questionmark.QMWISe.*"
 	pageEncoding="ISO-8859-1"
-	%>
+%>
 	
     
 <%@ taglib uri="/bbNG" prefix="bbNG" %>
@@ -38,7 +39,7 @@
 <%@ taglib uri="/bbUI" prefix="bbUI" %>
 
 
-<%@page import="blackboard.platform.context.Context"%><bbNG:jspBlock>
+<bbNG:jspBlock>
 
 <%	
 
@@ -47,7 +48,7 @@
 	if (!PlugInUtil.authorizeForCourseControlPanel(request, response)) {
 		//If user is not authorised to see this page then return error page.
 		%>
-			<bbNG:receipt type="FAIL" title="Error deleting schedule">
+			<bbNG:receipt type="FAIL" title="Cannot edit schedule">
 						<em>You are not authorised to view this page</em>
 			</bbNG:receipt>
 		<%
@@ -120,7 +121,7 @@
 
 
 
-<bbNG:learningSystemPage ctxId="ctx">
+<bbNG:learningSystemPage ctxId="ctx" title="Questionmark Perception connector" onLoad="disable_set_access()">
 <% 
 //Declare members.
 	
@@ -171,6 +172,30 @@
 			</bbNG:receipt>
 		<%
 		
+	}
+	
+	//Get the content Id of this content item to send across to editproc script.
+	
+	//Get content ID string from within the context of the content item.
+	String content_id = ctx.getContentId().toExternalString();
+	
+	if(content_id == null) {
+		%>
+			<bbNG:receipt iconUrl='<%=path+"/images/qm.gif"%>' type="FAIL" title="Error editing schedule">
+				<p>No content ID was found.</p>
+			</bbNG:receipt>
+		<%		
+	}
+	
+	//Get the parent Id of this content item to send across to editproc script. This is for the return url when the edit is finished.
+
+	String parent_id = request.getParameter("content_id");
+	if(parent_id == null) {
+		%>
+			<bbNG:receipt iconUrl='<%=path+"/images/qm.gif"%>' type="FAIL" title="Error editing schedule">
+				<p>No parent ID was found.</p>
+			</bbNG:receipt>
+		<%		
 	}
 
 
@@ -251,7 +276,7 @@
 	//Important! Need to get group information before continuing. Group ID needed from QMWISe call.
 	
 		try {
-			
+			perception_group_name = course.getBatchUid();
 			perception_group_ID = new Integer(qmwise.getStub().getGroupByName(course.getBatchUid()).getGroup_ID()).intValue();
 			
 		} catch(NullPointerException npe){
@@ -509,14 +534,13 @@
 					
 					<bbNG:dataElement isRequired="true" label="Schedule name">
 						<input type="text" name="schedule" width="" value="<%=StringEscapeUtils.escapeHtml(schedule_name)%>"/>
-						<br />
 						The schedule name must be unique if results are to be stored in the Grade Center
 					</bbNG:dataElement>	
 					
 					<bbNG:dataElement label="Schedule description">	
-						<textarea  cols="40" rows="3" title="Additional Comments" onfocus="this.value='';this.onfocus=null;" 
-							name="schedule_text_area" id="addComments" ><%=StringEscapeUtils.escapeHtml(schedule_description)%>
-						</textarea>		
+						<textarea  cols="40" rows="3" 
+							title="Additional Comments" name="schedule_text_area"
+								id="addComments" ><%=StringEscapeUtils.escapeHtml(schedule_description)%></textarea>		
 						<br />
 						Enter a short description for this Content item, N.B. Plaintext only.		
 					</bbNG:dataElement>				
@@ -554,15 +578,15 @@
 									<br/>
 									<br/>
 								<bbNG:dataElement label="Start date">
-									<bbUI:datePicker  startDate="<%=schedule_start_date%>"
+									<bbUI:datePicker startDate="<%=schedule_start_date%>"
 										formName="edit_schedule" 
 										startDateField="start" datePickerIndex="0" />
 								</bbNG:dataElement>
 								<bbNG:dataElement label="Start time (24-hour HH:MM)">
 									<input type="text" id="start_hour" name="start_hour" size="2"
-										disabled value="<%=schedule_start_hour%>" /> :
-													<input type="text" id="start_minute" name="start_minute"
-										size="2" disabled value="<%=schedule_start_minute%>" />
+										disabled value="09" /> :
+									<input type="text" id="start_minute" name="start_minute"
+										size="2" disabled value="00" />
 								</bbNG:dataElement>
 								<br/>
 								<bbNG:dataElement label="End date">
@@ -572,12 +596,18 @@
 								</bbNG:dataElement>
 								<bbNG:dataElement label="End time (24-hour HH:MM)">
 									<input type="text" id="end_hour" name="end_hour" size="2" disabled
-										value="<%=schedule_stop_hour%>" /> :
+										value="17" /> :
 													<input type="text" id="end_minute" name="end_minute" size="2"
-										disabled value="<%=schedule_stop_minute%>" />
+										disabled value="00" />
 								</bbNG:dataElement>
 							</bbNG:dataElement>
 				</bbNG:step>
+				
+				<input type="hidden" name="group_name" value="<%=perception_group_name%>"/>
+				<input type="hidden" name="content_id" value="<%=content_id%>"/>
+				<input type="hidden" name="parent_id" value="<%=parent_id%>"/>
+				<input type="hidden" name="course_id" value="<%=courseId%>" />
+				<input type="hidden" name="group_id" value="<%=perception_group_ID%>"/>
 				
 				<bbNG:stepSubmit hideNumber="true" title="Submit" instructions="Click the Submit button to save your changes"></bbNG:stepSubmit>
 					
