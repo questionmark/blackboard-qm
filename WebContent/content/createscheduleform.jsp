@@ -59,7 +59,7 @@
 		<bbNG:breadcrumbBar environment="COURSE" isContent="true">
 			<bbNG:breadcrumb>QUESTIONMARK SCHEDULE AN ASSESSMENT</bbNG:breadcrumb>
 		</bbNG:breadcrumbBar>
-		<bbNG:pageTitleBar iconUrl="../images/qm.gif" showTitleBar="true"
+		<bbNG:pageTitleBar iconUrl='<%=path+"/images/qm.gif"%>' showTitleBar="true"
 			title="Questionmark Perception Connector - Content Item" />
 	</bbNG:pageHeader>		
 	
