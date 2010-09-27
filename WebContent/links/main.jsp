@@ -424,6 +424,7 @@
 			</script>
 		</bbNG:jsBlock>
 		<tr>
+			<th>Schedule name</th>
 			<th>Maximum attempts</th>
 			<th>Start datetime</th>
 			<th>End datetime</th>
