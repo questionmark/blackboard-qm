@@ -399,7 +399,7 @@
 			// if by some chance you are not admin or instructor but are able to edit content item.
 			//-----------------------------------------------------------------------
 			%>
-				<bbNG:receipt iconUrl='<%=path+"/images/qm.gif"%>' type="FAIL" title="Cannot edit schedule">
+				<bbNG:receipt iconUrl='<%=path+"/images/qm.gif"%>' type="FAIL" title="Cannot create schedule">
 					<p>
 						<em>Insufficient rights - Incorrect role</em>							
 					</p>
