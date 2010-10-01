@@ -619,7 +619,7 @@
 			
 				//Check and update name
 				
-				if(!new_schedule_name.equals(bbSchedule.getSchedule_Name())){
+				if(!new_schedule_name.equals(schedule.getSchedule_Name())){
 					schedule.setSchedule_Name(new_schedule_name);
 				}
 				
@@ -629,7 +629,7 @@
 				//has restricted attempts 
 				
 				if(limited_attempts && 
-						new_sched_max_attempts != bbSchedule.getMax_Attempts()){
+						new_sched_max_attempts != schedule.getMax_Attempts()){
 					//If new attempts are different as well, make the change!
 					schedule.setMax_Attempts(new_sched_max_attempts);	
 						
@@ -642,9 +642,9 @@
 					
 					boolean changeDate = true;
 					//Go ahead with the change unless the following holds:
-					if(bbSchedule.isRestrict_Times()){			
-						if(startCal.equals(bbSchedule.readSchedule_Starts_asCalendar())
-								&& endCal.equals(bbSchedule.readSchedule_Stops_asCalendar()))
+					if(schedule.isRestrict_Times()){			
+						if(startCal.equals(schedule.readSchedule_Starts_asCalendar())
+								&& endCal.equals(schedule.readSchedule_Stops_asCalendar()))
 							{
 								//Then the user has ticked the box but hasn't changed the dates, 
 								changeDate = false;
