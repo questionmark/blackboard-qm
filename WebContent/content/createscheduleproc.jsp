@@ -234,6 +234,7 @@
 								QMWiseException qe = new QMWiseException(e);
 				%>
 				<bbUI:receipt type="FAIL" title="Error creating group schedule">
+					<em>QMWISe Error:</em><br />
 					<%=qe.getMessage()%>
 				</bbUI:receipt>
 		<%
