@@ -180,6 +180,12 @@
 	String old_schedule_name = "", new_schedule_name = "",
 		new_sched_description = "";
 	
+	//Boolean flags to allow edit:
+		
+	boolean name_changed = false, 
+		attempts_changed = false,
+			dates_changed = false;
+
 
 	//Initialise bb-phantom schedule object
 	ScheduleV42 bbSchedule = null;
@@ -198,7 +204,16 @@
 	
 	try {
 		
-		new_schedule_name = request.getParameter("schedule");
+		new_schedule_name = request.getParameter("new_schedule_name");
+		
+		if (new_schedule_name.length() == 0 || new_schedule_name.length() > 50){
+			%>			
+				<bbNG:receipt iconUrl='<%=path+"/images/qm.gif"%>' type="FAIL" title="Error editing schedule!" buttonAlt="OK">
+					<em>Schedule name empty or longer than 50 characters!</em>
+					 The new schedule name must be between 1 and 50 characters long. Please click ok to try again.
+				</bbNG:receipt>
+			<%
+		}
 		
 		
 		//Important! Need to get group information before continuing. Group ID needed from request call.
@@ -330,16 +345,19 @@
 			</bbNG:receipt>
 		<%	
 	}
+	
+
+	
 
 	new_sched_description = request.getParameter("schedule_text_area");
 	
 	
-	if (new_sched_description.length() > 4000){
+	if (new_sched_description.length() > 250){
 		
 		%>			
 			<bbNG:receipt iconUrl='<%=path+"/images/qm.gif"%>' type="FAIL" title="Error editing schedule!" buttonAlt="OK">
 				<em>Schedule description is too long!</em>
-				 Cannot exceed more than 4000 characters. Please click ok to try again
+				 Cannot exceed more than 250 characters. Please click ok to try again
 			</bbNG:receipt>
 		<%
 	}
@@ -611,8 +629,14 @@
 			<%
 		}
 		
+	
 		
 		try{
+				
+			//Set flags to help decide what details to change on for schedules:
+				
+				
+		
 			//Time to update schedule details on Perception via QMWISe:
 			
 			for(ScheduleV42 schedule: editGroupSchedules){

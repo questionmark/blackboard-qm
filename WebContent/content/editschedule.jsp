@@ -520,10 +520,60 @@
 						function set_limit_attempts_hidden() {
 							document.getElementById('per_participant_hidden').value = document.getElementById('per_participant').checked ? "1" : "0";
 						}
+						
+						function validate_required(field,alerttxt)
+						{
+						with (field)
+						  {
+						  if (value==null||value=="")
+						    {
+						    alert(alerttxt);return false;
+						    }
+						  else
+						    {
+						    return true;
+						    }
+						  }
+						}
+
+						function validate_length(field,length,alerttxt)
+						{
+						with (field)
+						  {
+						  if (length == 50)
+						    {
+						    alert(alerttxt);return false;
+						    }
+						  else
+						    {
+						    return true;
+						    }
+						  }
+						}
+						
+						function validate_form(thisform)
+						{
+						with (thisform)
+						  {
+						  var new_schedule_name = document.getElementById("new_schedule_name");		
+						  var name_length = new_schedule_name.attributes.length;				  
+						  if (validate_required(new_schedule_name,"Name cannot be empty")==false)
+						  {new_schedule_name.focus();return false;}
+						  
+						  }
+
+						  if (validate_length(new_schedule_name, name_length, "Name cannot be longer than 50 characters") == false)
+						  {
+						  {new_schedule_name.focus();return false;}
+						  
+						  } 		
+						  
+						}
+						
 		</script>
 	</bbNG:jsBlock>
 	
-	<form name="edit_schedule" action='<%=path+"/content/editscheduleproc.jsp"%>' method="post">
+	<form name="edit_schedule" action='<%=path+"/content/editscheduleproc.jsp"%>' method="post" onsubmit="return validate_form(this)"  >
 	
 		<bbNG:dataCollection>
 		
@@ -533,12 +583,12 @@
 					instructions="Please enter a new name for this schedule">
 					
 					<bbNG:dataElement isRequired="true" label="Schedule name">
-						<input type="text" name="schedule" width="" value="<%=StringEscapeUtils.escapeHtml(schedule_name)%>"/>
-						The schedule name must be unique if results are to be stored in the Grade Center
-					</bbNG:dataElement>	
+						<bbNG:textElement id="new_schedule_name" name="new_schedule_name" isRequired="true" maxLength="50" helpText="Maximum 50 characters allowed"
+							value="<%=StringEscapeUtils.escapeHtml(schedule_name)%>" />
+					</bbNG:dataElement>						
 					
 					<bbNG:dataElement label="Schedule description">	
-						<textarea  cols="40" rows="3" 
+						<textarea cols="40" rows="3" 
 							title="Additional Comments" name="schedule_text_area"
 								id="addComments" ><%=StringEscapeUtils.escapeHtml(schedule_description)%></textarea>		
 						<br />

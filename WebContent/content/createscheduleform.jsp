@@ -295,12 +295,13 @@
 									
 					<bbNG:dataCollection>			
 						<bbNG:step title="Enter Information">
+						
 							<bbNG:dataElement isRequired="true" label="Schedule name">
-								<input type="text" name="schedule" width=""/>
+								<bbNG:textElement name="schedule" isRequired="true" maxLength="50" helpText="Maximum 50 characters allowed"/>
 								<br />
 								The schedule name must be unique if results are to be stored in the Grade Center
-							</bbNG:dataElement>
-							
+							</bbNG:dataElement>	
+
 							<bbNG:dataElement label="Schedule description">	
 								<textarea  cols="40" rows="3" title="Additional Comments" onfocus="this.value='';this.onfocus=null;" 
 									name="schedule_text_area" id="addComments" >
