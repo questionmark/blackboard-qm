@@ -1,3 +1,17 @@
+Version 9.0.25
+--------------
+
+[#223] New option to edit schedules in Perception from Blackboard content items
+[#222] Update to deletion feature to improve error handling
+[#323] Bug fix: removed double header on schedule creation page
+
+Support for deleting and editing of schedules through Blackboard is only available 
+in Blackboard content items and not from the control panel.
+
+[#306] Also includes a minor updates to the additional descriptive text item in the
+schedule creation form to prevent accidental use of the default text.
+
+
 Version 9.0.20
 --------------
 
