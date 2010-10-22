@@ -151,6 +151,13 @@
 	int schedule_start_hour = 9, schedule_start_minute = 00,
 	schedule_stop_hour = 17, schedule_stop_minute = 00;
 	
+	String start_hour_string = "";
+	
+	String start_minute_string = "";
+	
+	String stop_hour_string = "";
+	
+	String stop_minute_string = "";
 	
 	
 	
@@ -458,14 +465,28 @@
 						
 					//Get Times (24-hour HH:MM)
 					
-					schedule_start_hour = schedule_start_date.getTime().getHours();
+					schedule_start_hour = schedule_start_date.getTime().getHours();			
+					
+					
 					schedule_start_minute = schedule_start_date.getTime().getMinutes();
+				
 					
 					schedule_stop_hour = schedule_end_date.getTime().getHours();
+					
+					
 					schedule_stop_minute = schedule_end_date.getTime().getMinutes();
+					
 				}
 				//else will take the default values set during initialisation.
 				
+				
+				//Format the start stop times such as HH:MM
+				
+				
+				start_hour_string = String.format("%02d", schedule_start_hour);
+				start_minute_string = String.format("%02d", schedule_start_minute);
+				stop_hour_string = String.format("%02d", schedule_stop_hour);
+				stop_minute_string = String.format("%02d", schedule_stop_minute);
 
 				
 				//Get Maximum attempts
@@ -634,9 +655,9 @@
 								</bbNG:dataElement>
 								<bbNG:dataElement label="Start time (24-hour HH:MM)">
 									<input type="text" id="start_hour" name="start_hour" size="2"
-										disabled value="09" /> :
+										disabled value="<%=start_hour_string%>" /> :
 									<input type="text" id="start_minute" name="start_minute"
-										size="2" disabled value="00" />
+										size="2" disabled value="<%=start_minute_string%>" />
 								</bbNG:dataElement>
 								<br/>
 								<bbNG:dataElement label="End date">
@@ -646,9 +667,9 @@
 								</bbNG:dataElement>
 								<bbNG:dataElement label="End time (24-hour HH:MM)">
 									<input type="text" id="end_hour" name="end_hour" size="2" disabled
-										value="17" /> :
-													<input type="text" id="end_minute" name="end_minute" size="2"
-										disabled value="00" />
+										value="<%=stop_hour_string%>" /> :
+									<input type="text" id="end_minute" name="end_minute" size="2"
+										disabled value="<%=stop_minute_string%>" />
 								</bbNG:dataElement>
 							</bbNG:dataElement>
 				</bbNG:step>
