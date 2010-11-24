@@ -1,6 +1,6 @@
 This License applies to the Blackboard-Questionmark Connector
 
-Copyright 2009 Questionmark Computing Ltd 
+Copyright 2010 Questionmark Computing Ltd 
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

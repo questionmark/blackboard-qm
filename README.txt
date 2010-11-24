@@ -31,6 +31,26 @@ of the months
 
 [#316] Users without a role in the Blackboard course get an error message
 
+[#334] Connector setting page does not remember https setting
+
+
+The following Perception issues may affect users of the connector, please check
+with Questionmark technical support for the latest service pack or hotfix as
+appropriate.
+
+You may have problems accessing browser-based authoring when logging into
+Enterprise Manager from the connector
+
+Questionmark Secure assessments launched through the Blackboard Connector
+incorrectly require monitor login
+
+Start/stop dates show up in Enterprise Manager even when no times have been set
+in the schedule created from Blackboard - this is a visual bug only.
+
+Schedule ID may not be recorded in the Perception database when launched from
+Blackboard.
+
+
 For more information see:
 http://projects.oscelot.org/gf/project/blackboard-qm/tracker/?action=TrackerItemBrowse&tracker_id=760
 
