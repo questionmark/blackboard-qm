@@ -26,7 +26,7 @@
 <%
 	String path = request.getContextPath();
 	String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+path+"/";
-	String schedule_name = "";
+	String schedule_name = request.getParameter("schedule_name");
 	
 	
 %>
@@ -443,7 +443,7 @@
 					%>
 					<tr id="scheduleRowID">
 												
-						<td><%=schedules.get(i).getSchedule_Name()%></td>
+						<td><%=StringEscapeUtils.escapeHtml(schedules.get(i).getSchedule_Name())%></td>
 						<td><%=schedules.get(i).isRestrict_Attempts() ? schedules.get(i).getMax_Attempts() : "no limit"%></td>
 						<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).readSchedule_Starts_asCalendar().getTime().toString()%></td>
 						<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).readSchedule_Stops_asCalendar().getTime().toString()%></td>
@@ -478,7 +478,7 @@
 						<td colspan="6">
 							<code>
 								<%=basePath+"links/main.jsp?course_id="+courseId+"&amp;schedule_name=" + 
-									StringEscapeUtils.escapeHtml(schedules.get(i).getSchedule_Name())
+									StringEscapeUtils.escapeHtml(URLEncoder.encode(schedules.get(i).getSchedule_Name(),"UTF-8"))
 								%>
 							</code>
 						</td>
@@ -797,7 +797,7 @@
 		%>
 		<tr>
 			<!--<td><%=schedules.get(i).getAssessment_ID()%></td>-->
-			<td><%=schedules.get(i).getSchedule_Name()%></td>
+			<td><%=StringEscapeUtils.escapeHtml(schedules.get(i).getSchedule_Name())%></td>
 			<td><%=schedules.get(i).isRestrict_Attempts() ? schedules.get(i).getMax_Attempts() : "no limit"%></td>
 			<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).readSchedule_Starts_asCalendar().getTime().toString()%></td>
 			<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).readSchedule_Stops_asCalendar().getTime().toString()%></td>

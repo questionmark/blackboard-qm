@@ -1,3 +1,9 @@
+Version 9.0.27
+--------------
+
+[#363] Bug fix: direct assessment links were not working
+
+
 Version 9.0.26
 --------------
 

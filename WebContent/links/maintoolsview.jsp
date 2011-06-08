@@ -377,7 +377,7 @@
 					</tr>
 					<tr id='<%=idStr%>' style="display: none;">
 						<td><i>URL:</i></td>
-						<td colspan="6"><code><%=basePath+"links/main.jsp?course_id="+courseId+"&amp;schedule_name="+StringEscapeUtils.escapeHtml(schedules.get(i).getSchedule_Name())%></code></td>
+						<td colspan="6"><code><%=basePath+"links/main.jsp?course_id="+courseId+"&amp;schedule_name="+StringEscapeUtils.escapeHtml(URLEncoder.encode(schedules.get(i).getSchedule_Name(),"UTF-8"))%></code></td>
 					</tr>
 					<% 
 				} 

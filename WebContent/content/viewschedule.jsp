@@ -362,14 +362,6 @@
 			%>			
 			
 		<table border="2" cellpadding="1">
-		<bbNG:jsBlock>
-			<script type="text/javascript">
-					function showhideScheduleURL(box,rowID) {
-						var row = document.getElementById(rowID); 
-						row.style.display = box.checked? "table-row":"none";
-						}
-			</script>
-		</bbNG:jsBlock>
 		<tr>
 			<!--<th>Assessment ID</th>-->
 			<th>Schedule name</th>
@@ -378,7 +370,6 @@
 			<th>End datetime</th>
 			<th>Active?</th>
 			<th>Try Out</th>
-			<th>Show URL</th>
 			<!--<th>Group</th>-->
 		</tr>
 			<%
@@ -434,13 +425,7 @@
 						
 						%>
 						
-						<td><input type="checkbox" name="switchBox"
-							onClick="showhideScheduleURL(this,'<%=idStr%>')" /></td>
 						<!--<td><%=schedules.get(i).getGroup_ID()%></td>-->
-					</tr>
-					<tr id='<%=idStr%>' style="display: none;">
-						<td><i>URL:</i></td>
-						<td colspan="6"><code><%=basePath+"links/main.jsp?course_id="+courseId+"&amp;schedule_name="+StringEscapeUtils.escapeHtml(schedules.get(i).getSchedule_Name())%></code></td>
 					</tr>
 					<% 
 				} 
