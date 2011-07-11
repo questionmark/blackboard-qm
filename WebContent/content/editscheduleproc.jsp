@@ -25,6 +25,7 @@
 	blackboard.base.*,
 	blackboard.data.gradebook.*,
 	blackboard.persist.gradebook.*,
+	blackboard.servlet.util.DatePickerUtil,
 	org.apache.axis.*,
 	org.apache.commons.lang.StringEscapeUtils,
 	java.rmi.RemoteException,
@@ -275,44 +276,9 @@
 		if (setAccessPeriod) {
 			//Set the class var to true
 			limited_schedule_access = true;
-			
-			String regexhour = "[0-1][0-9]|2[0-3]";
-			String regexmin = "[0-5][0-9]";
-			//check times make sense
-			if (!(request.getParameter("start_hour").matches(regexhour)
-					&& request.getParameter("start_minute")
-							.matches(regexmin)
-					&& request.getParameter("end_hour")
-							.matches(regexhour) && request
-					.getParameter("end_minute").matches(
-							regexmin))) 
-			{
-				%>				
-					<bbNG:receipt iconUrl='<%=path+"/images/qm.gif"%>' type="FAIL" title="Error editing schedule!" buttonAlt="OK">
-						<em>Times must be in 24-hour HH:MM format</em>
-						<br />
-						 Please click ok to try again.
-					</bbNG:receipt>
-				<%		
-			}
 
-			DateFormat df = new SimpleDateFormat("yyyy-MM-dd' 0:0:00'");
-
-			startCal.setTime(df.parse(request
-					.getParameter("start_0")));
-			startCal.set(Calendar.HOUR_OF_DAY, new Integer(
-					request.getParameter("start_hour"))
-					.intValue());
-			startCal.set(Calendar.MINUTE, new Integer(request
-					.getParameter("start_minute")).intValue());
-
-			endCal.setTime(df.parse(request
-					.getParameter("end_1")));
-			endCal.set(Calendar.HOUR_OF_DAY, new Integer(
-					request.getParameter("end_hour"))
-					.intValue());
-			endCal.set(Calendar.MINUTE, new Integer(request
-					.getParameter("end_minute")).intValue());
+			startCal = DatePickerUtil.pickerDatetimeStrToCal(request.getParameter("scheduleStart_datetime"));
+			endCal = DatePickerUtil.pickerDatetimeStrToCal(request.getParameter("scheduleEnd_datetime"));
 
 			if (endCal.before(startCal)
 					|| endCal.equals(startCal))

@@ -1,3 +1,18 @@
+Version 9.0.30
+--------------
+
+[#339] Converted date pickers to bbNG to improve browser compatibility.
+[#247] As a result some more bbUI tags were removed.
+[#364] Moved connector link to the "Create Assessment" tab (Blackboard 9.1 only)
+[#369] Fixed the manifest to list a single application and modified the handlers
+
+
+Version 9.0.28
+--------------
+
+[#368] Bug fix to add a default administrator ID (compatibility issue with QMWISe in Perception 5.3)
+
+
 Version 9.0.27
 --------------
 

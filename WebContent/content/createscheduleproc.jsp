@@ -27,6 +27,7 @@
 	blackboard.base.*,
 	blackboard.data.gradebook.*,
 	blackboard.persist.gradebook.*,
+	blackboard.servlet.util.DatePickerUtil,
 	org.apache.axis.*,
 	java.rmi.RemoteException,
 	javax.xml.namespace.QName,com.questionmark.*,
@@ -170,43 +171,10 @@
 								Calendar startCal = Calendar.getInstance();
 								Calendar endCal = Calendar.getInstance();
 								if (setAccessPeriod) {
-									String regexhour = "[0-1][0-9]|2[0-3]";
-									String regexmin = "[0-5][0-9]";
-									//check times make sense
-									if (!(request.getParameter("start_hour").matches(
-											regexhour)
-											&& request.getParameter("start_minute")
-													.matches(regexmin)
-											&& request.getParameter("end_hour")
-													.matches(regexhour) && request
-											.getParameter("end_minute").matches(
-													regexmin)))
-										throw new Exception(
-												"Times must be in 24-hour HH:MM format");
-
-									DateFormat df = new SimpleDateFormat(
-											"yyyy-MM-dd' 0:0:00'");
-
-									startCal.setTime(df.parse(request
-											.getParameter("start_0")));
-									startCal.set(Calendar.HOUR_OF_DAY, new Integer(
-											request.getParameter("start_hour"))
-											.intValue());
-									startCal.set(Calendar.MINUTE, new Integer(request
-											.getParameter("start_minute")).intValue());
-
-									endCal.setTime(df.parse(request
-											.getParameter("end_1")));
-									endCal.set(Calendar.HOUR_OF_DAY, new Integer(
-											request.getParameter("end_hour"))
-											.intValue());
-									endCal.set(Calendar.MINUTE, new Integer(request
-											.getParameter("end_minute")).intValue());
-
-									if (endCal.before(startCal)
-											|| endCal.equals(startCal))
-										throw new Exception(
-												"The end date must be after the start date");
+									startCal = DatePickerUtil.pickerDatetimeStrToCal(request.getParameter("scheduleStart_datetime"));
+									endCal = DatePickerUtil.pickerDatetimeStrToCal(request.getParameter("scheduleEnd_datetime"));
+									if (endCal.before(startCal) || endCal.equals(startCal))
+										throw new Exception("The end date must be after the start date");
 								}
 								schedule.updateSchedule_Starts_fromCalendar(startCal);
 								schedule.updateSchedule_Stops_fromCalendar(endCal);

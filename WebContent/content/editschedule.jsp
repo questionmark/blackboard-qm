@@ -143,23 +143,16 @@
 	//Dates and times
 	
 	Calendar schedule_start_date = Calendar.getInstance();
+	schedule_start_date.set(Calendar.HOUR_OF_DAY,9);
+	schedule_start_date.set(Calendar.MINUTE,0);
+	schedule_start_date.set(Calendar.SECOND,0);
 	
 	Calendar schedule_end_date = Calendar.getInstance();
+	schedule_start_date.set(Calendar.HOUR_OF_DAY,17);
+	schedule_start_date.set(Calendar.MINUTE,0);
+	schedule_start_date.set(Calendar.SECOND,0);
 	
 	schedule_end_date.add(Calendar.DAY_OF_MONTH, 7);
-
-	int schedule_start_hour = 9, schedule_start_minute = 00,
-	schedule_stop_hour = 17, schedule_stop_minute = 00;
-	
-	String start_hour_string = "";
-	
-	String start_minute_string = "";
-	
-	String stop_hour_string = "";
-	
-	String stop_minute_string = "";
-	
-	
 	
 	//Get context path.
 	String path = request.getContextPath();
@@ -462,33 +455,10 @@
 					
 					schedule_start_date = bbSchedule.readSchedule_Starts_asCalendar();
 					schedule_end_date = bbSchedule.readSchedule_Stops_asCalendar();
-						
-					//Get Times (24-hour HH:MM)
-					
-					schedule_start_hour = schedule_start_date.getTime().getHours();			
-					
-					
-					schedule_start_minute = schedule_start_date.getTime().getMinutes();
-				
-					
-					schedule_stop_hour = schedule_end_date.getTime().getHours();
-					
-					
-					schedule_stop_minute = schedule_end_date.getTime().getMinutes();
-					
+											
 				}
 				//else will take the default values set during initialisation.
-				
-				
-				//Format the start stop times such as HH:MM
-				
-				
-				start_hour_string = String.format("%02d", schedule_start_hour);
-				start_minute_string = String.format("%02d", schedule_start_minute);
-				stop_hour_string = String.format("%02d", schedule_stop_hour);
-				stop_minute_string = String.format("%02d", schedule_stop_minute);
-
-				
+								
 				//Get Maximum attempts
 				
 				if(bbSchedule.isRestrict_Attempts()){
@@ -520,17 +490,6 @@
 %>
 	<bbNG:jsBlock>
 		<script type="text/javascript">
-						function disable_set_access() {
-							if(document.getElementById('set_access_period')) {
-								var disabled = !document.getElementById('set_access_period').checked;
-								document.getElementById('dp_start_0_start_date').disabled = disabled;
-								document.getElementById('start_hour').disabled = disabled;
-								document.getElementById('start_minute').disabled = disabled;
-								document.getElementById('dp_end_1_start_date').disabled = disabled;
-								document.getElementById('end_hour').disabled = disabled;
-								document.getElementById('end_minute').disabled = disabled;
-							}
-						}
 						function disable_limit_attempts() {
 							if(document.getElementById('limit_attempts')) {
 								var checked = document.getElementById('limit_attempts').checked;
@@ -643,33 +602,17 @@
 				<bbNG:step title="Set / Change Access Period" hideNumber="true"
 					instructions="Set or modify this schedule's availability">
 					
-							<bbNG:dataElement label="Set / Change access period?">							
+							<bbNG:dataElement label="Set / Change access period?" isSubElement="true" subElementType="NESTED_LIST">							
 								<input type="checkbox" id="set_access_period"
-									name="set_access_period" value="true" onclick="disable_set_access()" />
+									name="set_access_period" value="true" />
 									<br/>
 									<br/>
 								<bbNG:dataElement label="Start date">
-									<bbUI:datePicker startDate="<%=schedule_start_date%>"
-										formName="edit_schedule" 
-										startDateField="start" datePickerIndex="0" />
-								</bbNG:dataElement>
-								<bbNG:dataElement label="Start time (24-hour HH:MM)">
-									<input type="text" id="start_hour" name="start_hour" size="2"
-										disabled value="<%=start_hour_string%>" /> :
-									<input type="text" id="start_minute" name="start_minute"
-										size="2" disabled value="<%=start_minute_string%>" />
+									<bbNG:datePicker baseFieldName="scheduleStart" dateTimeValue="<%= schedule_start_date%>" showDate="true" showTime="true"/>
 								</bbNG:dataElement>
 								<br/>
 								<bbNG:dataElement label="End date">
-									<bbUI:datePicker startDate="<%=schedule_end_date%>"
-										formName="edit_schedule" 
-										startDateField="end" datePickerIndex="1"/>
-								</bbNG:dataElement>
-								<bbNG:dataElement label="End time (24-hour HH:MM)">
-									<input type="text" id="end_hour" name="end_hour" size="2" disabled
-										value="<%=stop_hour_string%>" /> :
-									<input type="text" id="end_minute" name="end_minute" size="2"
-										disabled value="<%=stop_minute_string%>" />
+									<bbNG:datePicker baseFieldName="scheduleEnd" dateTimeValue="<%= schedule_end_date%>" showDate="true" showTime="true"/>
 								</bbNG:dataElement>
 							</bbNG:dataElement>
 				</bbNG:step>

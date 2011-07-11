@@ -37,7 +37,7 @@
 <%@page import="org.apache.velocity.app.event.implement.EscapeHtmlReference"%>
 
 <bbNG:learningSystemPage ctxId="ctx"
-	title="Questionmark Perception connector" onLoad="disable_set_access()">
+	title="Questionmark Perception connector">
 	<bbNG:pageHeader>
 		<bbNG:pageTitleBar iconUrl='<%=path+"/images/qm.gif"%>'
 			title="Questionmark Perception connector" />
@@ -275,27 +275,22 @@
 	<p>Users of this course were last synchronised <%=new Date(configReader.getCourseSyncDate()).toString()%></p>
 	<bbUI:spacer height="20" />
 
-	<h1 id="CourseSettings">Course Settings</h1>
 	<form name="course_settings"
 		action='<%=path+"/links/coursesettings.jsp"%>' method="post">
-		<bbUI:step title="Enter Information" number="1">
-			<bbUI:dataElement label="Hide schedules from students in Course Tool view?">
-				<% if (courseSettings.getProperty("hide_schedules","0").equals("1")) { %>
-				<input type="checkbox" id="hide_schedules" name="hide_schedules"
-					value="true" checked="checked" />
-				<% }
-					else {
-				%>
-				<input type="checkbox" id="hide_schedules" name="hide_schedules"
-					value="false" />
-				<% } %>
-				<p><i>Use this option if you are creating schedules using content items to prevent students from seeing the schedule list in the Course Tool 
-				view of the connector. <br/>
-				Hidden schedules can still be accessed individually using the schedule's URL below.</i></p>
-			</bbUI:dataElement>
-			<input type="hidden" name="course_id" value="<%=courseId%>" />
-		</bbUI:step>
-	 	<bbUI:stepSubmit title="Submit" number="2" />
+		<bbNG:dataCollection>
+			<bbNG:stepGroup active="true" title="Course Settings">
+				<bbNG:step title="Enter Information" hideNumber="true">
+					<bbNG:dataElement label="Hide schedules from students in Course Tool view?" >							
+					<input type="checkbox" id="hide_schedules" name="hide_schedules" value=<%=courseSettings.getProperty("hide_schedules","0").equals("1")%> />
+					<br/>
+					<i>Use this option if you are creating schedules using content items to prevent students from seeing the schedule list in the Course Tool view of the connector. <br/>
+					Hidden schedules can still be accessed individually using the schedule's URL below.</i>
+					</bbNG:dataElement>
+				</bbNG:step>	
+				<input type="hidden" name="course_id" value="<%=courseId%>" />
+				<bbNG:stepSubmit hideNumber="true" title="Submit" instructions="Save changes to course settings" />
+			</bbNG:stepGroup>
+		</bbNG:dataCollection>
 	 </form>
 
 	<h1 id="Schedules">Schedules</h1>
@@ -542,17 +537,6 @@
 	%>
 	<bbNG:jsBlock>
 		<script type="text/javascript">
-						function disable_set_access() {
-							if(document.getElementById('set_access_period')) {
-								var disabled = !document.getElementById('set_access_period').checked;
-								document.getElementById('dp_start_0_start_date').disabled = disabled;
-								document.getElementById('start_hour').disabled = disabled;
-								document.getElementById('start_minute').disabled = disabled;
-								document.getElementById('dp_end_1_start_date').disabled = disabled;
-								document.getElementById('end_hour').disabled = disabled;
-								document.getElementById('end_minute').disabled = disabled;
-							}
-						}
 						function disable_limit_attempts() {
 							if(document.getElementById('limit_attempts')) {
 								var checked = document.getElementById('limit_attempts').checked;
@@ -568,85 +552,76 @@
 		</script>
 	</bbNG:jsBlock>
 
-	<form name="schedule_assessment"
-		action='<%=path+"/links/scheduleassessment.jsp"%>' method="post">
-	<bbUI:step title="Enter Information" number="1">
-		<bbUI:dataElement label="Schedule name">
-			<input type="text" name="schedule" />
-			<br />
-			The schedule name must be unique if results are to be stored in the gradebook
-		</bbUI:dataElement>
-		<bbUI:dataElement label="Store results in Grade Center?">
-			<select name="use_gradebook">
-				<option value="percent" selected="selected">as percentage
-				scores</option>
-				<option value="point">as point scores</option>
-				<option value="no">do not store results in Grade Center</option>
-			</select>
-		</bbUI:dataElement>
-		<bbUI:dataElement label="Select result to display in Grade Center">
-			<select name="result_type">
-				<option value="FIRST">First</option>				
-				<option value="BEST" selected="selected">Best</option>
-				<option value="WORST">Worst</option>
-				<option value="LAST">Last</option>
-			</select>
-		</bbUI:dataElement>		
-		<bbUI:dataElement label="Assessment name">
-			<select name="assessment">
-				<% 
-				String last_ID = "";
-				for(int i = 0; i < assessments.length; i++) { 
-					String next_ID = assessments[i].getAssessment_ID();
-					if (!next_ID.equals(last_ID)){%>
-				<option value="<%=next_ID%>"><%=assessments[i].getSession_Name()%></option>				
-				<%		last_ID = next_ID;
-					}					
-				} %>
-			</select>
-		</bbUI:dataElement>
-		<bbUI:dataElement label="Limit attempts?">
-			<input type="checkbox" id="limit_attempts" name="limit_attempts"
-				value="true" onclick="disable_limit_attempts()" />
-			<input type="text" id="limit" name="limit" size="4" disabled
-				value="1" />
-		</bbUI:dataElement>
-		<bbUI:dataElement label="Create schedule for each group participant?">
-			<input type="checkbox" id="per_participant" name="per_participant"
-				value="true" onclick="set_limit_attempts_hidden()" />
-			<input type="hidden" id="per_participant_hidden"
-				name="per_participant_hidden" value="0" />
-		</bbUI:dataElement>
-		<bbUI:dataElement label="Set access period?">
-			<br />
-			<input type="checkbox" id="set_access_period"
-				name="set_access_period" value="true" onclick="disable_set_access()" />
-			<bbUI:dataElement label="Start date">
-				<bbUI:datePicker startDate="<%=startdate%>"
-					formName="schedule_assessment" startCaption="Start"
-					startDateField="start" />
-			</bbUI:dataElement>
-			<bbUI:dataElement label="Start time (24-hour HH:MM)">
-				<input type="text" id="start_hour" name="start_hour" size="2"
-					disabled value="09" /> :
-								<input type="text" id="start_minute" name="start_minute"
-					size="2" disabled value="00" />
-			</bbUI:dataElement>
-			<bbUI:dataElement label="End date">
-				<bbUI:datePicker startDate="<%=enddate%>"
-					formName="schedule_assessment" startCaption="End"
-					startDateField="end" />
-			</bbUI:dataElement>
-			<bbUI:dataElement label="End time (24-hour HH:MM)">
-				<input type="text" id="end_hour" name="end_hour" size="2" disabled
-					value="17" /> :
-								<input type="text" id="end_minute" name="end_minute" size="2"
-					disabled value="00" />
-			</bbUI:dataElement>
-		</bbUI:dataElement>
-		<input type="hidden" name="group" value="<%=course.getBatchUid()%>" />
-		<input type="hidden" name="course_id" value="<%=courseId%>" />
-	</bbUI:step> <bbUI:stepSubmit title="Submit" number="2" /></form>
+	<form name="schedule_assessment" action='<%=path+"/links/scheduleassessment.jsp"%>' method="post">
+		<bbNG:dataCollection>			
+			<bbNG:step title="Enter Information">
+				<bbNG:dataElement isRequired="true" label="Schedule name">
+					<bbNG:textElement name="schedule" isRequired="true" maxLength="50" helpText="Maximum 50 characters allowed"/>
+					<br />
+					The schedule name must be unique if results are to be stored in the Grade Center
+				</bbNG:dataElement>	
+				<bbNG:dataElement label="Store results in Grade Center?">
+					<select name="use_gradebook">
+						<option value="percent" selected="selected">as percentage scores</option>
+						<option value="point">as point scores</option>
+						<option value="no">do not store results in Grade Center</option>
+					</select>
+				</bbNG:dataElement>						
+				<bbNG:dataElement label="Select result to display in Grade Center">
+					<select name="result_type">
+						<option value="FIRST">First</option>				
+						<option value="BEST" selected="selected">Best</option>
+						<option value="WORST">Worst</option>
+						<option value="LAST">Last</option>
+					</select>
+				</bbNG:dataElement>
+				<bbNG:dataElement label="Assessment name">
+					<select name="assessment">
+						<% 
+						String last_ID = "";
+						for(int i = 0; i < assessments.length; i++) { 
+							String next_ID = assessments[i].getAssessment_ID();
+							if (!next_ID.equals(last_ID)){%>
+						<option value="<%=next_ID%>"><%=assessments[i].getSession_Name()%></option>				
+						<%		last_ID = next_ID;
+							}					
+						} %>
+					</select>
+				</bbNG:dataElement>
+				<bbNG:dataElement label="Limit attempts?">
+					<input type="checkbox" id="limit_attempts" name="limit_attempts"
+						value="true" onclick="disable_limit_attempts()" />
+					<input type="text" id="limit" name="limit" size="4" disabled
+						value="1" />
+				</bbNG:dataElement>
+				<bbNG:dataElement label="Create schedule for each group participant?">
+					<input type="checkbox" id="per_participant" name="per_participant"
+						value="true" onclick="set_limit_attempts_hidden()" />
+					<input type="hidden" id="per_participant_hidden"
+						name="per_participant_hidden" value="0" />
+				</bbNG:dataElement>
+				<bbNG:dataElement label="Set access period?" isSubElement="true" subElementType="NESTED_LIST">							
+					<input type="checkbox" id="set_access_period"
+						name="set_access_period" value="true" />
+						<br/>
+						<br/>							
+					<bbNG:dataElement label="Start date">
+						<bbNG:datePicker baseFieldName="scheduleStart" dateTimeValue="<%= startdate%>" showDate="true" showTime="true"/>
+					</bbNG:dataElement>
+					<br/>
+					<bbNG:dataElement label="End date">
+						<bbNG:datePicker baseFieldName="scheduleEnd" dateTimeValue="<%= enddate%>" showDate="true" showTime="true"/>
+					</bbNG:dataElement>
+				</bbNG:dataElement>
+
+			</bbNG:step> 
+							
+			<input type="hidden" name="group" value="<%=course.getBatchUid()%>" />
+			<input type="hidden" name="course_id" value="<%=courseId%>" />
+			<bbNG:stepSubmit title="Submit"/>
+						
+		</bbNG:dataCollection>
+	</form>
 	<% }
 
 		} else {

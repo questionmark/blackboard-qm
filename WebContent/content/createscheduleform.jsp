@@ -222,7 +222,13 @@
 	<%
 
 			Calendar startdate = Calendar.getInstance();
+			startdate.set(Calendar.HOUR_OF_DAY,9);
+			startdate.set(Calendar.MINUTE,0);
+			startdate.set(Calendar.SECOND,0);
 			Calendar enddate = Calendar.getInstance();
+			enddate.set(Calendar.HOUR_OF_DAY,17);
+			enddate.set(Calendar.MINUTE,0);
+			enddate.set(Calendar.SECOND,0);
 			enddate.add(Calendar.DAY_OF_MONTH, 7);
 
 			String adminid = null;
@@ -265,17 +271,6 @@
 	%>
 	<bbNG:jsBlock>
 		<script type="text/javascript">
-						function disable_set_access() {
-							if(document.getElementById('set_access_period')) {
-								var disabled = !document.getElementById('set_access_period').checked;
-								document.getElementById('dp_start_0_start_date').disabled = disabled;
-								document.getElementById('start_hour').disabled = disabled;
-								document.getElementById('start_minute').disabled = disabled;
-								document.getElementById('dp_end_1_start_date').disabled = disabled;
-								document.getElementById('end_hour').disabled = disabled;
-								document.getElementById('end_minute').disabled = disabled;
-							}
-						}
 						function disable_limit_attempts() {
 							if(document.getElementById('limit_attempts')) {
 								var checked = document.getElementById('limit_attempts').checked;
@@ -350,33 +345,17 @@
 								<input type="hidden" id="per_participant_hidden"
 									name="per_participant_hidden" value="0" />
 							</bbNG:dataElement>
-						<bbNG:dataElement label="Set access period?">							
+						<bbNG:dataElement label="Set access period?" isSubElement="true" subElementType="NESTED_LIST">							
 							<input type="checkbox" id="set_access_period"
-								name="set_access_period" value="true" onclick="disable_set_access()" />
+								name="set_access_period" value="true" />
 								<br/>
-								<br/>
+								<br/>							
 							<bbNG:dataElement label="Start date">
-								<bbUI:datePicker startDate="<%=startdate%>"
-									formName="schedule_assessment" 
-									startDateField="start" />
-							</bbNG:dataElement>
-							<bbNG:dataElement label="Start time (24-hour HH:MM)">
-								<input type="text" id="start_hour" name="start_hour" size="2"
-									disabled value="09" /> :
-												<input type="text" id="start_minute" name="start_minute"
-									size="2" disabled value="00" />
+								<bbNG:datePicker baseFieldName="scheduleStart" dateTimeValue="<%= startdate%>" showDate="true" showTime="true"/>
 							</bbNG:dataElement>
 							<br/>
 							<bbNG:dataElement label="End date">
-								<bbUI:datePicker  startDate="<%=enddate%>"
-									formName="schedule_assessment" 
-									startDateField="end" />
-							</bbNG:dataElement>
-							<bbNG:dataElement label="End time (24-hour HH:MM)">
-								<input type="text" id="end_hour" name="end_hour" size="2" disabled
-									value="17" /> :
-												<input type="text" id="end_minute" name="end_minute" size="2"
-									disabled value="00" />
+								<bbNG:datePicker baseFieldName="scheduleEnd" dateTimeValue="<%= enddate%>" showDate="true" showTime="true"/>
 							</bbNG:dataElement>
 						</bbNG:dataElement>
 

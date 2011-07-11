@@ -371,6 +371,7 @@ public class UserSynchronizer {
 						try {
 							//build new user
 							Administrator newuser = new Administrator();
+							newuser.setAdministrator_ID("0");
 							newuser.setAdministrator_Name(currentmembership.getUser().getUserName());
 							newuser.setPassword(currentmembership.getUser().getPassword().substring(0, 20));
 							newuser.setProfile_Name(currentmembership.getRole() == CourseMembership.Role.INSTRUCTOR ? "Blackboard Instructor" : "Blackboard TA");

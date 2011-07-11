@@ -4,7 +4,7 @@
 		<name value="Questionmark Perception"/>
 		<description value="Plugin to connect Blackboard to the Questionmark Perception assessment platform"/>
 		<handle value="qmpp"/>
-		<version value="9.0.27"/>
+		<version value="9.0.30"/>
 		<requires>
 			<bbversion value="9.0.0"/>
 		</requires>
@@ -24,7 +24,7 @@
 
 			<content-handler>
 
-				<name value="Questionmark Perception Assessment Schedule "></name>
+				<name value="Questionmark Perception Assessment Schedule"></name>
 			
 				<handle value="qm/schedule-link"></handle>
 
@@ -40,16 +40,22 @@
 					<toolbar value="images/qm.gif" />
 					<listitem value="images/qm.gif" />
 				</icons>
-
-			</content-handler>
+				
+				<types>
+					<type>
+            			<action-type value="evaluate"/>
+         			</type>
+      			</types>
+      			
+      		</content-handler>
 		</content-handlers>
 				
 		<application-defs>
-			<application
+<!-- 		<application
 				handle="qmppStaff"
 				type="course"
 				use-ssl="false"
-				name="Questionmark Perception"
+				name="Questionmark Perception Control Panel"
 				can-allow-guest="false"
 				small-icon=""
 				large-icon="">
@@ -64,9 +70,9 @@
 						<description value="Questionmark Perception plugin" />
 					</link>
 				</links>
-			</application>
+			</application>  -->
 			<application
-				handle="qmppStudent"
+				handle="qmpp"
 				type="course"
 				use-ssl="false"
 				name="Questionmark Perception"
@@ -79,12 +85,18 @@
 				<links>
 					<link>
 						<type value="tool"/>
-						<name value="Questionmark Perception Connector"/>
+						<name value="Questionmark"/>
 						<url value="links/maintoolsview.jsp"/>
-						<description value="Connect to the Questionmark Perception assessment system." />
+						<description value="Questionmark Perception Tool" />
 						<icons>
 							<listitem value="images/qm.gif"/>
 						</icons>
+					</link>
+					<link>
+						<type value="course_tool"/>
+						<name value="Questionmark"/>
+						<url value="links/main.jsp"/>
+						<description value="Questionmark Perception Control Panel" />
 					</link>
 				</links>
 			</application>
