@@ -4,9 +4,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Enumeration;
 import java.util.Properties;
 import javax.servlet.http.HttpServletRequest;
+
+import blackboard.platform.plugin.PlugInException;
 import blackboard.platform.plugin.PlugInUtil;
 
 public class PropertiesBean implements java.io.Serializable {
@@ -20,7 +23,7 @@ public class PropertiesBean implements java.io.Serializable {
 	public PropertiesBean() {
 	}
 
-	public void setProperties( HttpServletRequest request ) throws Exception {
+	public void setProperties( HttpServletRequest request ) {
 		File dir = null;
 		Enumeration pNames = request.getParameterNames();
 		try {
@@ -44,13 +47,14 @@ public class PropertiesBean implements java.io.Serializable {
 			}
 			prop.store( fos, "#QMPP Properties File" );
 			fos.close();
-
-		}
-		catch ( Exception e ) {
+		} catch (PlugInException e) {
+			System.out.println("Unexpected PlugInException: "+e.getMessage());
+		} catch (IOException e) {
+			System.out.println("Unexpected IOException: "+e.getMessage());
 		}
 	}
 
-	private void writeProperties( Properties props ) throws Exception {
+	private void writeProperties( Properties props ) {
 		File dir = null;
 		try {
 			dir = PlugInUtil.getConfigDirectory( vendorId, applicationHandle );
@@ -61,8 +65,10 @@ public class PropertiesBean implements java.io.Serializable {
 			fos = new FileOutputStream( configFile );
 			props.store( fos, "#QMPP Properties File" );
 			fos.close();
-		}
-		catch ( Exception e ) {
+		} catch (PlugInException e) {
+			System.out.println("Unexpected PlugInException: "+e.getMessage());
+		} catch (IOException e) {
+			System.out.println("Unexpected IOException: "+e.getMessage());
 		}
 	}
 
@@ -74,12 +80,13 @@ public class PropertiesBean implements java.io.Serializable {
 		return propertiesBean;
 	}
 
-	public Properties getProperties() throws Exception {
+	public Properties getProperties() {
 		File _dir = null;
 		FileInputStream _in = null ;
 
 		Properties _props = null;
 		try {
+			_props = new Properties();
 			_dir = PlugInUtil.getConfigDirectory( vendorId, applicationHandle );
 			File _configFile = new File( _dir, propertiesFilename );
 			if ( !_configFile.exists() )
@@ -87,12 +94,14 @@ public class PropertiesBean implements java.io.Serializable {
 			else
 				_in = new FileInputStream(_configFile);
 
-			_props = new Properties();
 			_props.load( _in );
 			_in.close();
-		}
-		catch ( Exception e ) {
-			_props = new Properties();
+		} catch (PlugInException e) {
+			System.out.println("Unexpected PlugInException: "+e.getMessage());
+		} catch (FileNotFoundException e) {
+			System.out.println("Questionmark Connector: missing properties file, assuming first run");
+		} catch (IOException e) {
+			System.out.println("Unexpected IOException: "+e.getMessage());
 		}
 		p = _props;
 		return _props;
