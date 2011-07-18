@@ -212,43 +212,28 @@
 
 		try {
 			crsMembership = crsMembershipLoader.loadByCourseAndUserId(courseIdObject, sessionUserId);
-		} catch (KeyNotFoundException e) {
-			// There is no membership record.
-			%>			
-			<h1>You don't have a role on this course</h1>
-				<p><%=StringEscapeUtils.escapeHtml(e.getMessage())%></p>
+
+
+			if(crsMembership.getRole() == CourseMembership.Role.INSTRUCTOR
+				|| crsMembership.getRole() == CourseMembership.Role.TEACHING_ASSISTANT) {
+				//-----------------------------------------------------------------------
+				//Administrator or TA
+				//-----------------------------------------------------------------------
+	
+				%>
+			
+			<bbNG:actionControlBar showWhenEmpty="true">	
+		
 			<%
-			//return;
-		} catch (PersistenceException pe) {
-			// There is no membership record.
+				if(pb.getProperty("perception.singlesignon") != null) {
 			%>
-			<h1>Error loading the current user</h1>
-				<p><%=pe.getMessage()%></p>			
+				<bbNG:actionButton url='<%=path+"/links/enterprisemanager.jsp"%>' 
+					title="Log in to Enterprise Manager" target="_blank"/>
 			<%
-			//return;
-		}
-
-
-		if(crsMembership.getRole() == CourseMembership.Role.INSTRUCTOR
-			|| crsMembership.getRole() == CourseMembership.Role.TEACHING_ASSISTANT) {
-			//-----------------------------------------------------------------------
-			//Administrator or TA
-			//-----------------------------------------------------------------------
-
+				}
 			%>
 			
-	<bbNG:actionControlBar showWhenEmpty="true">	
-
-	<%
-		if(pb.getProperty("perception.singlesignon") != null) {
-	%>
-		<bbNG:actionButton url='<%=path+"/links/enterprisemanager.jsp"%>' 
-			title="Log in to Enterprise Manager" target="_blank"/>
-	<%
-		}
-	%>
-	
-	</bbNG:actionControlBar>
+			</bbNG:actionControlBar>
 
 
 	
@@ -690,6 +675,21 @@
 			<%
 				} //end of Student view if-else statement
 			
+		} catch (KeyNotFoundException e) {
+			// There is no membership record.
+			%>			
+			<h1>You don't have a role on this course</h1>
+				<p><%=StringEscapeUtils.escapeHtml(e.getMessage())%></p>
+			<%
+			//return;
+		} catch (PersistenceException pe) {
+			// There is no membership record.
+			%>
+			<h1>Error loading the current user</h1>
+				<p><%=pe.getMessage()%></p>			
+			<%
+			//return;
+		}
 
 	%>			
 			
