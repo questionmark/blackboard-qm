@@ -4,7 +4,7 @@
 		<name value="Questionmark Perception"/>
 		<description value="Plugin to connect Blackboard to the Questionmark Perception assessment platform"/>
 		<handle value="qmpp"/>
-		<version value="9.0.30"/>
+		<version value="9.0.32"/>
 		<requires>
 			<bbversion value="9.0.0"/>
 		</requires>
@@ -51,26 +51,6 @@
 		</content-handlers>
 				
 		<application-defs>
-<!-- 		<application
-				handle="qmppStaff"
-				type="course"
-				use-ssl="false"
-				name="Questionmark Perception Control Panel"
-				can-allow-guest="false"
-				small-icon=""
-				large-icon="">
-				<description lang="en_US">
-					Plugin to connect Blackboard to the Questionmark Perception assessment platform
-				</description>
-				<links>
-					<link>
-						<type value="course_tool"/>
-						<name value="Questionmark Perception Connector"/>
-						<url value="links/main.jsp"/>
-						<description value="Questionmark Perception plugin" />
-					</link>
-				</links>
-			</application>  -->
 			<application
 				handle="qmpp"
 				type="course"

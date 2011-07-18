@@ -23,21 +23,25 @@ public class QMPContext {
 		content
 	}
 	
+	public HttpServletRequest request = null;
 	public String path;
 	public String basePath;
 	public QMWise qmwise = null;
 	public BbPersistenceManager bbPm = null;
 	public User user = null;
+	public Boolean sysAdmin = false;
 	public PropertiesBean pb= null;
 	public String failTitle = null;
 	public String failText = null;
 	
 	public QMPContext(HttpServletRequest request, Context ctx ) {
+		this.request = request;
 		path = request.getContextPath();
 		basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+path+"/";
 		//Retrieve the Db persistence manager from the persistence service
 		bbPm = PersistenceServiceFactory.getInstance().getDbPersistenceManager();
 		user = ctx.getUser();
+		sysAdmin = user.getSystemRole().equals(User.SystemRole.SYSTEM_ADMIN);
 		try {
 			// connect to QMWise
 			qmwise = new QMWise();				
