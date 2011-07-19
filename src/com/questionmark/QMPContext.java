@@ -46,24 +46,20 @@ public class QMPContext {
 		bbPm = PersistenceServiceFactory.getInstance().getDbPersistenceManager();
 		user = ctx.getUser();
 		sysAdmin = user.getSystemRole().equals(User.SystemRole.SYSTEM_ADMIN);
-		try {
-			// connect to QMWise
-			qmwise = new QMWise();				
-		} catch(Exception e) {
-			QMWiseException qe = new QMWiseException(e);
-			Fail("Error connecting to Perception server",qe.getMessage());
-		}
+		qmwise = new QMWise();				
 		// Get our properties object
 		pb = new PropertiesBean();
 		//	return;
 	}
 
-	public void Connect() {
+	public boolean Connect() {
 		try {
 			stub = qmwise.getStub();
+			return (stub != null);
 		} catch (QMWiseException e) {
 			Fail("QMWISe Exception",e.getMessage());
 		}
+		return false;
 	}
 	
 	public Version2 Test() {

@@ -12,6 +12,7 @@
 		blackboard.data.course.*,
 		blackboard.persist.course.*,
 		org.apache.axis.*,
+		org.apache.commons.lang.StringEscapeUtils,
 		java.rmi.RemoteException,
 		javax.xml.namespace.QName,
 		com.questionmark.*,
@@ -21,59 +22,37 @@
 
 <%@ taglib uri="/bbUI" prefix="bbUI" %> 
 <%@ taglib uri="/bbData" prefix="bbData" %>
-<%
-	String path = request.getContextPath();
-	String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+path+"/";
-%>
-		
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<%@ taglib uri="/bbNG" prefix="bbNG" %>
 
-<bbData:context id="ctx">
-<html>
-	<head>
-		<base href="<%=basePath%>">
+<bbNG:learningSystemPage ctxId="ctx"
+	title="Questionmark Perception Synchronization">
+	<%
+	QMPCourseContext qbc=new QMPCourseContext(request,ctx);
+	String result = qbc.ForceSynchronization();
+	%>
+	<bbNG:pageHeader>
+		<bbNG:pageTitleBar iconUrl='<%=qbc.path+"/images/qm.gif"%>'
+			title="Forced Synchronization" />
+	</bbNG:pageHeader>	
 
-		<title>Questionmark Perception connector</title>
-		<meta http-equiv="pragma" content="no-cache">
-		<meta http-equiv="cache-control" content="no-cache">
-		<meta http-equiv="expires" content="0">
-		<meta http-equiv="keywords" content="questionmark perception,questionmark,perception,assessment,connector">
-		<meta http-equiv="description" content="Questionmark Perception connector for Blackboard">
-		<!--
-			<link rel="stylesheet" type="text/css" href="styles.css">
-		-->
-	</head>
+	<%
+		if (qbc.failTitle == null) {
+	%>
+	<bbNG:receipt type="SUCCESS" title="Users synchronized with Perception">
+		<%=StringEscapeUtils.escapeHtml(result) %>
+	</bbNG:receipt>
 
-	<body>
-		<bbUI:docTemplate>
-			<%
-				// Retrieve the course identifier from the URL
-				String courseId = request.getParameter("course_id");
+	<%	} else {
+	%>
 
-				//create a ConfigFileReader to save synchronization date
-				ConfigFileReader configReader = new ConfigFileReader(courseId);
+	<bbNG:receipt type="FAIL" title="<%=StringEscapeUtils.escapeHtml(qbc.failTitle) %>">
+		<%=StringEscapeUtils.escapeHtml(qbc.failText) %>
+	</bbNG:receipt>
 
-				//synchronize course users
-				System.out.println("Perception: course " + courseId + ": user synchronization forced");
-				UserSynchronizer us = new UserSynchronizer();
-				String result;
-				try {
-					result = us.synchronizeCourse(courseId);
-					configReader.setCourseSyncDate();
-				} catch (Exception e) {
-					System.out.println("Perception: course " + courseId + ": synchronization failed: " + e.getMessage());
-					%>
-					<bbUI:receipt type="FAIL" title="Error synchronizing course users with Perception">
-						<%=e.getMessage()%>
-					</bbUI:receipt>
-					<%
-					return;
-				}
-			%>
-			<bbUI:receipt type="SUCCESS" title="Users synchronized with Perception">
-				<%=result%>
-			</bbUI:receipt>
-		</bbUI:docTemplate>
-	</body>
-</html>
-</bbData:context>
+	<%
+		} //End of other view
+	%>
+	
+</bbNG:learningSystemPage>
+
+

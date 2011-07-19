@@ -66,6 +66,24 @@ public class QMPCourseContext extends QMPContext {
 		}
 	}
 
+	public String ForceSynchronization() {
+		String result="";
+		if (userRole.equals(CourseMembership.Role.INSTRUCTOR) || userRole.equals(CourseMembership.Role.TEACHING_ASSISTANT)) {
+			System.out.println("Perception: course " + courseId + ": user synchronization forced");
+			UserSynchronizer us = new UserSynchronizer();
+			try {
+				result = us.synchronizeCourse(courseId);
+				configReader.setCourseSyncDate();
+			} catch (Exception e) {
+				System.out.println("Perception: course " + courseId + ": synchronization failed: " + e.getMessage());
+				Fail("Synchronization Failure",e.getMessage());
+			}
+		} else {
+			Fail("Course Administration","Your role is not authorized to view this page");
+		}
+		return result;
+	}
+	
 	public void FailCourse() {
 		Fail("Course Not Found","There was no course associated with this request");
 	}
