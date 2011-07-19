@@ -18,43 +18,23 @@ public class PropertiesBean implements java.io.Serializable {
 	private static String vendorId = "qm";
 	private static String applicationHandle = "qmpp";
 	private static String propertiesFilename = "qmpp.properties";
-	private Properties p;
+	private Properties p=null;
 
 	public PropertiesBean() {
 	}
 
 	public void setProperties( HttpServletRequest request ) {
-		File dir = null;
 		Enumeration pNames = request.getParameterNames();
-		try {
-			dir = PlugInUtil.getConfigDirectory( vendorId, applicationHandle );
-			File configFile = new File( dir, propertiesFilename );
-			FileOutputStream fos = null;
-			if ( !configFile.exists() )
-				configFile.createNewFile();
-			try {
-				fos = new FileOutputStream( configFile );
-			}
-			catch(FileNotFoundException e) {
-				System.out.println("Cant find properties file");
-			}
-			Properties prop = new Properties();
-			for ( ; pNames.hasMoreElements(); ) {
-				String name = (String) pNames.nextElement();
-				String value = request.getParameter( name );
-				prop.setProperty( name, value );
-
-			}
-			prop.store( fos, "#QMPP Properties File" );
-			fos.close();
-		} catch (PlugInException e) {
-			System.out.println("Unexpected PlugInException: "+e.getMessage());
-		} catch (IOException e) {
-			System.out.println("Unexpected IOException: "+e.getMessage());
+		p = new Properties();
+		for ( ; pNames.hasMoreElements(); ) {
+			String name = (String) pNames.nextElement();
+			String value = request.getParameter( name );
+			p.setProperty( name, value );
+		writeProperties();
 		}
 	}
 
-	private void writeProperties( Properties props ) {
+	private void writeProperties() {
 		File dir = null;
 		try {
 			dir = PlugInUtil.getConfigDirectory( vendorId, applicationHandle );
@@ -63,10 +43,12 @@ public class PropertiesBean implements java.io.Serializable {
 			if ( !configFile.exists() )
 				configFile.createNewFile();
 			fos = new FileOutputStream( configFile );
-			props.store( fos, "#QMPP Properties File" );
+			p.store( fos, "#QMPP Properties File" );
 			fos.close();
 		} catch (PlugInException e) {
 			System.out.println("Unexpected PlugInException: "+e.getMessage());
+		} catch (FileNotFoundException e) {
+			System.out.println("Can't find properties file"+e.getMessage());
 		} catch (IOException e) {
 			System.out.println("Unexpected IOException: "+e.getMessage());
 		}
@@ -103,27 +85,21 @@ public class PropertiesBean implements java.io.Serializable {
 		} catch (IOException e) {
 			System.out.println("Unexpected IOException: "+e.getMessage());
 		}
-		p = _props;
+//		p = _props;
 		return _props;
 	}
 
 	public String getProperty(String propertyName) {
 		String _prop = "";
-
-		try {
-			Properties p = this.getProperties();
+		if (p == null)
+			p = this.getProperties();
+		if (p != null)
 			_prop = p.getProperty(propertyName);
-		}
-		catch (Exception e) {
-			System.out.println(e);
-			_prop = "";
-		}
 		return _prop;
 	}
 
-	public void setProperty(String key, String value)
-		throws Exception {
+	public void setProperty(String key, String value) {
 		p.setProperty(key, value);
-		this.writeProperties(p);
+		this.writeProperties();
 	}
 }

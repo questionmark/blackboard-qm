@@ -22,7 +22,7 @@ String checksum = "";
 boolean sync_users = false;
 String syncperiod = "";
 boolean single_signon = false;
-boolean limit_availability = false;
+boolean sync_groups = false;
 %>
 
 
@@ -77,17 +77,21 @@ boolean limit_availability = false;
 
 			</bbNG:step>
 
-			<bbNG:step title="Controlling Availability">
+			<bbNG:step title="Controlling Synchronization">
 			
-				<bbNG:dataElement label="Control Availability using Perception Groups" isRequired="false">
-					<% limit_availability = (qbc.pb.getProperty("perception.limitavailability") == null)? false : true; %>
-					<input name="perception.limitavailability" id="perception.limitavailability" type="checkbox" value="Yes" <%=limit_availability?"checked":"" %>>
+				<p><strong>Warning:</strong> this feature is in development and is not yet complete.</p>
+				
+				<bbNG:dataElement label="Perception Groups" isRequired="false">
+					<% sync_groups = (qbc.pb.getProperty("perception.syncgroups") == null)? false : true; %>
+					<input name="perception.syncgroups" id="perception.syncgroups" type="checkbox" value="Yes" <%=sync_groups?"checked":"" %>>
 				</bbNG:dataElement>
 
-				<p>If checked, the connector will only be available to courses with a corresponding group
-				in Perception: to make the connector available you must create a group with a name that
-				matches the course <em>ID</em>.
-				</p>
+				<p>If <em>unchecked</em>, the connector will only be available to courses with a corresponding group
+				in Perception.  You then control the connector on a course-by-course basis by creating Perception groups
+				with names that match the course <em>IDs</em> of the courses you want to use with Perception.</p>
+				
+				<p>If <em>checked</em> the connector will automatically create groups in Perception for <em>all</em>
+				courses in which it is used.</p>
 			
 			</bbNG:step>
 			

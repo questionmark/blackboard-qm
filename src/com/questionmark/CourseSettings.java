@@ -22,6 +22,11 @@ public class CourseSettings extends Properties {
 		this.courseID = courseID;
 		if (settingsFile.exists()) {
 			loadSettingsFile();
+			if (getProperty(versionKey).equals("1")) {
+				// upgrade settings: version 1 behavior was to syncusers based on global setting 
+				setProperty(versionKey,"2");
+				setProperty("perception.syncusers","true");
+			}
 		}
 		else {
 			// if there are no settings, prime our settings file with a version for future compatibility
