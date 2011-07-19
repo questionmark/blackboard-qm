@@ -31,6 +31,10 @@ public class QMWiseException extends AxisFault {
 		}
 	}
 
+	public QMWiseException(String e) {
+		qmmessage = e;
+	}
+	
 	public String getMessage() {
 		return qmmessage;
 	}

@@ -22,6 +22,7 @@ String checksum = "";
 boolean sync_users = false;
 String syncperiod = "";
 boolean single_signon = false;
+boolean limit_availability = false;
 %>
 
 
@@ -76,8 +77,22 @@ boolean single_signon = false;
 
 			</bbNG:step>
 
-			<bbNG:step title="Connector Options">
+			<bbNG:step title="Controlling Availability">
 			
+				<bbNG:dataElement label="Control Availability using Perception Groups" isRequired="false">
+					<% limit_availability = (qbc.pb.getProperty("perception.limitavailability") == null)? false : true; %>
+					<input name="perception.limitavailability" id="perception.limitavailability" type="checkbox" value="Yes" <%=limit_availability?"checked":"" %>>
+				</bbNG:dataElement>
+
+				<p>If checked, the connector will only be available to courses with a corresponding group
+				in Perception: to make the connector available you must create a group with a name that
+				matches the course <em>ID</em>.
+				</p>
+			
+			</bbNG:step>
+			
+			<bbNG:step title="Connector Options">
+					
 				<bbNG:dataElement label="Synchronize Perception users automatically?" isRequired="false">
 					<% sync_users = (qbc.pb.getProperty("perception.syncusers") == null)? false : true; %>
 					<input name="perception.syncusers" id="perception.syncusers" type="checkbox" value="Yes" <%=sync_users?"checked":"" %>>
@@ -106,8 +121,8 @@ boolean single_signon = false;
 	<%	} else {
 	%>
 
-	<bbNG:receipt type="FAIL" title="<%=qbc.failTitle %>">
-		<%=qbc.failText %>
+	<bbNG:receipt type="FAIL" title="<%=StringEscapeUtils.escapeHtml(qbc.failTitle) %>">
+		<%=StringEscapeUtils.escapeHtml(qbc.failText) %>
 	</bbNG:receipt>
 
 	<%

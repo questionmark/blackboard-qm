@@ -15,6 +15,9 @@ import blackboard.persist.course.CourseDbLoader;
 import blackboard.persist.course.CourseMembershipDbLoader;
 import blackboard.platform.context.Context;
 
+import com.questionmark.QMWISe.QMWISeSoapStub;
+import com.questionmark.QMWISe.Version2;
+
 public class QMPContext {
 
 	public enum PageType {
@@ -27,6 +30,7 @@ public class QMPContext {
 	public String path;
 	public String basePath;
 	public QMWise qmwise = null;
+	public QMWISeSoapStub stub = null;
 	public BbPersistenceManager bbPm = null;
 	public User user = null;
 	public Boolean sysAdmin = false;
@@ -54,6 +58,24 @@ public class QMPContext {
 		//	return;
 	}
 
+	public void Connect() {
+		try {
+			stub = qmwise.getStub();
+		} catch (QMWiseException e) {
+			Fail("QMWISe Exception",e.getMessage());
+		}
+	}
+	
+	public Version2 Test() {
+		try {
+			Version2 version=qmwise.getVersion();
+			return version;
+		} catch (QMWiseException e) {
+			Fail("QMWISe Exception",e.getMessage());
+		}
+		return null;
+	}
+	
 	public void Fail(String title, String text) {
 		if (failTitle == null) {
 			failTitle=title;
