@@ -15,7 +15,6 @@ public class QMPControlPanel extends QMPCourseContext {
 
 	public String panelTitle="Questionmark Perception Control Panel";
 	public String syncResult="";
-	public Vector<ScheduleInfo> scheduleInfo=null;
 	public boolean linkView=false;
 	public Assessment[] assessmentList=null;
 	
@@ -63,41 +62,5 @@ public class QMPControlPanel extends QMPCourseContext {
 		}
 	}
 
-	
-	public Vector<ScheduleV42> GroupSchedules(String filter) throws QMWiseException {
-		Vector<ScheduleV42> schedules = new Vector<ScheduleV42>();
-		try {
-			// Assumption:
-			// number of courses x number of schedules is less than...
-			// max(number of students in a course) x number of limited attempt schedules in that course
-			// Either way we would prefer a method that also filtered by group
-			ScheduleV42[] phantomSchedules = null;
-			phantomSchedules = stub.getScheduleListByParticipantV42(new Integer(phantomID).intValue());
-			for(int i = 0; i < phantomSchedules.length; i++) {
-				if(phantomSchedules[i].getGroup_ID() == new Integer(groupID).intValue())
-					if (filter == null || filter.equals(phantomSchedules[i].getSchedule_Name()))
-						schedules.add(phantomSchedules[i]);
-			}
-			ScheduleV42[] groupSchedules = null;
-			// Not sure how well documented using 0 is here
-			// returns approx (number of courses x number of group schedules) records
-			groupSchedules=stub.getScheduleListByParticipantV42(0);
-			for(int i = 0; i < groupSchedules.length; i++)
-				if(groupSchedules[i].getGroup_ID() == new Integer(groupID).intValue())
-					if (filter == null || filter.equals(groupSchedules[i].getSchedule_Name()))
-						schedules.add(groupSchedules[i]);
-		} catch (RemoteException e) {
-			throw new QMWiseException(e);
-		}
-		return schedules;
-	}
-	
-	
-	public void GetScheduleInfo(Vector<ScheduleV42> schedules) {
-		scheduleInfo = new Vector<ScheduleInfo>();
-		for(int i = 0; i < schedules.size(); i++) {
-			scheduleInfo.add(new ScheduleInfo(this,schedules.get(i),isAdministrator));
-		}
-	}
-	
+		
 }
