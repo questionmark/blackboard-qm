@@ -3,17 +3,5 @@
 <web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" id="WebApp_ID" version="2.5">
 	<display-name>blackboard-qm</display-name>
  
- 	<servlet>
-		<servlet-name>LaunchAssessmentServlet</servlet-name>
-		<jsp-file>/legacy/launch.jsp</jsp-file>
-		<!-- <servlet-class>com.qm.bb6.perception.servlet.LaunchAssessmentServlet</servlet-class>  -->
-		<load-on-startup>1</load-on-startup>
-	</servlet>
- 
-	<servlet-mapping>
-		<servlet-name>LaunchAssessmentServlet</servlet-name>
-		<url-pattern>/LaunchAssessment</url-pattern>
-	</servlet-mapping>
-
 
 </web-app>

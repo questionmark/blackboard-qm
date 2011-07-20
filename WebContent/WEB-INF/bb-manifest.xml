@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <manifest>
 	<plugin>
-		<name value="Questionmark Perception (Legacy)"/>
+		<name value="Questionmark Perception"/>
 		<description value="Plugin to connect Blackboard to the Questionmark Perception assessment platform"/>
 		<handle value="qmpp"/>
 		<version value="9.0.31"/>
@@ -24,7 +24,7 @@
 
 			<content-handler>
 
-				<name value="Questionmark Perception Assessment Schedule"></name>
+				<name value="Questionmark Perception Assessment"></name>
 			
 				<handle value="qm/schedule-link"></handle>
 
