@@ -69,7 +69,7 @@
 			<bbNG:stepGroup active="true" title="Course Settings">
 				<bbNG:step title="Enter Information" hideNumber="true">
 					<bbNG:dataElement label="Hide schedules from students in Course Tool view?" >							
-					<input type="checkbox" id="hide_schedules" name="hide_schedules" value=<%= panel.courseSettings.getProperty("hide_schedules","0").equals("1")%> />
+					<input type="checkbox" id="hide_schedules" name="hide_schedules" value=<%=panel.courseSettings.getProperty("hide_schedules","0").equals("1")?"checked":""%> />
 					<br/>
 					<i>Use this option if you are creating schedules using content items to prevent students from seeing the schedule list in the Course Tool view of the connector. <br/>
 					Hidden schedules can still be accessed individually using the schedule's URL below.</i>
@@ -103,7 +103,7 @@
 		</bbNG:listElement>
 		<bbNG:listElement name="tryout" label="Launch">
 			<% if (s.launchURL!=null) {
-				%><a href="<%=s.launchURL%>">Try out</a><%
+				%><a href="<%=s.launchURL%>" target="_blank">Try out</a><%
 			} else {
 				%>Unavailable<%
 			}
@@ -250,7 +250,7 @@
 		</bbNG:listElement>
 		<bbNG:listElement name="launch" label="Launch">
 			<% if (s.launchURL!=null) {
-				%><a href="<%=s.launchURL%>">Start the Test</a><%
+				%><a href="<%=s.launchURL%>" target="_blank">Start the Test</a><%
 			} else {
 				%>Unavailable<%
 			}
