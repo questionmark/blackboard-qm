@@ -36,33 +36,50 @@
 		if (panel.failTitle == null) {
 
 			if (panel.isAdministrator && !panel.linkView) {
+				boolean sync_users=(panel.pb.getProperty("perception.syncusers")!=null);
+				boolean sync_members=(panel.pb.getProperty("perception.syncmembers")!=null);
 	%>
 
 	<bbNG:actionControlBar showWhenEmpty="true">	
-
-		<bbNG:actionButton  url='<%=panel.path+"/links/forcesync.jsp?course_id="+panel.courseId%>' title="Synchronize users now"/>		
-
+		<%
+				if (sync_users || sync_members) {
+		%>
+		<bbNG:actionButton  url='<%=panel.path+"/links/forcesync.jsp?course_id="+panel.courseId%>' title="Synchronize Now"/>
+		<%
+				}
+		%>
 		<bbNG:actionButton url='<%=panel.path+"/links/viewresults.jsp?course_id="+panel.courseId%>' title="View results"/>		
-	<%
+		<%
 				if(panel.pb.getProperty("perception.singlesignon") != null) {
-	%>
+		%>
 		<bbNG:actionButton url='<%=panel.path+"/links/enterprisemanager.jsp"%>' 
 			title="Log in to Enterprise Manager" target="_blank"/>
-	<%
+		<%
 				}
-	%>	
+		%>	
 	</bbNG:actionControlBar>
 
-	<h1 id="Syncdetails">Synchronization Details</h1>
-	<%
-				if (panel.syncResult != null) {
-	%>
-	<p>Synchronization time expired:<br/>
-	<%=StringEscapeUtils.escapeHtml(panel.syncResult)%></p>
-	<%
+		<%
+				if (sync_users || sync_members) {
+		%>
+	<h1 id="Syncdetails">Synchronization</h1>
+		<%
+					if (panel.courseSettings.getProperty("lastsync")==null) {
+		%>
+		<p>This course has never been fully synchronized.<br/></p>
+		<%
+					} else {
+		%>
+		<p>This course was last fully synchronized: <%=panel.courseSettings.getProperty("lastsync") %><br/></p>
+		<%
+					}
+		%>
+		<p>You can force a full synchronization using the "Synchronize Now" button above.</p>
+		<%
 				}
-	%>
-	<p>Users of this course were last synchronized <%=new Date(panel.configReader.getCourseSyncDate()).toString() %></p>
+		%>
+
+	<h1>Course Settings</h1>
 
 	<form name="course_settings" action='<%=panel.path+"/links/coursesettings.jsp"%>' method="post">
 		<bbNG:dataCollection>
@@ -72,9 +89,9 @@
 					<input type="checkbox" id="hide_schedules" name="hide_schedules" value="Yes" <%=panel.courseSettings.getProperty("hide_schedules","0").equals("1")?"checked":""%> />
 					<br/>
 					<i>Use this option if you are creating schedules using content items to prevent students from seeing the schedule list in the Course Tool view of the connector. <br/>
-					Hidden schedules can still be accessed individually using the schedule's URL below.</i>
+					Hidden schedules can still be accessed individually using the schedule's URL Link below.</i>
 					</bbNG:dataElement>
-				</bbNG:step>	
+				</bbNG:step>
 				<input type="hidden" name="course_id" value="<%=panel.courseId%>" />
 				<bbNG:stepSubmit hideNumber="true" title="Submit" instructions="Save changes to course settings" />
 			</bbNG:stepGroup>

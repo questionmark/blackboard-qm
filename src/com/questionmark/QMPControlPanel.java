@@ -1,7 +1,5 @@
 package com.questionmark;
 
-import java.rmi.RemoteException;
-import java.util.Date;
 import java.util.Vector;
 
 import javax.servlet.http.HttpServletRequest;
@@ -14,7 +12,6 @@ import blackboard.platform.context.Context;
 public class QMPControlPanel extends QMPCourseContext {
 
 	public String panelTitle="Questionmark Perception Control Panel";
-	public String syncResult="";
 	public boolean linkView=false;
 	public Assessment[] assessmentList=null;
 	
@@ -26,19 +23,19 @@ public class QMPControlPanel extends QMPCourseContext {
 			if (Synchronize()) {
 				System.out.println("User Synchronized OK!  UserID="+userID);
 				if (isAdministrator) {
-					String syncperiod = pb.getProperty("perception.syncperiod");
-					String syncusers = pb.getProperty("perception.syncusers");
-					if(syncperiod == null)
-						syncperiod = "60";
-					Long syncperiodms = new Long(syncperiod) * 60 * 1000;
-					if (syncusers != null) {
-						if(new Date().getTime() > configReader.getCourseSyncDate() + syncperiodms) {
-							//synchronize course users
-							System.out.println("Perception: course " + courseId + ": sync period expired...");
-							syncResult=ForceSynchronization();
-						}
-					}
-					System.out.println("Forced synchronized OK! "+syncResult.toString());
+//					String syncperiod = pb.getProperty("perception.syncperiod");
+//					String syncusers = pb.getProperty("perception.syncusers");
+//					if(syncperiod == null)
+//						syncperiod = "60";
+//					Long syncperiodms = new Long(syncperiod) * 60 * 1000;
+//					if (syncusers != null) {
+//						if(new Date().getTime() > configReader.getCourseSyncDate() + syncperiodms) {
+//							//synchronize course users
+//							System.out.println("Perception: course " + courseId + ": sync period expired...");
+//							syncResult=ForceSynchronization();
+//						}
+//					}
+//					System.out.println("Forced synchronized OK! "+syncResult.toString());
 					Vector<ScheduleV42> schedules=GroupSchedules(schedule_name);
 					GetScheduleInfo(schedules);
 					assessmentList=GetAssessments();

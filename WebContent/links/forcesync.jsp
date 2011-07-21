@@ -39,7 +39,9 @@
 		if (qbc.failTitle == null) {
 	%>
 	<bbNG:receipt type="SUCCESS" title="Users synchronized with Perception">
-		<%=StringEscapeUtils.escapeHtml(result) %>
+		<h2>Synchronization Details</h2>
+		<pre><%=StringEscapeUtils.escapeHtml(result) %></pre>
+		<p>&nbsp;</p>
 	</bbNG:receipt>
 
 	<%	} else {

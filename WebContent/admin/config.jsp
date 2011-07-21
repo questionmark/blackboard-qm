@@ -20,9 +20,10 @@ String username = "";
 String checksum = "";
 
 boolean sync_users = false;
+boolean sync_groups = false;
+boolean sync_members = false;
 String syncperiod = "";
 boolean single_signon = false;
-boolean sync_groups = false;
 %>
 
 
@@ -78,38 +79,75 @@ boolean sync_groups = false;
 			</bbNG:step>
 
 			<bbNG:step title="Controlling Synchronization">
-			
-				<p><strong>Warning:</strong> this feature is in development and is not yet complete.</p>
-				
-				<bbNG:dataElement label="Perception Groups" isRequired="false">
-					<% sync_groups = (qbc.pb.getProperty("perception.syncgroups") == null)? false : true; %>
+							
+				<bbNG:stepInstructions text="Please enter the options for synchronizing group and user data with Perception"/>
+
+				<bbNG:dataElement label="Synchronize Perception groups automatically" isRequired="false">
+					<%
+					if (qbc.pb.getProperty("perception.version") == null)
+						sync_groups = (qbc.pb.getProperty("perception.syncusers") == null)? false : true; 
+					else
+						sync_groups = (qbc.pb.getProperty("perception.syncgroups") == null)? false : true;
+					%>
 					<input name="perception.syncgroups" id="perception.syncgroups" type="checkbox" value="Yes" <%=sync_groups?"checked":"" %>>
+					<bbNG:elementInstructions text="Select this option to automatically create groups in Perception"/>
+					<blockquote>
+					<p>If <em>unchecked</em>, the connector will only be available to courses that already have
+					a corresponding group in Perception.  This enables you to control use of the connector
+					on a course-by-course basis <em>in Perception</em>.  To enable the connector for a course
+					use Perception Enterprise Manager to create a group with a name that matches the <em>course
+					ID</em> for each course you want to use the connector with.</p>
+					</blockquote>
+				</bbNG:dataElement>	
+							
+				<bbNG:dataElement label="Synchronize Perception users automatically?" isRequired="false">
+					<% sync_users = (qbc.pb.getProperty("perception.syncusers") == null)? false : true; %>
+					<input name="perception.syncusers" id="perception.syncusers" type="checkbox" value="Yes" <%=sync_users?"checked":"" %>>
+					<bbNG:elementInstructions text="Select this option to automatically create administrators and participants in Perception"/>
+					<blockquote>
+					<p>If <em>unchecked</em>, the connector will only be available to administrators and
+					participants that already exist in Perception.</p>
+					</blockquote>
 				</bbNG:dataElement>
 
-				<p>If <em>unchecked</em>, the connector will only be available to courses with a corresponding group
-				in Perception.  You then control the connector on a course-by-course basis by creating Perception groups
-				with names that match the course <em>IDs</em> of the courses you want to use with Perception.</p>
-				
-				<p>If <em>checked</em> the connector will automatically create groups in Perception for <em>all</em>
-				courses in which it is used.</p>
-			
+
+				<bbNG:dataElement label="Synchronize group membership automatically?" isRequired="false">
+					<%
+					if (qbc.pb.getProperty("perception.version") == null)
+						sync_members = (qbc.pb.getProperty("perception.syncusers") == null)? false : true; 
+					else
+						sync_members = (qbc.pb.getProperty("perception.syncmembers") == null)? false : true;
+					%>
+					<input name="perception.syncmembers" id="perception.syncmembers" type="checkbox" value="Yes" <%=sync_members?"checked":"" %>>
+					<bbNG:elementInstructions text="Select this option to automatically assign administrators and participants to groups in Perception"/>
+					<blockquote>
+					<p>If <em>unchecked</em>, the connector will only be available to administrators and
+					participants that are already members of the corresponding group in Perception.</p>
+					</blockquote>
+				</bbNG:dataElement>
+
+				<%
+					syncperiod = qbc.pb.getProperty("perception.syncperiod");
+					if (syncperiod != null) {
+				%>
+				<bbNG:dataElement label="User synchronization frequency (minutes)" isRequired="false">
+					<input name="perception.syncperiod" id="perception.syncperiod" type="text" value="<%=( syncperiod == null )?"60":syncperiod%>" disabled="disabled">
+					<bbNG:elementInstructions text="The synchronization frequency is no longer used."/>
+					<blockquote>
+						<p><em>Warning:</em> this version of the connector contains a new "just-in-time" synchronization
+						algorithm.  Users are synchronized individually when they access the connector so
+						that they can take Perception assessments immediately after enrollment.  (Course instructors
+						and teaching assistants can still synchronize all course members
+						at once using the "Synchronize Now" option in the course control panel.)</p>
+					</blockquote>
+				</bbNG:dataElement>
+				<%	} %>
+
+				<input type="hidden" name="perception.version" value="1" />
 			</bbNG:step>
 			
 			<bbNG:step title="Connector Options">
 					
-				<bbNG:dataElement label="Synchronize Perception users automatically?" isRequired="false">
-					<% sync_users = (qbc.pb.getProperty("perception.syncusers") == null)? false : true; %>
-					<input name="perception.syncusers" id="perception.syncusers" type="checkbox" value="Yes" <%=sync_users?"checked":"" %>>
-				</bbNG:dataElement>
-				
-				<bbNG:stepInstructions text="Enter the number of minutes between user synchronizations - whenever a user clicks on the 'Questionmark Perception Connector' 
-					course tool, if the last synchronization was not performed within the specified period, a user synchronization will take place."/>
-				
-				<bbNG:dataElement label="User synchronization frequency (minutes)" isRequired="false">
-					<% syncperiod = qbc.pb.getProperty("perception.syncperiod");%>
-					<input name="perception.syncperiod" id="perception.syncperiod" type="text" value="<%=( syncperiod == null )?"60":syncperiod%>">
-				</bbNG:dataElement>
-				
 				<bbNG:dataElement label="Enable Single Sign-On to Perception Enterprise Manager for course instructors" isRequired="false">
 					<% single_signon = (qbc.pb.getProperty("perception.singlesignon") == null)? false : true; %>
 					<input name="perception.singlesignon" id="perception.singlesignon" type="checkbox" value="Yes" <%=single_signon?"checked":"" %>>

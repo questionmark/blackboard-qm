@@ -1,7 +1,11 @@
 package com.questionmark;
 
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
+import java.util.Hashtable;
+import java.util.ListIterator;
 import java.util.Vector;
 
 import javax.servlet.http.HttpServletRequest;
@@ -13,23 +17,24 @@ import com.questionmark.QMWISe.ScheduleV42;
 
 import blackboard.data.course.Course;
 import blackboard.data.course.CourseMembership;
+import blackboard.data.user.User;
 import blackboard.persist.Id;
 import blackboard.persist.KeyNotFoundException;
 import blackboard.persist.PersistenceException;
 import blackboard.persist.course.CourseDbLoader;
 import blackboard.persist.course.CourseMembershipDbLoader;
 import blackboard.platform.context.Context;
-import blackboard.platform.persistence.PersistenceServiceFactory;
 import blackboard.platform.plugin.PlugInException;
 
 public class QMPCourseContext extends QMPContext {
 
 	public String courseId = null;
-	public ConfigFileReader configReader = null;
+	public Id courseIdObject = null;
 	public CourseSettings courseSettings = null;
 	public CourseDbLoader courseLoader = null;
 	public CourseMembershipDbLoader crsMembershipLoader = null;
 	public Course course = null;
+	public User courseUser = null;
 	public CourseMembership crsMembership = null;
 	public CourseMembership.Role userRole=CourseMembership.Role.GUEST;
 	public String groupID=null;
@@ -46,33 +51,19 @@ public class QMPCourseContext extends QMPContext {
 		try {
 			FindPhantomUserId();
 			if(courseId != null) {
-				configReader = new ConfigFileReader(courseId);
-				// load the courseSettings file too...
+				// load the courseSettings file...
 				courseSettings = new CourseSettings(courseId);
 				// Generate a persistence framework course Id to be used for loading the course
-				Id courseIdObject = bbPm.generateId(Course.DATA_TYPE, courseId);
+				courseIdObject = bbPm.generateId(Course.DATA_TYPE, courseId);
 				courseLoader = (CourseDbLoader) bbPm.getLoader(CourseDbLoader.TYPE);
 				course = courseLoader.loadById(courseIdObject);
 				if (course != null) {
 					groupID=courseSettings.getProperty("groupid");
 					// get the membership data to determine the User's Role
 					crsMembershipLoader = (CourseMembershipDbLoader) bbPm.getLoader(CourseMembershipDbLoader.TYPE);
-					try {
-						Id sessionUserId = user.getId();				
-						crsMembership = crsMembershipLoader.loadByCourseAndUserId(courseIdObject, sessionUserId);
-						userRole=crsMembership.getRole();
-						if ( ! userRole.equals(CourseMembership.Role.INSTRUCTOR)
-								&& ! userRole.equals(CourseMembership.Role.TEACHING_ASSISTANT)
-								&& !userRole.equals(CourseMembership.Role.STUDENT)) {
-							Fail("Course Role","You do not have permission to see this page.");
-							userRole=CourseMembership.Role.GUEST;
-						}
-						isAdministrator=(userRole.equals(CourseMembership.Role.INSTRUCTOR) ||
-								userRole.equals(CourseMembership.Role.TEACHING_ASSISTANT));
-					} catch (KeyNotFoundException e) {
-						// There is no membership record.
-						Fail("Course Role","No role found for the current user in this course "+e.getMessage());
-					}
+					SetCourseUser(null);
+					if (userRole.equals(CourseMembership.Role.GUEST))
+						Fail("Course Role","You do not have permission to see this page.");
 				} else {
 					FailCourse();
 				}
@@ -89,12 +80,54 @@ public class QMPCourseContext extends QMPContext {
 	}
 
 	
+	public void SetCourseUser(CourseMembership newMembership) throws PersistenceException {
+		try {
+			if (newMembership==null) {
+				courseUser=user;
+				Id sessionUserId = courseUser.getId();
+				crsMembership = crsMembershipLoader.loadByCourseAndUserId(courseIdObject, sessionUserId);
+			} else {
+				courseUser=newMembership.getUser();
+				crsMembership = newMembership;
+			}
+			userID=null;
+			userRole=crsMembership.getRole();
+			if ( ! userRole.equals(CourseMembership.Role.INSTRUCTOR)
+					&& ! userRole.equals(CourseMembership.Role.TEACHING_ASSISTANT)
+					&& !userRole.equals(CourseMembership.Role.STUDENT)) {
+				userRole=CourseMembership.Role.GUEST;
+			}
+			isAdministrator=(userRole.equals(CourseMembership.Role.INSTRUCTOR) ||
+					userRole.equals(CourseMembership.Role.TEACHING_ASSISTANT));
+		} catch (KeyNotFoundException e) {
+			// There is no membership record.
+			userRole=CourseMembership.Role.GUEST;
+			Fail("Course Role","No role found for this user in the course "+e.getMessage());
+		}		
+	}
+	
+
 	public void FindPerceptionGroupID() throws QMWiseException {
 		//get Perception group id, make it if it doesn't exist yet
 		if (groupID == null && Connect()) {
 			try {
 				com.questionmark.QMWISe.Group group = stub.getGroupByName(course.getBatchUid());
 				groupID = group.getGroup_ID();
+				// Check that the phantom user is in the group
+				com.questionmark.QMWISe.Group[] groupList=stub.getParticipantGroupList(phantomID);
+				int iGroup;
+				boolean found=false;
+				for(iGroup = 0; iGroup < groupList.length; iGroup++) {
+					if(groupList[iGroup].getGroup_ID().equals(groupID)) {
+						found=true;
+						break;
+					}
+				}
+				if (!found) {
+					String[] userIDList=new String[1];
+					userIDList[0]=phantomID;
+					stub.addGroupParticipantList(groupID,userIDList);
+				}
 				// Cache the group ID for future synchronization on this course
 				courseSettings.setProperty("groupid", groupID);
 				courseSettings.saveSettingsFile();
@@ -128,7 +161,7 @@ public class QMPCourseContext extends QMPContext {
 		if (userID == null && Connect()) {
 			if (isAdministrator) {
 				try {
-					userID = stub.getAdministratorByName(user.getUserName()).getAdministrator_ID();
+					userID = stub.getAdministratorByName(courseUser.getUserName()).getAdministrator_ID();
 				} catch(RemoteException e) {
 					QMWiseException qe = new QMWiseException(e);
 					if(qe.getQMErrorCode() == 1601) {
@@ -140,7 +173,7 @@ public class QMPCourseContext extends QMPContext {
 				}				
 			} else {
 				try {
-					userID=stub.getParticipantByName(user.getUserName()).getParticipant_ID();
+					userID=stub.getParticipantByName(courseUser.getUserName()).getParticipant_ID();
 				} catch (RemoteException e) {
 					QMWiseException qe = new QMWiseException(e);
 					if(qe.getQMErrorCode() == 1101) {
@@ -198,8 +231,8 @@ public class QMPCourseContext extends QMPContext {
 				//build new user
 				Administrator newuser = new Administrator();
 				newuser.setAdministrator_ID("0");
-				newuser.setAdministrator_Name(user.getUserName());
-				newuser.setPassword(user.getPassword().substring(0, 20));
+				newuser.setAdministrator_Name(courseUser.getUserName());
+				newuser.setPassword(courseUser.getPassword().substring(0, 20));
 				newuser.setProfile_Name(profile);
 				//make new user
 				userID = stub.createAdministrator(newuser);
@@ -211,12 +244,12 @@ public class QMPCourseContext extends QMPContext {
 			try {
 				Participant newuser = new Participant();							
 				//Clean out special characters by replacing them with acceptable ones (By Perception)
-				String userFirstName = replaceSpecChars(user.getGivenName());
-				String userLastName = replaceSpecChars(user.getFamilyName());	
+				String userFirstName = replaceSpecChars(courseUser.getGivenName());
+				String userLastName = replaceSpecChars(courseUser.getFamilyName());	
 				newuser.setFirst_Name(userFirstName);
 				newuser.setLast_Name(userLastName); 							
-				newuser.setParticipant_Name(user.getUserName());
-				newuser.setPassword(user.getPassword().substring(0, 20));
+				newuser.setParticipant_Name(courseUser.getUserName());
+				newuser.setPassword(courseUser.getPassword().substring(0, 20));
 				userID = stub.createParticipant(newuser);
 				AddToGroup();
 			} catch(RemoteException e) {
@@ -278,8 +311,8 @@ public class QMPCourseContext extends QMPContext {
 	
 	
 	public Boolean Synchronize() throws QMWiseException {
-		boolean syncUsers=(pb.getProperty("perception.syncusers")!=null &&
-				!courseSettings.getProperty("perception.syncusers","false").equals("false"));
+		boolean syncUsers=(pb.getProperty("perception.syncusers")!=null);
+		boolean syncMembers=(pb.getProperty("perception.syncmembers")!=null);
 		FindPerceptionGroupID();
 		if (groupID == null) {
 			if (pb.getProperty("perception.syncgroups")==null) {
@@ -298,9 +331,9 @@ public class QMPCourseContext extends QMPContext {
 			CreatePerceptionUser();
 		} else if (!IsGroupMember()) {
 			System.out.println("userID="+userID+" is not a member of group "+groupID);
-			if (!syncUsers) {
-					Fail("Connector Disabled","This tool is not available to you in this course (no group membership in Perception)");
-					return false;
+			if (!syncMembers) {
+				Fail("Connector Disabled","This tool is not available to you in this course (no group membership in Perception)");
+				return false;
 				}
 			AddToGroup();
 		}
@@ -310,24 +343,95 @@ public class QMPCourseContext extends QMPContext {
 
 	
 	public String ForceSynchronization() {
-		String result="";
+		StringBuilder sb = new StringBuilder(4096); // arbitrary 4K chunk
 		if (userRole.equals(CourseMembership.Role.INSTRUCTOR) || userRole.equals(CourseMembership.Role.TEACHING_ASSISTANT)) {
-			System.out.println("Perception: course " + courseId + ": user synchronization forced");
-			UserSynchronizer us = new UserSynchronizer();
+			sb.append("Perception: course " + course.getBatchUid() + ": user synchronization forced\n");
 			try {
-				result = us.synchronizeCourse(courseId);
-				configReader.setCourseSyncDate();
-			} catch (Exception e) {
-				System.out.println("Perception: course " + courseId + ": synchronization failed: " + e.getMessage());
-				Fail("Synchronization Failure",e.getMessage());
+				ArrayList<CourseMembership> allMembershipsList = crsMembershipLoader.loadByCourseId(courseIdObject, null, true);
+				ListIterator<CourseMembership> iterator = allMembershipsList.listIterator();
+				Hashtable<String,User> adminHash= new Hashtable<String,User>();
+				Hashtable<String,User> participantHash= new Hashtable<String,User>();
+				// sort course members into admins and participants as we go...
+				while(iterator.hasNext()) {
+					CourseMembership membership = (CourseMembership) iterator.next();
+					SetCourseUser(membership);
+					if (isAdministrator) {
+						//sb.append(courseUser.getUserName()+" is an administrator on the course\n");
+						adminHash.put(courseUser.getUserName(),courseUser);
+					} else {
+						//sb.append(courseUser.getUserName()+" is a participant on the course\n");
+						participantHash.put(courseUser.getUserName(), courseUser);
+					}
+					if (!Synchronize()) {
+						sb.append(courseUser.getUserName()+": "+failTitle+"; "+failText+"\n");
+						failTitle=null;
+						failText=null;
+					}
+				}
+				// All users are synched into Perception now; return to the current user
+				SetCourseUser(null);
+				if (pb.getProperty("perception.syncmembers")!=null) {
+					// now weed out people from the Perception group who are not in the hashmaps
+					Participant pMembers[];
+					Administrator aMembers[];
+					Vector<String> killList=new Vector<String>();
+					pMembers=stub.getParticipantListByGroup(groupID);
+					for(int i = 0; i < pMembers.length; i++) {
+						Participant p=pMembers[i];
+						if (p.getParticipant_ID().equals(phantomID) || participantHash.containsKey(p.getParticipant_Name()))
+							continue;
+						killList.add(p.getParticipant_ID());
+						sb.append(p.getParticipant_Name()+": participant marked for removal\n");
+						ScheduleV42[] schedulesarray;
+						schedulesarray = stub.getScheduleListByParticipantV42(new Integer(p.getParticipant_ID()).intValue());
+						for(int j = 0; j < schedulesarray.length; j++) {
+							ScheduleV42 schedule=schedulesarray[j];
+							if(schedule.getGroup_ID() == new Integer(groupID).intValue()) {
+								try {
+									stub.deleteSchedule(new Integer(schedule.getSchedule_ID()).toString());
+								} catch (RemoteException e) {
+									sb.append(p.getParticipant_Name()+": failed to remove schedule "+schedule.getSchedule_Name()+"\n");
+								}
+							}
+						}
+					}
+					if (killList.size()>0) {
+						String[] killArray = (String[])killList.toArray(new String[killList.size()]);
+						stub.deleteGroupParticipantList(groupID,killArray);
+						sb.append("Removed "+new Integer(killList.size()).toString()+" participants from Perception group\n");
+					}
+					killList.clear();
+					aMembers=stub.getAdministratorListByGroup(groupID);
+					for(int i = 0; i < aMembers.length; i++) {
+						Administrator a=aMembers[i];
+						if (adminHash.containsKey(a.getAdministrator_Name()))
+							continue;
+						killList.add(a.getAdministrator_ID());
+						sb.append(a.getAdministrator_Name()+": administrator marked for removal\n");
+					}
+					if (killList.size()>0) {
+						String[] killArray = (String[])killList.toArray(new String[killList.size()]);
+						stub.deleteGroupAdministratorList(groupID, killArray);
+						sb.append("Removed "+new Integer(killList.size()).toString()+" administrators from Perception group\n");						
+					}					
+					courseSettings.setProperty("lastsync", new Date().toString());
+					courseSettings.saveSettingsFile();
+				}
+			} catch (PersistenceException e) {
+				sb.append("Synchronization aborted: "+e.getMessage());
+			} catch (RemoteException e) {
+				QMWiseException qe=new QMWiseException(e);
+				sb.append("Synchronization aborted due to QMWISe error: "+qe.getMessage()+"\n");
 			}
 		} else {
 			Fail("Course Administration","Your role is not authorized to view this page");
 		}
-		return result;
+		sb.append("Perception: course " + course.getBatchUid() + ": synchronization complete!\n");
+		return sb.toString();
 	}
 
 	
+	@SuppressWarnings("unchecked")
 	public Assessment[] GetAssessments() throws QMWiseException {
 		Assessment[] assessments = null;
 		if (isAdministrator) {
