@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest>
+	<plugin>
+		<name value="Questionmark Connector"/>
+		<description value="Functions to integrate Blackboard with Questionmark Perception"/>
+		<handle value="perception"/>
+		<version value="4.3.41"/>
+		<requires>
+			<bbversion value="6.1"/>
+		</requires>
+		<vendor>
+			<id value="qm"/>
+			<name value="Questionmark"/>
+			<url value="http://www.questionmark.com/"/>
+			<description value=""/>
+		</vendor>
+		<http-actions>
+			<config value="SystemAdmin"/>
+		</http-actions>
+		
+		<content-handlers>
+			<content-handler>
+				<name value="Questionmark Assessment"/>
+				<handle value= "qm/assessment-link"/>
+				<http-actions>
+				  <create value="CreateAssessment"/>
+				  <modify value="CreateAssessment"/>
+				  <remove value="remove_assessment.jsp"/>
+				</http-actions>
+				<icons>
+				  <toolbar value="images/qm.gif"/>
+				  <listitem value="images/qm.gif"/>
+				</icons>
+			</content-handler>
+		</content-handlers>
+		
+		<application-defs>
+		    <application handle="perceptionBridgeAdmin" type="system" name="Questionmark Connector Admin Tools" can-allow-guest="false">
+		    	<description lang="en_US">Change the Perception Bridge properties</description>
+		    	<links>
+					<link>
+						<type value="system_tool"/>
+						<name value="Configure Questionmark Connector"/>
+						<url value="SystemAdmin" />
+						<description value="Edit the settings associated with the Perception Bridge plugin" />
+						<icons>
+							<listitem value="images/qm.gif"/>
+						</icons>
+                	</link>
+                </links>
+		    </application>
+		    <application handle="perceptionBridgeCourse" type="course" name="Questionmark Connector Course Tools" can-allow-guest="false" small-icon="" large-icon="">
+		    	<description lang="en_US">Student and Instructor tools created by the Perception Bridge</description>
+		    	<links>		
+					<link>
+						<type value="course_tool"/>
+						<name value="Questionmark"/>
+						<url value="CourseAdmin" />
+						<description value="Link to the Perception Enterprise Manager" />
+						<icons>
+							<listitem value="images/qm.gif"/>
+						</icons>
+					</link>
+					<link>
+						<type value="tool"/>
+						<name value="Questionmark"/>
+						<url value="jsp/login.jsp" />
+						<description value="Link to the Perception student interface" />
+						<icons>
+							<listitem value="images/qm.gif"/>
+						</icons>
+					</link>
+                </links>
+		    </application>
+		</application-defs>		
+		
+   		<permissions>
+			<permission type="attribute" name="user.authinfo" actions="get,set"/>
+			<permission type="attribute" name="user.personalinfo" actions="get,set"/>
+			<permission type="socket" name="*" actions="connect,resolve"/>
+	       	<permission type="persist" name="OutcomeDefinitionCategory" actions="*" />
+			<permission type="persist" name="OutcomeDefinition" actions="*" />
+       		<permission type="persist" name="Outcome" actions="*" />
+			<permission type="persist" name="Attempt" actions="*" />
+       		<permission type="persist" name="Content" actions="*" />
+       		<permission type="persist" name="coursetoc" actions="create" />
+       		<permission type="java.io.FilePermission" name="&amp;lt;&amp;lt;ALL FILES&amp;gt;&amp;gt;" actions="read,write"/>
+        	<permission type="runtime" name="db.connection.*" actions="*"/>
+		</permissions>
+	</plugin>
+</manifest>

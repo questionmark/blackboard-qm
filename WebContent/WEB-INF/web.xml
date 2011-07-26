@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" id="WebApp_ID" version="2.5">
+
+	<display-name>Questionmark Connector</display-name>
+
+	<servlet>
+		<servlet-name>BootstrapServlet</servlet-name>
+		<servlet-class>com.qm.bb6.perception.servlet.BootstrapServlet</servlet-class>
+		<load-on-startup>1</load-on-startup> 
+	</servlet>
+
+	<servlet>
+		<servlet-name>AddCourseMenuLinkServlet</servlet-name>
+		<servlet-class>com.qm.bb6.perception.servlet.AddCourseMenuLinkServlet</servlet-class>
+	</servlet>
+
+	<servlet>
+		<servlet-name>AddGradeBookEntryServlet</servlet-name>
+		<servlet-class>com.qm.bb6.perception.servlet.AddGradeBookEntryServlet</servlet-class>
+	</servlet>
+
+	<servlet>
+		<servlet-name>AttemptsServlet</servlet-name>
+		<servlet-class>com.qm.bb6.perception.servlet.AttemptsServlet</servlet-class>
+	</servlet>
+
+	<servlet>
+		<servlet-name>ClearAttemptServlet</servlet-name>
+		<servlet-class>com.qm.bb6.perception.servlet.ClearAttemptServlet</servlet-class>
+	</servlet>
+
+	<servlet>
+		<servlet-name>CourseAdminServlet</servlet-name>
+		<servlet-class>com.qm.bb6.perception.servlet.CourseAdminServlet</servlet-class>
+	</servlet>
+	
+	<servlet>
+		<servlet-name>CreateAssessmentServlet</servlet-name>
+		<servlet-class>com.qm.bb6.perception.servlet.CreateAssessmentServlet</servlet-class>
+	</servlet>
+	
+	<servlet>
+		<servlet-name>RemoveAssessmentServlet</servlet-name>
+		<servlet-class>com.qm.bb6.perception.servlet.RemoveAssessmentServlet</servlet-class>
+	</servlet>
+	
+	<servlet>
+		<servlet-name>LaunchAssessmentServlet</servlet-name>
+		<servlet-class>com.qm.bb6.perception.servlet.LaunchAssessmentServlet</servlet-class>
+	</servlet>
+	
+	<servlet>
+		<servlet-name>LaunchCoachingReportServlet</servlet-name>
+		<servlet-class>com.qm.bb6.perception.servlet.LaunchCoachingReportServlet</servlet-class>
+	</servlet>
+
+	<servlet>
+		<servlet-name>PerceptionLoginServlet</servlet-name>
+		<servlet-class>com.qm.bb6.perception.servlet.PerceptionLoginServlet</servlet-class>
+	</servlet>
+		
+	<servlet>
+		<servlet-name>SystemAdminServlet</servlet-name>
+		<servlet-class>com.qm.bb6.perception.servlet.SystemAdminServlet</servlet-class>
+	</servlet>
+	
+	<servlet>
+		<servlet-name>LaunchEnterpriseManagerServlet</servlet-name>
+		<servlet-class>com.qm.bb6.perception.servlet.LaunchEnterpriseManagerServlet</servlet-class>
+	</servlet>
+	
+	<servlet>
+		<servlet-name>FullSynchronisationServlet</servlet-name>
+		<servlet-class>com.qm.bb6.perception.servlet.FullSynchronisationServlet</servlet-class>
+	</servlet>
+	
+	<servlet>
+		<servlet-name>TestConnectionServlet</servlet-name>
+		<servlet-class>com.qm.bb6.perception.servlet.TestConnectionServlet</servlet-class>
+	</servlet>
+	
+	<servlet-mapping>
+		<servlet-name>AddCourseMenuLinkServlet</servlet-name>
+		<url-pattern>/AddCourseMenuLink</url-pattern>
+	</servlet-mapping>
+
+	<servlet-mapping>
+		<servlet-name>AddGradeBookEntryServlet</servlet-name>
+		<url-pattern>/AddGradeBookEntry</url-pattern>
+	</servlet-mapping>
+
+	<servlet-mapping>
+		<servlet-name>AttemptsServlet</servlet-name>
+		<url-pattern>/Attempts</url-pattern>
+	</servlet-mapping>
+
+	<servlet-mapping>
+		<servlet-name>ClearAttemptServlet</servlet-name>
+		<url-pattern>/ClearAttempt</url-pattern>
+	</servlet-mapping>
+
+	<servlet-mapping>
+		<servlet-name>CourseAdminServlet</servlet-name>
+		<url-pattern>/CourseAdmin</url-pattern>
+	</servlet-mapping>
+	
+	<servlet-mapping>
+		<servlet-name>CreateAssessmentServlet</servlet-name>
+		<url-pattern>/CreateAssessment</url-pattern>
+	</servlet-mapping>
+
+	<servlet-mapping>
+		<servlet-name>RemoveAssessmentServlet</servlet-name>
+		<url-pattern>/RemoveAssessment</url-pattern>
+	</servlet-mapping>
+	
+	<servlet-mapping>
+		<servlet-name>LaunchAssessmentServlet</servlet-name>
+		<url-pattern>/LaunchAssessment</url-pattern>
+	</servlet-mapping>
+
+	<servlet-mapping>
+		<servlet-name>LaunchCoachingReportServlet</servlet-name>
+		<url-pattern>/LaunchCoachingReport</url-pattern>
+	</servlet-mapping>
+
+	<servlet-mapping>
+		<servlet-name>PerceptionLoginServlet</servlet-name>
+		<url-pattern>/PerceptionLogin</url-pattern>
+	</servlet-mapping>
+
+	<servlet-mapping>
+		<servlet-name>SystemAdminServlet</servlet-name>
+		<url-pattern>/SystemAdmin</url-pattern>
+	</servlet-mapping>
+	
+	<servlet-mapping>
+		<servlet-name>LaunchEnterpriseManagerServlet</servlet-name>
+		<url-pattern>/LaunchEnterpriseManager</url-pattern>
+	</servlet-mapping>
+	
+	<servlet-mapping>
+		<servlet-name>FullSynchronisationServlet</servlet-name>
+		<url-pattern>/FullSynchronisation</url-pattern>
+	</servlet-mapping>
+	
+	<servlet-mapping>
+		<servlet-name>TestConnectionServlet</servlet-name>
+		<url-pattern>/TestConnection</url-pattern>
+	</servlet-mapping>
+	
+</web-app>
