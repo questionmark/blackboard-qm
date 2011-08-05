@@ -11,6 +11,7 @@
 <%@ taglib uri="/bbNG" prefix="bbNG"%>
 
 <%
+String protocol = "";
 String host = "";
 String port = "";
 String directory = "";
@@ -46,13 +47,14 @@ boolean single_signon = false;
 				
 				<bbNG:dataElement label="Perception server details" isRequired="true">
 					<%
+						protocol = qbc.pb.getProperty("perception.protocol");
 						host = qbc.pb.getProperty("perception.host");
 						port = qbc.pb.getProperty("perception.port");
 						directory = qbc.pb.getProperty("perception.directory");
 					%>
 					<select name="perception.protocol">
-						<option value="http://">http://</option>
-						<option value="https://">https://</option>
+						<option value="https://" <%=protocol.equals("https://")?"selected=\"selected\"":""%>>https://</option>
+						<option value="http://" <%=protocol.equals("http://")?"selected=\"selected\"":""%> >http://</option>
 					</select>
 					<input maxlength="100" enabled="1" size="40" type="text" name="perception.host" value="<%=( host == null )?"localhost":host%>">
 					:
