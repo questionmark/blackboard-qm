@@ -43,6 +43,8 @@ public class QMPCourseContext extends QMPContext {
 	public boolean taProfile=false;
 	public boolean instructorProfile=false;
 	public String userID=null;
+	Administrator userAdministratorInfo = null;
+	Participant userParticipantInfo = null;
 	public Vector<ScheduleInfo> scheduleInfo=null;
 	
 	public QMPCourseContext(HttpServletRequest request, Context ctx) {
@@ -161,7 +163,8 @@ public class QMPCourseContext extends QMPContext {
 		if (userID == null && Connect()) {
 			if (isAdministrator) {
 				try {
-					userID = stub.getAdministratorByName(courseUser.getUserName()).getAdministrator_ID();
+					userAdministratorInfo=stub.getAdministratorByName(courseUser.getUserName());
+					userID = userAdministratorInfo.getAdministrator_ID();
 				} catch(RemoteException e) {
 					QMWiseException qe = new QMWiseException(e);
 					if(qe.getQMErrorCode() == 1601) {
@@ -173,7 +176,8 @@ public class QMPCourseContext extends QMPContext {
 				}				
 			} else {
 				try {
-					userID=stub.getParticipantByName(courseUser.getUserName()).getParticipant_ID();
+					userParticipantInfo=stub.getParticipantByName(courseUser.getUserName());
+					userID=userParticipantInfo.getParticipant_ID();
 				} catch (RemoteException e) {
 					QMWiseException qe = new QMWiseException(e);
 					if(qe.getQMErrorCode() == 1101) {
@@ -250,8 +254,44 @@ public class QMPCourseContext extends QMPContext {
 				newuser.setLast_Name(userLastName); 							
 				newuser.setParticipant_Name(courseUser.getUserName());
 				newuser.setPassword(courseUser.getPassword().substring(0, 20));
+				newuser.setPrimary_Email(courseUser.getEmailAddress());
 				userID = stub.createParticipant(newuser);
 				AddToGroup();
+			} catch(RemoteException e) {
+				QMWiseException qe = new QMWiseException(e);
+				if(qe.getQMErrorCode()==4002)
+					System.out.println("Illegal character not handled");
+				throw qe;
+			}
+			
+		}
+	}
+	
+	
+	public void UpdatePerceptionUser() throws QMWiseException {
+		// person exists -- compare and update information as necessary
+		boolean update=false;
+		// we cannot update administrator information
+		if (!isAdministrator) {
+			try {
+				// Clean out special characters by replacing them with acceptable ones (By Perception)
+				String userFirstName = replaceSpecChars(courseUser.getGivenName());
+				String userLastName = replaceSpecChars(courseUser.getFamilyName());	
+				if (!userParticipantInfo.getFirst_Name().equals(userFirstName)) {
+					userParticipantInfo.setFirst_Name(userFirstName);
+					update=true;
+				}
+				if (!userParticipantInfo.getLast_Name().equals(userLastName)) {
+					userParticipantInfo.setLast_Name(userLastName);
+					update=true;
+				}
+				String userEmail = courseUser.getEmailAddress();
+				if (!userParticipantInfo.getPrimary_Email().equals(userEmail)) {
+					userParticipantInfo.setPrimary_Email(userEmail);
+					update=true;
+				}
+				if (update)
+					stub.setParticipant(userParticipantInfo);
 			} catch(RemoteException e) {
 				QMWiseException qe = new QMWiseException(e);
 				if(qe.getQMErrorCode()==4002)
@@ -329,13 +369,16 @@ public class QMPCourseContext extends QMPContext {
 				return false;
 			}
 			CreatePerceptionUser();
-		} else if (!IsGroupMember()) {
-			System.out.println("userID="+userID+" is not a member of group "+groupID);
-			if (!syncMembers) {
-				Fail("Connector Disabled","This tool is not available to you in this course (no group membership in Perception)");
-				return false;
+		} else {
+			UpdatePerceptionUser();
+			if (!IsGroupMember()) {
+				System.out.println("userID="+userID+" is not a member of group "+groupID);
+				if (!syncMembers) {
+					Fail("Connector Disabled","This tool is not available to you in this course (no group membership in Perception)");
+					return false;
 				}
-			AddToGroup();
+				AddToGroup();
+			}
 		}
 		System.out.println("userID="+userID+" is (now) a member of group "+groupID);
 		return true;
