@@ -48,7 +48,7 @@
 	%>
 	<bbNG:pageHeader>
 		<bbNG:breadcrumbBar environment="COURSE" isContent="true">
-			<bbNG:breadcrumb>QUESTIONMARK SCHEDULE AN ASSESSMENT</bbNG:breadcrumb>
+			<bbNG:breadcrumb>Create Assessment Schedule</bbNG:breadcrumb>
 		</bbNG:breadcrumbBar>
 		<bbNG:pageTitleBar iconUrl='<%=cc.path+"/images/qm.gif"%>' showTitleBar="true"
 			title="Questionmark Perception Assessment" />

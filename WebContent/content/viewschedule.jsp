@@ -47,7 +47,7 @@
 		<bbNG:pageTitleBar iconUrl='<%=cv.path+"/images/qm.gif"%>'
 			title='<%=StringEscapeUtils.escapeHtml(cv.title)%>' />
 		<bbNG:breadcrumbBar environment="COURSE" isContent="true">
-			<bbNG:breadcrumb><%=StringEscapeUtils.escapeHtml(cv.title)%></bbNG:breadcrumb>
+			<bbNG:breadcrumb>Schedule Details</bbNG:breadcrumb>
 		</bbNG:breadcrumbBar>
 	</bbNG:pageHeader>	
 
