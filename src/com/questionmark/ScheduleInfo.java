@@ -64,6 +64,11 @@ public class ScheduleInfo {
 	public void ScheduleLink (QMPCourseContext ctx) {
 		Long now = new Date().getTime();
 		try {
+			active=true;
+			launchURL = null;
+			if (schedule.isRestrict_Attempts() && schedule.getMax_Attempts()<1) {
+				active=false;
+			}
 			Long schedule_start = schedule.readSchedule_Starts_asCalendar().getTime().getTime();
 			Long schedule_stop = schedule.readSchedule_Stops_asCalendar().getTime().getTime();
 			if (schedule.isRestrict_Times() && (
@@ -71,8 +76,9 @@ public class ScheduleInfo {
 				//not started yet
 				|| (schedule_stop >= 0 && schedule_stop < now))) {
 				// stop time is set (not 0001 AD) && already finished
-				launchURL = null;
-			} else {
+				active=false;
+			}
+			if (active) {
 				Parameter[] parameters = {
 						new Parameter("bb_schedulename", schedule.getSchedule_Name()),
 						new Parameter("bb_scheduleid", new Integer(

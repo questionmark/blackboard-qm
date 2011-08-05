@@ -17,26 +17,22 @@ import blackboard.platform.context.Context;
 public class QMPContentView extends QMPCourseContext {
 
 	public String content_id = null;
+	public QMPContentItem contentItem = null;
 	public String parent_id = null;
-	public ContentDbLoader courseDocumentLoader = null;
-	public Content courseDoc=null;
 	public Assessment[] assessmentList=null;
-	public String schedule_name = null;
+	public String title = "Questionmark Perception Schedule";
 	
 	public QMPContentView(HttpServletRequest request, Context ctx) {
 		super(request, ctx);
 		content_id=request.getParameter("content_id");
 		try {
-			Id contentId = Id.generateId(Content.DATA_TYPE, content_id);
-			courseDocumentLoader = ContentDbLoader.Default.getInstance();
-			courseDoc = courseDocumentLoader.loadById( contentId ); 
-			// can now query this...
-			parent_id = courseDoc.getParentId().toExternalString();				
-			schedule_name = courseDoc.getTitle();		
-			String schedule_description = courseDoc.getBody().getText();
 			if (Synchronize()) {
 				System.out.println("User Synchronized OK!  UserID="+userID);
-				Vector<ScheduleV42> schedules=GroupSchedules(schedule_name);
+				contentItem=new QMPContentItem(this,content_id,null);
+				title=contentItem.name;
+				// can now query this...
+				parent_id = contentItem.courseDoc.getParentId().toExternalString();				
+				Vector<ScheduleV42> schedules=GroupSchedules(contentItem.name);
 				if (isAdministrator) {
 					GetScheduleInfo(schedules);
 					assessmentList=GetAssessments();

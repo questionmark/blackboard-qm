@@ -42,7 +42,10 @@
 <%@ taglib uri="/bbNG" prefix="bbNG"%>
 
 <bbNG:learningSystemPage ctxId="ctx" title="Questionmark Perception connector" onLoad="disable_set_access()">
-	<% QMPContentCreator cc=new QMPContentCreator(request,ctx,response); %>
+	<%
+	QMPContentCreator cc=new QMPContentCreator(request,ctx,response);
+	cc.NewForm();
+	%>
 	<bbNG:pageHeader>
 		<bbNG:breadcrumbBar environment="COURSE" isContent="true">
 			<bbNG:breadcrumb>QUESTIONMARK SCHEDULE AN ASSESSMENT</bbNG:breadcrumb>
@@ -67,16 +70,6 @@
 
 		<h1 id="Scheduleform">Schedule an Assessment</h1>
 		<%
-		Calendar startdate = Calendar.getInstance();
-		startdate.set(Calendar.HOUR_OF_DAY,9);
-		startdate.set(Calendar.MINUTE,0);
-		startdate.set(Calendar.SECOND,0);
-		Calendar enddate = Calendar.getInstance();
-		enddate.set(Calendar.HOUR_OF_DAY,17);
-		enddate.set(Calendar.MINUTE,0);
-		enddate.set(Calendar.SECOND,0);
-		enddate.add(Calendar.DAY_OF_MONTH, 7);
-
 		if (cc.assessmentList.length == 0) {
 			%>
 			<p>You do not have permission to schedule any assessments in Perception.</p>
@@ -161,18 +154,18 @@
 								<br/>
 								<br/>							
 							<bbNG:dataElement label="Start date">
-								<bbNG:datePicker baseFieldName="scheduleStart" dateTimeValue="<%= startdate%>" showDate="true" showTime="true"/>
+								<bbNG:datePicker baseFieldName="scheduleStart" dateTimeValue="<%= cc.contentItem.startdate%>" showDate="true" showTime="true"/>
 							</bbNG:dataElement>
 							<br/>
 							<bbNG:dataElement label="End date">
-								<bbNG:datePicker baseFieldName="scheduleEnd" dateTimeValue="<%= enddate%>" showDate="true" showTime="true"/>
+								<bbNG:datePicker baseFieldName="scheduleEnd" dateTimeValue="<%= cc.contentItem.enddate%>" showDate="true" showTime="true"/>
 							</bbNG:dataElement>
 						</bbNG:dataElement>
 					</bbNG:step> 
 									
 					<input type="hidden" name="group" value="<%=cc.course.getBatchUid()%>" />
 					<input type="hidden" name="course_id" value="<%=cc.courseId%>" />
-					<input type="hidden" name="parent_id" value="<%=cc.parent_id%>"/>	
+					<input type="hidden" name="parent_id" value="<%=cc.contentItem.parentId.toExternalString()%>"/>	
 					
 					<bbNG:stepSubmit title="Submit"/>
 								
