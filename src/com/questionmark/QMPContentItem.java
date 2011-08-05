@@ -140,6 +140,7 @@ public class QMPContentItem {
 				newLimit=true;
 			}
 			if (request.getParameter("set_access_period") != null) {
+				accessPeriod=true;
 				startdate=DatePickerUtil.pickerDatetimeStrToCal(request.getParameter("scheduleStart_datetime"));
 				enddate=DatePickerUtil.pickerDatetimeStrToCal(request.getParameter("scheduleEnd_datetime"));			
 			}
@@ -254,13 +255,20 @@ public class QMPContentItem {
 		}
 		// ignore new limit because we can't convert a group schedule to an individual one
 		if (accessPeriod) {
-			if (!startdate.equals(s.readSchedule_Starts_asCalendar())) {
+			if (!s.isRestrict_Times()) {
+				s.setRestrict_Times(true);
 				s.updateSchedule_Starts_fromCalendar(startdate);
-				update=true;
-			}
-			if (!enddate.equals(s.readSchedule_Stops_asCalendar())) {
 				s.updateSchedule_Stops_fromCalendar(enddate);
 				update=true;
+			} else {
+				if (!startdate.equals(s.readSchedule_Starts_asCalendar())) {
+					s.updateSchedule_Starts_fromCalendar(startdate);
+					update=true;
+				}
+				if (!enddate.equals(s.readSchedule_Stops_asCalendar())) {
+					s.updateSchedule_Stops_fromCalendar(enddate);
+					update=true;
+				}
 			}
 		}
 		if (update)
@@ -356,6 +364,10 @@ public class QMPContentItem {
 		courseDoc.setBody(text);
 		//made it unconditionally available to all, can change depending on user story.
 		courseDoc.setIsAvailable(true);
+		if (accessPeriod) {
+			courseDoc.setStartDate(startdate);
+			courseDoc.setEndDate(enddate);
+		}
 		//set content resource type(Set content handler)
 		courseDoc.setContentHandler("qm/schedule-link"); //NB Must match the entry in bb-manifest!!
 		//set parent id
@@ -390,6 +402,16 @@ public class QMPContentItem {
 			courseDoc.setBody(text);
 			update=true;
 		}
+		if (accessPeriod) {
+			if (!startdate.equals(courseDoc.getStartDate())) {
+				courseDoc.setStartDate(startdate);
+				update=true;
+			}
+			if (!enddate.equals(courseDoc.getEndDate())) {
+				courseDoc.setEndDate(enddate);
+				update=true;
+			}			
+		}		
 		return update;
 	}
 	
