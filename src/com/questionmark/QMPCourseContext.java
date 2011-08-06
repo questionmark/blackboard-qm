@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import com.questionmark.QMWISe.Administrator;
 import com.questionmark.QMWISe.Assessment;
+import com.questionmark.QMWISe.AssessmentTreeItem;
 import com.questionmark.QMWISe.Participant;
 import com.questionmark.QMWISe.ScheduleV42;
 
@@ -488,6 +489,59 @@ public class QMPCourseContext extends QMPContext {
 		return assessments;
 	}
 	
+	
+	public SelectAssessmentItem[] GetAssessmentTree(String folderID, String baseLabel) throws QMWiseException {
+		/*
+		 * This method appears odd at first, it rolls up a hierarchy into a set of individual
+		 * assessment nodes interspersed with group nodes that contain a path representation
+		 * of the containing folders and an array of child assessments.
+		 */
+		Vector<SelectAssessmentItem> selectItems=new Vector<SelectAssessmentItem>();
+		SelectAssessmentItem[] result=null;
+		if (folderID==null)
+			folderID="0";
+		try {
+			AssessmentTreeItem[] treeItems = null;
+			treeItems=stub.getAssessmentTreeByAdministrator(userID, folderID, 1);
+			for (AssessmentTreeItem treeItem: treeItems) {
+				if (treeItem.getType()==0) {
+					// a folder
+					String groupName=null;
+					if (baseLabel==null)
+						groupName=treeItem.getName();
+					else
+						groupName=baseLabel+"/"+treeItem.getName();
+					SelectAssessmentItem[] children=GetAssessmentTree(treeItem.getID(),groupName);
+					Vector<SelectAssessmentItem> groupChildren=new Vector<SelectAssessmentItem>();
+					for (SelectAssessmentItem child: children) {
+						if (child.assessmentID==null) {
+							// an assessment folder just gets added straight to the parent
+							selectItems.add(child);
+						} else {
+							// an assessment belongs in this 'group'
+							groupChildren.add(child);
+						}
+					}
+					if (groupChildren.size()>0) {
+						SelectAssessmentItem sGroup=new SelectAssessmentItem(groupName,null);
+						sGroup.children=(SelectAssessmentItem[])groupChildren.toArray(new SelectAssessmentItem[groupChildren.size()]);
+						selectItems.add(sGroup);
+						Arrays.sort(sGroup.children, new SelectAssessmentItem.SortComparator());
+					}
+				} else {
+					// an assessment
+					SelectAssessmentItem sItem=new SelectAssessmentItem(treeItem.getName(),treeItem.getID());
+					selectItems.add(sItem);
+				}
+			}
+		} catch (RemoteException e) {
+			throw new QMWiseException(e);
+		}
+		result=(SelectAssessmentItem[])selectItems.toArray(new SelectAssessmentItem[selectItems.size()]);
+		Arrays.sort(result,new SelectAssessmentItem.SortComparator());
+		return result;
+	}
+
 	
 	public Vector<ScheduleV42> GroupSchedules(String filter) throws QMWiseException {
 		Vector<ScheduleV42> schedules = new Vector<ScheduleV42>();

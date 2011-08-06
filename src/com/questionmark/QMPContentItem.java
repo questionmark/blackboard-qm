@@ -341,9 +341,11 @@ public class QMPContentItem {
 	
 	
 	public void PersistLineitem() throws ValidationException, PersistenceException {
-		LineitemDbPersister lineitemdbpersister = (LineitemDbPersister) ctx.bbPm.getPersister(LineitemDbPersister.TYPE);
-		lineitem.validate();
-		lineitemdbpersister.persist(lineitem);
+		if (lineitem != null) {
+			LineitemDbPersister lineitemdbpersister = (LineitemDbPersister) ctx.bbPm.getPersister(LineitemDbPersister.TYPE);
+			lineitem.validate();
+			lineitemdbpersister.persist(lineitem);
+		}
 	}
 	
 	

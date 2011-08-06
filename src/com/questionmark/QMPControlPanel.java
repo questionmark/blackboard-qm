@@ -14,6 +14,7 @@ public class QMPControlPanel extends QMPCourseContext {
 	public String panelTitle="Questionmark Perception Control Panel";
 	public boolean linkView=false;
 	public Assessment[] assessmentList=null;
+	public SelectAssessmentItem[] selectAssessmentList=null;
 	
 	public QMPControlPanel(HttpServletRequest request, Context ctx) {
 		super(request, ctx);
@@ -39,6 +40,7 @@ public class QMPControlPanel extends QMPCourseContext {
 					Vector<ScheduleV42> schedules=GroupSchedules(schedule_name);
 					GetScheduleInfo(schedules);
 					assessmentList=GetAssessments();
+					selectAssessmentList=GetAssessmentTree(null,null);
 				} else if (schedule_name != null) {
 					panelTitle="Assessment Launch Page";
 					Vector<ScheduleV42> schedules=GroupSchedules(schedule_name);

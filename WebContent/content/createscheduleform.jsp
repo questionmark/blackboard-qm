@@ -126,13 +126,10 @@
 						<bbNG:dataElement label="Assessment name">
 							<select name="assessment">
 								<% 
-								String last_ID = "";
-								for(int i = 0; i < cc.assessmentList.length; i++) { 
-									String next_ID = cc.assessmentList[i].getAssessment_ID();
-									if (!next_ID.equals(last_ID)){%>
-								<option value="<%=next_ID%>"><%=cc.assessmentList[i].getSession_Name()%></option>				
-								<%		last_ID = next_ID;
-									}					
+								for(int i = 0; i < cc.selectAssessmentList.length; i++) { 
+									%>
+								<%=cc.selectAssessmentList[i].toString() %>
+								<%
 								} %>
 							</select>
 						</bbNG:dataElement>
