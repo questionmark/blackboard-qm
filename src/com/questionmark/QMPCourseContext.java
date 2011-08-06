@@ -596,7 +596,7 @@ public class QMPCourseContext extends QMPContext {
 	public void FailAccess(String msg) {
 		String link=pb.getProperty("perception.accesslink");
 		msg=StringEscapeUtils.escapeHtml(msg);
-		if (link!=null)
+		if (link!=null && !link.isEmpty())
 			msg=msg+"  <a href=\""+StringEscapeUtils.escapeHtml(link)+"\">More information...</a>";
 		FailRaw("Connector Disabled",msg);
 	}
