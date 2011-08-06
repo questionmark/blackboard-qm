@@ -158,6 +158,10 @@
 								<bbNG:datePicker baseFieldName="scheduleEnd" dateTimeValue="<%= cc.contentItem.enddate%>" showDate="true" showTime="true"/>
 							</bbNG:dataElement>
 						</bbNG:dataElement>
+						<bbNG:dataElement label="Permit Users to View this Content">
+							<input type="radio" name="available" value="true" checked="checked" /> Yes
+							<input type="radio" name="available" value="false" /> No
+						</bbNG:dataElement>
 					</bbNG:step> 
 									
 					<input type="hidden" name="group" value="<%=cc.course.getBatchUid()%>" />

@@ -50,6 +50,7 @@ public class QMPContentItem {
 	public boolean accessPeriod=false;
 	public Calendar startdate = Calendar.getInstance();
 	public Calendar enddate = Calendar.getInstance();
+	public boolean available = true;
 	public String gradebookScore="no";
 	public String gradebookScoreType=null;
 	
@@ -84,10 +85,11 @@ public class QMPContentItem {
 		if (accessPeriod) {
 			startdate=DatePickerUtil.pickerDatetimeStrToCal(request.getParameter("scheduleStart_datetime"));
 			enddate=DatePickerUtil.pickerDatetimeStrToCal(request.getParameter("scheduleEnd_datetime"));
-			
 		} else {
 			SetDefaultAccessPeriod();
 		}
+		available=request.getParameter("available")==null ||
+			!request.getParameter("available").equalsIgnoreCase("false");
 		// read the value of the "store results in gradebook" select menu
 		gradebookScore=request.getParameter("use_gradebook");
 		gradebookScoreType=request.getParameter("result_type");
@@ -144,6 +146,10 @@ public class QMPContentItem {
 				startdate=DatePickerUtil.pickerDatetimeStrToCal(request.getParameter("scheduleStart_datetime"));
 				enddate=DatePickerUtil.pickerDatetimeStrToCal(request.getParameter("scheduleEnd_datetime"));			
 			}
+			// slightly different, on update we keep the current available value unless we
+			// have some input.
+			if (request.getParameter("available")!=null)
+				available=!request.getParameter("available").equalsIgnoreCase("false");
 			UpdateSchedule(newLimit);
 			if (UpdateLineitem())
 				PersistLineitem();
@@ -364,8 +370,7 @@ public class QMPContentItem {
 		//Escape any html that the user types. Only allowing plaintext.
 		FormattedText text = new FormattedText(StringEscapeUtils.escapeHtml(description), FormattedText.Type.DEFAULT);														
 		courseDoc.setBody(text);
-		//made it unconditionally available to all, can change depending on user story.
-		courseDoc.setIsAvailable(true);
+		courseDoc.setIsAvailable(available);
 		if (accessPeriod) {
 			courseDoc.setStartDate(startdate);
 			courseDoc.setEndDate(enddate);
@@ -390,6 +395,7 @@ public class QMPContentItem {
 		parentId = courseDoc.getParentId();				
 		name = courseDoc.getTitle();		
 		description = courseDoc.getBody().getText();
+		available = courseDoc.getIsAvailable();
 	}
 
 	
@@ -413,7 +419,11 @@ public class QMPContentItem {
 				courseDoc.setEndDate(enddate);
 				update=true;
 			}			
-		}		
+		}
+		if (available != courseDoc.getIsAvailable()) {
+			courseDoc.setIsAvailable(available);
+			update=true;
+		}
 		return update;
 	}
 	

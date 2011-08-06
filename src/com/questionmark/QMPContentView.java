@@ -37,9 +37,13 @@ public class QMPContentView extends QMPCourseContext {
 					GetScheduleInfo(schedules);
 					assessmentList=GetAssessments();
 				} else {
-					GetScheduleInfo(schedules);
-					if (schedules.size()==0)
-						Fail("Assessment Not Found","This assessment is no longer available (no matching schedule)");
+					if (!contentItem.available)
+						Fail("Assessment Not Available","This assessment is not currently available");
+					else {
+						GetScheduleInfo(schedules);
+						if (schedules.size()==0)
+							Fail("Assessment Not Found","This assessment is no longer available (no matching schedule)");
+					}
 				}
 			}
 		} catch (QMWiseException e) {
