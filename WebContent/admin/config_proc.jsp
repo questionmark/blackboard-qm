@@ -42,7 +42,7 @@
 	%>
 
 	<bbNG:receipt type="FAIL" title="<%=qbc.failTitle %>">
-		<%=qbc.failText %>
+		<%=qbc.failMsg %>
 	</bbNG:receipt>
 
 	<%

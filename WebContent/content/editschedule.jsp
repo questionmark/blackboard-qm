@@ -188,10 +188,10 @@
 		<%
 	} else {
 		%>
-		<bbNG:receipt type="FAIL" title="<%=StringEscapeUtils.escapeHtml(cc.failTitle) %>">
-			<%=StringEscapeUtils.escapeHtml(cc.failText) %>
-		</bbNG:receipt>
-		<%
+	<bbNG:receipt type="FAIL" title="<%=cc.failTitle %>">
+		<%=cc.failMsg %>
+	</bbNG:receipt>
+	<%
 	} //End of other view
 	%>
 </bbNG:learningSystemPage>

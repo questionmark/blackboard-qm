@@ -47,8 +47,8 @@
 	<%	} else {
 	%>
 
-	<bbNG:receipt type="FAIL" title="<%=StringEscapeUtils.escapeHtml(qbc.failTitle) %>">
-		<%=StringEscapeUtils.escapeHtml(qbc.failText) %>
+	<bbNG:receipt type="FAIL" title="<%=qbc.failTitle %>">
+		<%=qbc.failMsg %>
 	</bbNG:receipt>
 
 	<%

@@ -10,6 +10,8 @@ import java.util.Vector;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.lang.StringEscapeUtils;
+
 import com.questionmark.QMWISe.Administrator;
 import com.questionmark.QMWISe.Assessment;
 import com.questionmark.QMWISe.AssessmentTreeItem;
@@ -357,7 +359,7 @@ public class QMPCourseContext extends QMPContext {
 		FindPerceptionGroupID();
 		if (groupID == null) {
 			if (pb.getProperty("perception.syncgroups")==null) {
-				Fail("Connector Disabled","This tool is not enabled for use with this course (no corresponding group in Perception)");
+				FailAccess("This tool is not enabled for use with this course (no corresponding group in Perception)");
 				return false;
 			}
 			CreatePerceptionGroup();
@@ -366,7 +368,7 @@ public class QMPCourseContext extends QMPContext {
 		System.out.println("Found userID "+userID);
 		if (userID == null) {
 			if (!syncUsers) {
-				Fail("Connector Disabled","This tool is not available to you (no corresponding user in Perception)");
+				FailAccess("This tool is not available to you (no corresponding user in Perception)");
 				return false;
 			}
 			CreatePerceptionUser();
@@ -375,7 +377,7 @@ public class QMPCourseContext extends QMPContext {
 			if (!IsGroupMember()) {
 				System.out.println("userID="+userID+" is not a member of group "+groupID);
 				if (!syncMembers) {
-					Fail("Connector Disabled","This tool is not available to you in this course (no group membership in Perception)");
+					FailAccess("This tool is not available to you in this course (no group membership in Perception)");
 					return false;
 				}
 				AddToGroup();
@@ -407,9 +409,9 @@ public class QMPCourseContext extends QMPContext {
 						participantHash.put(courseUser.getUserName(), courseUser);
 					}
 					if (!Synchronize()) {
-						sb.append(courseUser.getUserName()+": "+failTitle+"; "+failText+"\n");
+						sb.append(courseUser.getUserName()+": "+failTitle+"; "+failMsg+"\n");
 						failTitle=null;
-						failText=null;
+						failMsg=null;
 					}
 				}
 				// All users are synched into Perception now; return to the current user
@@ -590,6 +592,15 @@ public class QMPCourseContext extends QMPContext {
 	public void FailCourse() {
 		Fail("Course Not Found","There was no course associated with this request");
 	}
+
+	public void FailAccess(String msg) {
+		String link=pb.getProperty("perception.accesslink");
+		msg=StringEscapeUtils.escapeHtml(msg);
+		if (link!=null)
+			msg=msg+"  <a href=\""+StringEscapeUtils.escapeHtml(link)+"\">More information...</a>";
+		FailRaw("Connector Disabled",msg);
+	}
 	
+
 
 }

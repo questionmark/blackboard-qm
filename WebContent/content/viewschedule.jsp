@@ -102,8 +102,8 @@
 			<%
 		} else {
 		%>
-		<bbNG:receipt type="FAIL" title="<%=StringEscapeUtils.escapeHtml(cv.failTitle) %>">
-			<%=StringEscapeUtils.escapeHtml(cv.failText) %>
+		<bbNG:receipt type="FAIL" title="<%=cv.failTitle %>">
+			<%=cv.failMsg %>
 		</bbNG:receipt>
 		<%
 	} //End of other view

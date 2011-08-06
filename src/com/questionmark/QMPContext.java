@@ -4,6 +4,8 @@ import java.rmi.RemoteException;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.lang.StringEscapeUtils;
+
 import blackboard.data.course.Course;
 import blackboard.data.course.CourseMembership;
 import blackboard.data.user.User;
@@ -39,7 +41,7 @@ public class QMPContext {
 	public Boolean sysAdmin = false;
 	public PropertiesBean pb= null;
 	public String failTitle = null;
-	public String failText = null;
+	public String failMsg = null;
 	public String phantomID = null;
 	
 	public QMPContext(HttpServletRequest request, Context ctx ) {
@@ -169,8 +171,16 @@ public class QMPContext {
 	
 	public void Fail(String title, String text) {
 		if (failTitle == null) {
+			failTitle=StringEscapeUtils.escapeHtml(title);
+			failMsg=StringEscapeUtils.escapeHtml(text);
+		}
+	}
+
+
+	public void FailRaw(String title, String text) {
+		if (failTitle == null) {
 			failTitle=title;
-			failText=text;
+			failMsg=text;
 		}
 	}
 }

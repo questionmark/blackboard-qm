@@ -277,8 +277,8 @@
 		} else {
 	%>
 
-	<bbNG:receipt type="FAIL" title="<%=StringEscapeUtils.escapeHtml(panel.failTitle) %>">
-		<%=StringEscapeUtils.escapeHtml(panel.failText) %>
+	<bbNG:receipt type="FAIL" title="<%=panel.failTitle %>">
+		<%=panel.failMsg %>
 	</bbNG:receipt>
 
 	<%

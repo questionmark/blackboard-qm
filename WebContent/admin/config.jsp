@@ -128,6 +128,16 @@ boolean single_signon = false;
 					</blockquote>
 				</bbNG:dataElement>
 
+				<bbNG:dataElement label="Access Failure Link" isRequired="false">
+					<%
+					String link=qbc.pb.getProperty("perception.accesslink");
+					if (link == null)
+						link="";
+					%>
+					<input maxlength="1024" enabled="1" size="100" type="text" name="perception.accesslink" value="<%=link%>">
+					<bbNG:elementInstructions text="An optional link to a web page with information helpful to people denied access to Perception"/>
+				</bbNG:dataElement>
+
 				<%
 					syncperiod = qbc.pb.getProperty("perception.syncperiod");
 					if (syncperiod != null) {
@@ -165,8 +175,8 @@ boolean single_signon = false;
 	<%	} else {
 	%>
 
-	<bbNG:receipt type="FAIL" title="<%=StringEscapeUtils.escapeHtml(qbc.failTitle) %>">
-		<%=StringEscapeUtils.escapeHtml(qbc.failText) %>
+	<bbNG:receipt type="FAIL" title="<%=qbc.failTitle %>">
+		<%=qbc.failMsg %>
 	</bbNG:receipt>
 
 	<%
