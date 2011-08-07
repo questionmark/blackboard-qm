@@ -9,11 +9,13 @@ import java.util.ListIterator;
 import java.util.Vector;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.xml.rpc.holders.StringHolder;
 
 import org.apache.commons.lang.StringEscapeUtils;
 
 import com.questionmark.QMWISe.Administrator;
 import com.questionmark.QMWISe.Assessment;
+import com.questionmark.QMWISe.AssessmentFolder;
 import com.questionmark.QMWISe.AssessmentTreeItem;
 import com.questionmark.QMWISe.Participant;
 import com.questionmark.QMWISe.ScheduleV42;
@@ -41,6 +43,7 @@ public class QMPCourseContext extends QMPContext {
 	public CourseMembership crsMembership = null;
 	public CourseMembership.Role userRole=CourseMembership.Role.GUEST;
 	public String groupID=null;
+	public String folderID=null;
 	public boolean isAdministrator=false;
 	public boolean profileCheck=true;
 	public boolean taProfile=false;
@@ -64,6 +67,7 @@ public class QMPCourseContext extends QMPContext {
 				course = courseLoader.loadById(courseIdObject);
 				if (course != null) {
 					groupID=courseSettings.getProperty("groupid");
+					folderID=courseSettings.getProperty("folderid");
 					// get the membership data to determine the User's Role
 					crsMembershipLoader = (CourseMembershipDbLoader) bbPm.getLoader(CourseMembershipDbLoader.TYPE);
 					SetCourseUser(null);
@@ -156,6 +160,53 @@ public class QMPCourseContext extends QMPContext {
 			newgroup.setGroup_Name(course.getBatchUid());
 			newgroup.setDescription(course.getTitle());
 			groupID = stub.createGroup(newgroup);
+		} catch(RemoteException e) {
+			throw new QMWiseException(e);
+		}
+	}
+
+	
+	public void FindPerceptionFolderID() throws QMWiseException {
+		//get Perception group id, make it if it doesn't exist yet
+		if (folderID != null && folderID.isEmpty() && pb.getProperty("perception.syncfolders")!=null)
+			// sync got turned on? have another go...
+			folderID=null;
+		if (folderID == null && Connect()) {
+			try {
+				String username=pb.getProperty("perception.username");
+				String adminID=userID;
+				if (username!=null) {
+					// if possible use a powerful user
+					Administrator admin=stub.getAdministratorByName(username);
+					adminID=admin.getAdministrator_ID();
+				}
+				AssessmentTreeItem[] items=stub.getAssessmentTreeByAdministrator(adminID, "0", 0);
+				for (AssessmentTreeItem item: items) {
+					if (item.getType()==0 && item.getName().equalsIgnoreCase(course.getBatchUid())) {
+						folderID=item.getID();
+						// Cache the folder ID for future synchronization on this course
+						courseSettings.setProperty("folderid", folderID);
+						courseSettings.saveSettingsFile();
+						break;
+					}
+				}
+			} catch(RemoteException e) {
+				QMWiseException qe = new QMWiseException(e);
+				throw qe;
+			}
+		}
+	}
+
+	
+	public void CreatePerceptionFolder() throws QMWiseException {
+		// folder doesn't exist -- make it
+		try {
+			AssessmentFolder folder = new AssessmentFolder();
+			folder.setParent_ID("0");
+			folder.setID("");
+			folder.setName(course.getBatchUid());
+			folder.setDescription(course.getTitle());
+			folderID = stub.createAssessmentFolder(folder);
 		} catch(RemoteException e) {
 			throw new QMWiseException(e);
 		}
@@ -353,9 +404,30 @@ public class QMPCourseContext extends QMPContext {
 	}
 	
 	
+	public void AddToFolder() throws QMWiseException {
+		try {
+			if (isAdministrator && folderID!=null && !folderID.isEmpty()) {
+				StringHolder permissions=new StringHolder();
+				if (userRole.equals(CourseMembership.Role.INSTRUCTOR))
+					permissions.value="3";
+				else
+					permissions.value="1";
+				stub.assignAdministratorToAssessmentFolder(userID, folderID, permissions);
+			}
+		} catch (RemoteException e) {
+			throw new QMWiseException(e);
+		}
+	}
+	
+	
 	public Boolean Synchronize() throws QMWiseException {
+		return Synchronize(false);
+	}
+	
+	public Boolean Synchronize(boolean forceFolder) throws QMWiseException {
 		boolean syncUsers=(pb.getProperty("perception.syncusers")!=null);
 		boolean syncMembers=(pb.getProperty("perception.syncmembers")!=null);
+		boolean syncFolders=(pb.getProperty("perception.syncfolders")!=null);
 		FindPerceptionGroupID();
 		if (groupID == null) {
 			if (pb.getProperty("perception.syncgroups")==null) {
@@ -363,6 +435,18 @@ public class QMPCourseContext extends QMPContext {
 				return false;
 			}
 			CreatePerceptionGroup();
+		}
+		FindPerceptionFolderID();
+		if (folderID == null) {
+			if (syncFolders) {
+				CreatePerceptionFolder();
+				forceFolder=true;
+			} else {
+				// save an empty string to prevent the check each time
+				folderID="";
+				courseSettings.setProperty("folderid", folderID);
+				courseSettings.saveSettingsFile();
+			}
 		}
 		FindPerceptionUserID();
 		System.out.println("Found userID "+userID);
@@ -372,8 +456,10 @@ public class QMPCourseContext extends QMPContext {
 				return false;
 			}
 			CreatePerceptionUser();
+			forceFolder=true;
 		} else {
-			UpdatePerceptionUser();
+			if (syncUsers)
+				UpdatePerceptionUser();
 			if (!IsGroupMember()) {
 				System.out.println("userID="+userID+" is not a member of group "+groupID);
 				if (!syncMembers) {
@@ -381,8 +467,11 @@ public class QMPCourseContext extends QMPContext {
 					return false;
 				}
 				AddToGroup();
+				forceFolder=true;
 			}
 		}
+		if (syncFolders && forceFolder)
+			AddToFolder();
 		System.out.println("userID="+userID+" is (now) a member of group "+groupID);
 		return true;
 	}
@@ -390,6 +479,8 @@ public class QMPCourseContext extends QMPContext {
 	
 	public String ForceSynchronization() {
 		StringBuilder sb = new StringBuilder(4096); // arbitrary 4K chunk
+		boolean syncmembers=(pb.getProperty("perception.syncmembers")!=null);
+		boolean syncfolders=(pb.getProperty("perception.syncfolders")!=null && folderID!=null && !folderID.isEmpty());
 		if (userRole.equals(CourseMembership.Role.INSTRUCTOR) || userRole.equals(CourseMembership.Role.TEACHING_ASSISTANT)) {
 			sb.append("Perception: course " + course.getBatchUid() + ": user synchronization forced\n");
 			try {
@@ -408,7 +499,7 @@ public class QMPCourseContext extends QMPContext {
 						//sb.append(courseUser.getUserName()+" is a participant on the course\n");
 						participantHash.put(courseUser.getUserName(), courseUser);
 					}
-					if (!Synchronize()) {
+					if (!Synchronize(true)) {
 						sb.append(courseUser.getUserName()+": "+failTitle+"; "+failMsg+"\n");
 						failTitle=null;
 						failMsg=null;
@@ -416,10 +507,9 @@ public class QMPCourseContext extends QMPContext {
 				}
 				// All users are synched into Perception now; return to the current user
 				SetCourseUser(null);
-				if (pb.getProperty("perception.syncmembers")!=null) {
+				if (syncmembers) {
 					// now weed out people from the Perception group who are not in the hashmaps
 					Participant pMembers[];
-					Administrator aMembers[];
 					Vector<String> killList=new Vector<String>();
 					pMembers=stub.getParticipantListByGroup(groupID);
 					for(int i = 0; i < pMembers.length; i++) {
@@ -446,23 +536,32 @@ public class QMPCourseContext extends QMPContext {
 						stub.deleteGroupParticipantList(groupID,killArray);
 						sb.append("Removed "+new Integer(killList.size()).toString()+" participants from Perception group\n");
 					}
-					killList.clear();
-					aMembers=stub.getAdministratorListByGroup(groupID);
-					for(int i = 0; i < aMembers.length; i++) {
-						Administrator a=aMembers[i];
-						if (adminHash.containsKey(a.getAdministrator_Name()))
-							continue;
-						killList.add(a.getAdministrator_ID());
+				}
+				Administrator aMembers[];
+				Vector<String> killList=new Vector<String>();
+				aMembers=stub.getAdministratorListByGroup(groupID);
+				for(int i = 0; i < aMembers.length; i++) {
+					Administrator a=aMembers[i];
+					if (adminHash.containsKey(a.getAdministrator_Name()))
+						continue;
+					killList.add(a.getAdministrator_ID());
+					if (syncmembers)
 						sb.append(a.getAdministrator_Name()+": administrator marked for removal\n");
+					if (syncfolders) {
+						StringHolder permissions=new StringHolder();
+						permissions.value="0";
+						stub.assignAdministratorToAssessmentFolder(a.getAdministrator_ID(), folderID, permissions);
 					}
+				}
+				if (syncmembers) {
 					if (killList.size()>0) {
 						String[] killArray = (String[])killList.toArray(new String[killList.size()]);
 						stub.deleteGroupAdministratorList(groupID, killArray);
 						sb.append("Removed "+new Integer(killList.size()).toString()+" administrators from Perception group\n");						
 					}					
-					courseSettings.setProperty("lastsync", new Date().toString());
-					courseSettings.saveSettingsFile();
 				}
+				courseSettings.setProperty("lastsync", new Date().toString());
+				courseSettings.saveSettingsFile();
 			} catch (PersistenceException e) {
 				sb.append("Synchronization aborted: "+e.getMessage());
 			} catch (RemoteException e) {

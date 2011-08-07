@@ -128,6 +128,19 @@ boolean single_signon = false;
 					</blockquote>
 				</bbNG:dataElement>
 
+				<bbNG:dataElement label="Experimental: Synchronize assessment folders automatically?" isRequired="false">
+					<%
+					boolean sync_folders=(qbc.pb.getProperty("perception.syncfolders") == null)? false : true;
+					%>
+					<input name="perception.syncfolders" id="perception.syncfolders" type="checkbox" value="Yes" <%=sync_folders?"checked":"" %>>
+					<bbNG:elementInstructions text="Select this option to automatically create assessment folders and assign administrator permissions in Perception"/>
+					<blockquote>
+					<p><em>Warning:</em> assessment folder permissions may not be granted until the course is manually
+					synchronized from the course control panel.  To revoke permissions, you must use Perception
+					Enterprise Manager.</p>
+					</blockquote>
+				</bbNG:dataElement>
+
 				<bbNG:dataElement label="Access Failure Link" isRequired="false">
 					<%
 					String link=qbc.pb.getProperty("perception.accesslink");
