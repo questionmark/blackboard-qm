@@ -645,8 +645,16 @@ public class QMPCourseContext extends QMPContext {
 
 	
 	public Vector<ScheduleV42> GroupSchedules(String filter) throws QMWiseException {
+		return GroupSchedules(filter,null);
+	}
+
+	
+	public Vector<ScheduleV42> GroupSchedules(String filter, Id contentID) throws QMWiseException {
 		Vector<ScheduleV42> schedules = new Vector<ScheduleV42>();
 		try {
+			String idFilter=null;
+			if (contentID!=null)
+				idFilter=contentID.toExternalString();
 			// Assumption:
 			// number of courses x number of schedules is less than...
 			// max(number of students in a course) x number of limited attempt schedules in that course
@@ -657,19 +665,36 @@ public class QMPCourseContext extends QMPContext {
 			} else {
 				limitedSchedules = stub.getScheduleListByParticipantV42(new Integer(userID).intValue());
 			}
-			for(int i = 0; i < limitedSchedules.length; i++) {
-				if(limitedSchedules[i].getGroup_ID() == new Integer(groupID).intValue())
-					if (filter == null || filter.equals(limitedSchedules[i].getSchedule_Name()))
-						schedules.add(limitedSchedules[i]);
-			}
 			ScheduleV42[] groupSchedules = null;
 			// Not sure how well documented using 0 is here
 			// returns approx (number of courses x number of group schedules) records
 			groupSchedules=stub.getScheduleListByParticipantV42(0);
-			for(int i = 0; i < groupSchedules.length; i++)
-				if(groupSchedules[i].getGroup_ID() == new Integer(groupID).intValue())
-					if (filter == null || filter.equals(groupSchedules[i].getSchedule_Name()))
+			if (idFilter!=null) {
+				// First pass; match against the contentID magic prefix
+				for(int i = 0; i < limitedSchedules.length; i++) {
+					if(limitedSchedules[i].getGroup_ID() == new Integer(groupID).intValue() &&
+							QMPContentItem.ExtractContentId(limitedSchedules[i].getSchedule_Name()).equals(idFilter))
+						schedules.add(limitedSchedules[i]);
+				}				
+				for(int i = 0; i < groupSchedules.length; i++) {
+					if(groupSchedules[i].getGroup_ID() == new Integer(groupID).intValue() &&
+							QMPContentItem.ExtractContentId(groupSchedules[i].getSchedule_Name()).equals(idFilter))
 						schedules.add(groupSchedules[i]);
+				}
+			}
+			if (schedules.size()==0) {
+				// We didn't find any schedules, match the whole name (or everything) on a second pass
+				for(int i = 0; i < limitedSchedules.length; i++) {
+					if(limitedSchedules[i].getGroup_ID() == new Integer(groupID).intValue())
+						if (filter == null || filter.equals(limitedSchedules[i].getSchedule_Name()))
+							schedules.add(limitedSchedules[i]);
+				}
+				for(int i = 0; i < groupSchedules.length; i++) {
+					if(groupSchedules[i].getGroup_ID() == new Integer(groupID).intValue())
+						if (filter == null || filter.equals(groupSchedules[i].getSchedule_Name()))
+							schedules.add(groupSchedules[i]);
+				}
+			}
 		} catch (RemoteException e) {
 			throw new QMWiseException(e);
 		}
@@ -678,9 +703,14 @@ public class QMPCourseContext extends QMPContext {
 	
 	
 	public void GetScheduleInfo(Vector<ScheduleV42> schedules) {
+		GetScheduleInfo(schedules,null);
+	}
+	
+		
+	public void GetScheduleInfo(Vector<ScheduleV42> schedules, String contentName) {
 		scheduleInfo = new Vector<ScheduleInfo>();
 		for(int i = 0; i < schedules.size(); i++) {
-			scheduleInfo.add(new ScheduleInfo(this,schedules.get(i),isAdministrator));
+			scheduleInfo.add(new ScheduleInfo(this,schedules.get(i),contentName,isAdministrator));
 		}
 	}
 

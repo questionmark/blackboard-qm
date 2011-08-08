@@ -183,4 +183,9 @@ public class QMPContext {
 			failMsg=text;
 		}
 	}
+	
+	
+	public void Log(String msg) {
+		System.out.println(msg);
+	}
 }

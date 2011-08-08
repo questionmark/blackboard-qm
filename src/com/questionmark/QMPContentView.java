@@ -32,15 +32,15 @@ public class QMPContentView extends QMPCourseContext {
 				title=contentItem.name;
 				// can now query this...
 				parent_id = contentItem.courseDoc.getParentId().toExternalString();				
-				Vector<ScheduleV42> schedules=GroupSchedules(contentItem.name);
+				Vector<ScheduleV42> schedules=GroupSchedules(contentItem.name,contentItem.contentId);
 				if (isAdministrator) {
-					GetScheduleInfo(schedules);
+					GetScheduleInfo(schedules,contentItem.name);
 					assessmentList=GetAssessments();
 				} else {
 					if (!contentItem.available)
 						Fail("Assessment Not Available","This assessment is not currently available");
 					else {
-						GetScheduleInfo(schedules);
+						GetScheduleInfo(schedules,contentItem.name);
 						if (schedules.size()==0)
 							Fail("Assessment Not Found","This assessment is no longer available (no matching schedule)");
 					}

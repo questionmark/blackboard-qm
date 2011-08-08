@@ -109,12 +109,17 @@ public class QMPContentItem {
 	
 	public void CreateNew() {
 		try {
+			if (!CheckDuplicateLineItem(name)) {
+				ctx.Fail("Duplicate Name","There is already a gradebook column with that name.");
+				return;
+			}
 			schedule=NewSchedule();
 			lineitem=NewLineItem();
 			courseDoc=NewCourseDocument();
-			CreateSchedule();
 			PersistLineitem();
 			PersistCourseDocument();
+			// must create schedule after persisting document to get Id
+			CreateSchedule();
 		} catch(RemoteException e) {
 			QMWiseException qe=new QMWiseException(e);
 			ctx.FailQMWISe(qe);
@@ -132,8 +137,13 @@ public class QMPContentItem {
 			Calendar newEnddate=null;
 			String newName = request.getParameter("new_schedule_name");
 			boolean newLimit = false;
-			if (newName != null)
+			if (newName != null) {
+				if (!name.equals(newName) && !CheckDuplicateLineItem(newName)) {
+					ctx.Fail("Duplicate Name","There is already a gradebook column with that name.");
+					return;
+				}
 				name=newName;
+			}
 			String newDescription = request.getParameter("schedule_text_area");
 			if (newDescription != null)
 				description=newDescription;
@@ -181,6 +191,7 @@ public class QMPContentItem {
 	
 	public ScheduleV42 NewSchedule() {
 		schedule = new ScheduleV42();
+		// name will be updated later
 		schedule.setSchedule_Name(name);
 		schedule.setAssessment_ID(assessmentID);
 		schedule.setRestrict_Attempts(limitAttempts);
@@ -207,13 +218,54 @@ public class QMPContentItem {
 	
 	
 	public void CreateSchedule() throws RemoteException {
+		// just before creating the schedule we add the prefix for the content Id
+		String prefix="[BB"+contentId.toExternalString()+"] ";
+		schedule.setSchedule_Name(prefix+name);
 		@SuppressWarnings("unused")
 		String[] scheduleids = ctx.stub.createScheduleGroupV42(schedule,individualSchedules);
 	}
 
 	
+	public static String ExtractContentId(String scheduleName) {
+		StringBuilder sb = new StringBuilder(10);
+		char mode='[';
+		for (int i=0;i<scheduleName.length();i++) {
+			char c=scheduleName.charAt(i);
+			switch (mode) {
+			case '[':
+				if (c==mode)
+					mode='1';
+				else
+					mode='X';
+				continue;
+			case '1':
+				if (c=='B')
+					mode='2';
+				else
+					mode='X';
+				continue;
+			case '2':
+				if (c=='B')
+					mode='I';
+				else
+					mode='X';
+				continue;
+			case 'I':
+				if (c==']')
+					mode='$';
+				else
+					sb.append(c);
+				continue;
+			}
+			break;
+		}
+		return (mode=='$')?sb.toString():"";
+	}
+
+	
 	public void LoadSchedule() throws QMWiseException {
-		schedules=ctx.GroupSchedules(name);
+		ctx.Log("Loading schedule for [BB"+contentId.toExternalString()+"] "+name);
+		schedules=ctx.GroupSchedules(name,contentId);
 		if (schedules.size()>0) {
 			schedule=schedules.get(0);
 			assessmentID=schedule.getAssessment_ID();
@@ -251,8 +303,9 @@ public class QMPContentItem {
 	
 	public void UpdateSchedule(ScheduleV42 s, boolean newLimit) throws RemoteException {
 		boolean update=false;
-		if (!s.getSchedule_Name().equals(name)) {
-			s.setSchedule_Name(name);
+		String prefixedName="[BB"+contentId.toExternalString()+"] "+name;
+		if (!s.getSchedule_Name().equals(prefixedName)) {
+			s.setSchedule_Name(prefixedName);
 			update=true;
 		}
 		if (individualSchedules && newLimit && s.getMax_Attempts()!=maxAttempts) {
@@ -338,7 +391,7 @@ public class QMPContentItem {
 	
 	public boolean UpdateLineitem() {
 		boolean update=false;
-		if (!lineitem.getName().equals(name)) {
+		if (lineitem!=null && !lineitem.getName().equals(name)) {
 			lineitem.setName(name);
 			update=true;
 		}
@@ -354,6 +407,13 @@ public class QMPContentItem {
 		}
 	}
 	
+	
+	public boolean CheckDuplicateLineItem(String checkName) throws PersistenceException {
+		LineitemDbLoader lineitemdbloader = (LineitemDbLoader)ctx.bbPm.getLoader(LineitemDbLoader.TYPE);
+		List<Lineitem> lineitems = lineitemdbloader.loadByCourseIdAndLineitemName(ctx.courseIdObject,checkName);
+		return (lineitems.size()==0);
+	}
+
 	
 	public Content NewCourseDocument() {
 //		if (parentId == null){
@@ -434,6 +494,7 @@ public class QMPContentItem {
 		ContentDbPersister persister = (ContentDbPersister)ctx.bbPm.getPersister( ContentDbPersister.TYPE );
 		//now to persist!
 		//save details of this item.
-		persister.persist(courseDoc);	
+		persister.persist(courseDoc);
+		contentId=courseDoc.getId();
 	}
 }

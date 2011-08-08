@@ -13,9 +13,11 @@ public class ScheduleInfo {
 	public boolean active=false;
 	public String errorMsg=null;
 	public String launchURL=null;
+	public String contentName=null;
 	
-	public ScheduleInfo (QMPCourseContext ctx, ScheduleV42 schedule, boolean tryOut) {
+	public ScheduleInfo (QMPCourseContext ctx, ScheduleV42 schedule, String contentName, boolean tryOut) {
 		this.schedule=schedule;
+		this.contentName=contentName;
 		if (tryOut)
 			TryOutLink(ctx);
 		else
@@ -26,6 +28,8 @@ public class ScheduleInfo {
 	public String DisplayName() {
 		if (errorMsg != null)
 			return errorMsg;
+		else if (contentName!=null)
+			return contentName;
 		else
 			return schedule.getSchedule_Name();
 	}
@@ -80,7 +84,7 @@ public class ScheduleInfo {
 			}
 			if (active) {
 				Parameter[] parameters = {
-						new Parameter("bb_schedulename", schedule.getSchedule_Name()),
+						new Parameter("bb_schedulename", contentName==null?schedule.getSchedule_Name():contentName),
 						new Parameter("bb_scheduleid", new Integer(
 							schedule.getSchedule_ID()).toString()),
 						new Parameter("bb_courseid", ctx.course.getBatchUid())

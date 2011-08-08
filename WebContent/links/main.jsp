@@ -100,6 +100,8 @@
 	
 	<h1 id="Schedules">Schedules</h1>
 	
+	<p>Schedule names prefixed with [BB_...] are associated with content items in this course.</p>
+	
 	<bbNG:inventoryList collection="<%=panel.scheduleInfo %>" objectVar="s"
 		className="com.questionmark.ScheduleInfo" description="Scheduled Assessments"
 		emptyMsg="No assessments scheduled" showAll="true">
