@@ -1,3 +1,43 @@
+Version 9.0.32
+--------------
+
+This is a significant new release of the connector with a new synchronizer
+and a number of improvements to the management of content items.
+
+[#371] Gradebook name-clash possible when renaming schedules:
+	This issue has been fixed for content items
+[#326] Make Schedule Unavailable
+	Added checkbox to enable standard content availability flag to be set
+[#321] Save schedule restricted times in Blackboard content item
+	Content items now synchronize standard content availability times with schedule
+[#209] Use tree-views for Assessment list browsing
+	Forms now use a tree-like view for browsing list of available assessments
+	This may also resolve overly restricted permission issues
+[#216] Manual Synchronization Option for Large Courses
+[#325] Improve Synchronization
+	All new 'just-in-time' synchronization process should work for all sizes of course
+	Course members are now synchronized *individually* when they access the connector
+	so students have access to assessments as soon as they enroll (no need for the
+	instructor to force the synchronization in the control panel).  Manual synchronization
+	is still possible if desired.
+[#361] Limit use of the connector to specified courses
+	Group synchronization can now optionally be disabled allowing Perception-side control
+	of which courses are synchronized if desired.
+[#358] Syncrhonize Email Address with Perception
+	Participant email addresses now synched to Perception
+
+Minor bug fixes:
+[#316] Users without a role in the Blackboard course get an error message
+[#311] Schedule name appears twice in the breadcrumb trail
+[#334] Connector setting page does not remember https setting
+
+
+Version 9.0.31
+--------------
+
+Minor release to deal with an issue when saving settings.
+
+
 Version 9.0.30
 --------------
 
