@@ -20,6 +20,8 @@ and a number of improvements to the management of content items.
 	so students have access to assessments as soon as they enroll (no need for the
 	instructor to force the synchronization in the control panel).  Manual synchronization
 	is still possible if desired.
+[#224] Automatic Creation/Linking to Assessment and Topic folders
+	Experimental support for synchronizing assessment folders and permissions
 [#361] Limit use of the connector to specified courses
 	Group synchronization can now optionally be disabled allowing Perception-side control
 	of which courses are synchronized if desired.
