@@ -11,6 +11,7 @@ import org.apache.commons.lang.StringEscapeUtils;
 
 import blackboard.base.BbList;
 import blackboard.base.FormattedText;
+import blackboard.data.ExtendedData;
 import blackboard.data.ValidationException;
 import blackboard.data.content.Content;
 import blackboard.data.content.CourseDocument;
@@ -37,9 +38,17 @@ public class QMPContentItem {
 	private QMPCourseContext ctx=null;
 	public Id parentId=null;
 	public Id contentId=null;
+	private boolean copyFlag=false; // set to true if we detect that we've been copied
+	public static int LEGACY_VERSION=-1; // for future support of 4.3/4.4 created content
+	public static int BASIC_SCHEDULE_VERSION=0; // schedule names match in Perception
+	public static int MAGIC_SCHEDULE_VERSION=1; // schedule names are keyed with content id in Perception
+	public static int XDATA_VERSION=2; // content item uses xData
+	public static int CURRENT_VERSION=2;
+	public int version=BASIC_SCHEDULE_VERSION;
 	public Content courseDoc=null;
 	public Vector<ScheduleV42> schedules = null;
-	public ScheduleV42 schedule = null;
+	private ScheduleV42 schedule = null;
+	private Id lineitemId=null;
 	public Lineitem lineitem = null;
 	public String name="Perception Assessment";
 	public String description="Questionmark Perception Schedule";
@@ -52,15 +61,17 @@ public class QMPContentItem {
 	public Calendar enddate = Calendar.getInstance();
 	public boolean available = true;
 	public String gradebookScore="no";
-	public String gradebookScoreType=null;
+	public String gradebookScoreType="BEST";
 	
-	public QMPContentItem(QMPCourseContext ctx, String content_id, String parent_id) throws PersistenceException, QMWiseException {
+	public QMPContentItem(QMPCourseContext ctx, String content_id, String parent_id) throws PersistenceException, QMWiseException, ValidationException {
 		this.ctx=ctx;
 		if (content_id != null) {
 			// ignore parent_id
 			LoadCourseDocument(content_id);
-			LoadLineitem();
 			LoadSchedule();
+			LoadLineitem();
+			if (copyFlag)
+				PersistCourseDocument();
 		} else {
 			// new content item in parent_id (perhaps)
 			parentId=ctx.bbPm.generateId(CourseDocument.DATA_TYPE,parent_id);			
@@ -113,10 +124,12 @@ public class QMPContentItem {
 				ctx.Fail("Duplicate Name","There is already a gradebook column with that name.");
 				return;
 			}
+			version=CURRENT_VERSION;
 			schedule=NewSchedule();
-			lineitem=NewLineItem();
+			NewLineItem();
 			courseDoc=NewCourseDocument();
 			PersistLineitem();
+			// must persist the document after persisting the line item to record the Id
 			PersistCourseDocument();
 			// must create schedule after persisting document to get Id
 			CreateSchedule();
@@ -265,20 +278,49 @@ public class QMPContentItem {
 	
 	public void LoadSchedule() throws QMWiseException {
 		ctx.Log("Loading schedule for [BB"+contentId.toExternalString()+"] "+name);
-		schedules=ctx.GroupSchedules(name,contentId);
-		if (schedules.size()>0) {
-			schedule=schedules.get(0);
-			assessmentID=schedule.getAssessment_ID();
-			limitAttempts=schedule.isRestrict_Attempts();
-			if (limitAttempts)
-				maxAttempts=schedule.getMax_Attempts();
-			individualSchedules=(schedule.getParticipant_ID()!=0);
-			accessPeriod=schedule.isRestrict_Times();
-			if (accessPeriod) {
-				startdate=schedule.readSchedule_Starts_asCalendar();
-				enddate=schedule.readSchedule_Stops_asCalendar();
+		if (version>=XDATA_VERSION) {
+			if (copyFlag) {
+				// there are no schedules, create them
+				NewSchedule();
+				try {
+					CreateSchedule();
+				} catch (RemoteException e) {
+					throw new QMWiseException(e);
+				}
+				// we still need to search for the schedules to get the right scheduleID
+			}
+			// we need only search for schedules which match the contentId in future
+			schedules=ctx.GroupSchedules(name,contentId);
+			if (schedules.size()>0)
+				schedule=schedules.get(0);
+			else {
+				// schedules went missing in Perception; presumably by design?
+				// Workaround for accidental deletion: make a copy of the content item!
+				ctx.Fail("Assessment Not Found","This assessment is no longer available (no matching schedule)");
+			}
+		} else {
+			schedules=ctx.GroupSchedules(name,contentId);
+			if (schedules.size()>0) {
+				schedule=schedules.get(0);
+				if (!schedule.getSchedule_Name().equals(name) && version==BASIC_SCHEDULE_VERSION)
+					version=MAGIC_SCHEDULE_VERSION;
+				assessmentID=schedule.getAssessment_ID();
+				limitAttempts=schedule.isRestrict_Attempts();
+				if (limitAttempts)
+					maxAttempts=schedule.getMax_Attempts();
+				individualSchedules=(schedule.getParticipant_ID()!=0);
+				accessPeriod=schedule.isRestrict_Times();
+				if (accessPeriod) {
+					startdate=schedule.readSchedule_Starts_asCalendar();
+					enddate=schedule.readSchedule_Stops_asCalendar();
+				} else {
+					SetDefaultAccessPeriod();
+				}
 			} else {
-				SetDefaultAccessPeriod();
+				// schedules have gone missing in Perception; most likely copied content item
+				// the bad news is that we don't know anything about the item any more
+				// we have to FAIL
+				ctx.Fail("Assessment Not Found","This assessment is no longer available (no matching schedule)");
 			}
 		}
 	}
@@ -312,7 +354,7 @@ public class QMPContentItem {
 			s.setMax_Attempts(maxAttempts);
 			update=true;
 		}
-		// ignore new limit because we can't convert a group schedule to an individual one
+		// else: ignore new limit because we can't convert a group schedule to an individual one
 		if (accessPeriod) {
 			if (!s.isRestrict_Times()) {
 				s.setRestrict_Times(true);
@@ -360,9 +402,9 @@ public class QMPContentItem {
 	}
 	
 	
-	public Lineitem NewLineItem() {
+	public void NewLineItem() {
 		if (!gradebookScore.equals("no")) {
-			Lineitem lineitem = new Lineitem();
+			lineitem = new Lineitem();
 			lineitem.setName(name);
 			lineitem.setCourseId(ctx.course.getId());
 			lineitem.setIsAvailable(true);						
@@ -370,21 +412,75 @@ public class QMPContentItem {
 			if (gradebookScore.equals("percent")) {
 				lineitem.setPointsPossible(100f);
 			}
-			return lineitem;
-		} else
-			return null;
+		}
 	}
 	
 	
-	public void LoadLineitem() throws KeyNotFoundException, PersistenceException {
+	public void LoadLineitem() throws PersistenceException, ValidationException {
 		// gradebook information is also set later, but differently
 		LineitemDbLoader lineitemdbloader = (LineitemDbLoader)ctx.bbPm.getLoader(LineitemDbLoader.TYPE);
-		List<Lineitem> lineitems = lineitemdbloader.loadByCourseIdAndLineitemName(ctx.courseIdObject,name);
-		if (lineitems.size()>=1) {
-			lineitem=lineitems.get(0);
-			gradebookScore=(lineitem.getPointsPossible()==100f)?"percent":"point";
-			// TODO need to figure out how to load the score type from the line item
-			gradebookScoreType="";
+		if (version>=XDATA_VERSION) {
+			if (gradebookScore.equals("no")) {
+				lineitemId=null;
+				lineitem=null;
+			} else if (copyFlag) {
+				// Deal with a copied content item here, line items are copied independently so will have new ids
+				List<Lineitem> lineitems = lineitemdbloader.loadByCourseIdAndLineitemName(ctx.courseIdObject,name);
+				if (lineitems.size()==1) {
+					lineitem=lineitems.get(0);
+					lineitemId=lineitem.getId();
+					ExtendedData xData=courseDoc.getExtendedData();
+					xData.setValue("lineitemID", lineitemId.toExternalString());
+					courseDoc.setExtendedData(xData);
+				} else if (lineitems.size()==0) {
+					// copied to another course, no lineitem?  Probably individually moved, create new one
+					NewLineItem();
+					PersistLineitem();
+				} else {
+					// more than 1 matching lineitem; we decouple.
+					lineitem=null;
+					lineitemId=null;
+					gradebookScore="no";
+					gradebookScoreType="BEST";
+				}
+			} else if (lineitemId!=null) {
+				try {
+					lineitem=lineitemdbloader.loadById(lineitemId);
+				} catch (KeyNotFoundException e) {
+					// the lineitem has been deleted; turn off gradebook support
+					gradebookScore="no";
+					lineitemId=null;
+					lineitem=null;
+				}
+				// all the information we need was in the content item;
+			} else {
+				// shouldn't get here; turn off gradebook
+				gradebookScore="no";
+			}
+		} else {
+			// we have no information about the lineItem; search by name
+			List<Lineitem> lineitems = lineitemdbloader.loadByCourseIdAndLineitemName(ctx.courseIdObject,name);
+			if (lineitems.size()>=1) {
+				lineitem=lineitems.get(0);
+				lineitemId=lineitem.getId();
+				gradebookScore=(lineitem.getPointsPossible()==100f)?"percent":"point";
+				String lineitemType=lineitem.getType();
+				if (lineitemType==null)
+					lineitemType="BEST";
+				if (lineitemType.endsWith("FIRST"))
+					gradebookScoreType="FIRST";
+				else if (lineitemType.endsWith("WORST"))
+					gradebookScoreType="WORST";
+				else if (lineitemType.endsWith("LAST"))
+					gradebookScoreType="LAST";
+				else // if (lineitemType.endsWith("BEST")) - default behaviour before lineitemType
+					gradebookScoreType="BEST";
+			} else {
+				lineitem=null;
+				lineitemId=null;
+				gradebookScore="no";
+				gradebookScoreType="BEST";
+			}
 		}
 	}
 	
@@ -404,6 +500,12 @@ public class QMPContentItem {
 			LineitemDbPersister lineitemdbpersister = (LineitemDbPersister) ctx.bbPm.getPersister(LineitemDbPersister.TYPE);
 			lineitem.validate();
 			lineitemdbpersister.persist(lineitem);
+			if (lineitemId == null) {
+				lineitemId=lineitem.getId();
+				ExtendedData xData=courseDoc.getExtendedData();
+				xData.setValue("lineitemID", lineitemId.toExternalString());
+				courseDoc.setExtendedData(xData);
+			}
 		}
 	}
 	
@@ -434,7 +536,8 @@ public class QMPContentItem {
 		if (accessPeriod) {
 			courseDoc.setStartDate(startdate);
 			courseDoc.setEndDate(enddate);
-		}
+		} else
+			SetDefaultAccessPeriod();			
 		//set content resource type(Set content handler)
 		courseDoc.setContentHandler("qm/schedule-link"); //NB Must match the entry in bb-manifest!!
 		//set parent id
@@ -443,6 +546,20 @@ public class QMPContentItem {
 		courseDoc.setCourseId(ctx.courseIdObject); //get the course id from the context of create page.
 		//here we have the option to set the order in which the child appears
 		//courseDoc.setPosition(numberOfChildren);
+		//
+		// Now we add our data to the content item; see http://forums.edugarage.com/forums/p/2167/7161.aspx
+		ExtendedData xData=courseDoc.getExtendedData();
+		xData.setValue("version",new Integer(version).toString());
+		xData.setValue("courseID",ctx.courseIdObject.toExternalString());
+		xData.setValue("assessmentID", assessmentID);
+		xData.setValue("limitAttempts", limitAttempts?"true":"false");
+		xData.setValue("maxAttempts", new Integer(maxAttempts).toString());
+		xData.setValue("individualSchedules", individualSchedules?"true":"false");
+		xData.setValue("accessPeriod", accessPeriod?"true":"false");
+		// the startdate and enddate are stored directly in the content item (see above)
+		xData.setValue("gradebookScore", gradebookScore);
+		xData.setValue("gradebookScoreType", gradebookScoreType);
+		courseDoc.setExtendedData(xData);
 		return courseDoc;
 	}
 
@@ -456,6 +573,50 @@ public class QMPContentItem {
 		name = courseDoc.getTitle();		
 		description = courseDoc.getBody().getText();
 		available = courseDoc.getIsAvailable();
+		ExtendedData xData=courseDoc.getExtendedData();
+		String versionString=xData.getValue("version");
+		if (versionString==null)
+			// may revise this to MAGIC_SCHEDULE_VERSION later
+			version=BASIC_SCHEDULE_VERSION;
+		else {
+			version=new Integer(versionString).intValue();
+			assessmentID=xData.getValue("assessmentID");
+			limitAttempts=xData.getValue("limitAttempts").equals("true");
+			maxAttempts=new Integer(xData.getValue("maxAttempts")).intValue();
+			individualSchedules=xData.getValue("individualSchedules").equals("true");
+			accessPeriod=xData.getValue("accessPeriod").equals("true");
+			if (accessPeriod) {
+				startdate=courseDoc.getStartDate();
+				enddate=courseDoc.getEndDate();
+			}
+			gradebookScore=xData.getValue("gradebookScore");
+			gradebookScoreType=xData.getValue("gradebookScoreType");
+			if (xData.getValue("courseID")==null) {
+				// Catch for buggy condition, use previous logic
+				version=BASIC_SCHEDULE_VERSION;
+				return;
+			}
+			if (!xData.getValue("courseID").equals(ctx.courseId) ||
+					!xData.getValue("contentID").equals(content_id)) {
+				// We've been copied to a different course or content item
+				copyFlag=true;
+				if (xData.getValue("courseID").equals(ctx.courseId)) {
+					// copied within a course; we can't point to the same gradebook lineitem
+					gradebookScore="no";
+					gradebookScoreType="BEST";
+				} else {
+					xData.setValue("courseID",ctx.courseIdObject.toExternalString());					
+				}
+				xData.setValue("contentID", contentId.toExternalString());
+				courseDoc.setExtendedData(xData);
+				lineitemId=null;
+			} else {
+				// We're good to go
+				copyFlag=false;
+				if (!gradebookScore.equals("no") && xData.getValue("lineitemID")!=null)
+					lineitemId=Id.generateId(Lineitem.LINEITEM_DATA_TYPE, xData.getValue("lineitemID"));
+			}
+		}			
 	}
 
 	
@@ -484,6 +645,49 @@ public class QMPContentItem {
 			courseDoc.setIsAvailable(available);
 			update=true;
 		}
+		ExtendedData xData=courseDoc.getExtendedData();
+		if (version<XDATA_VERSION) {
+			update=true;
+			xData.setValue("version",new Integer(CURRENT_VERSION).toString());
+			xData.setValue("courseID",ctx.courseIdObject.toExternalString());
+			xData.setValue("contentID", contentId.toExternalString());
+			xData.setValue("assessmentID", assessmentID);
+			xData.setValue("limitAttempts", limitAttempts?"true":"false");
+			xData.setValue("maxAttempts", new Integer(maxAttempts).toString());
+			xData.setValue("individualSchedules", individualSchedules?"true":"false");
+			xData.setValue("accessPeriod", accessPeriod?"true":"false");
+			// the startdate and enddate are stored directly in the content item (see above)
+			xData.setValue("gradebookScore", gradebookScore);
+			xData.setValue("gradebookScoreType", gradebookScoreType);
+			if (lineitem!=null) {
+				xData.setValue("lineitemID", lineitemId.toExternalString());
+			}
+		} else {
+			if (CURRENT_VERSION!=version) {
+				xData.setValue("version",new Integer(CURRENT_VERSION).toString());
+				update=true;
+			}
+			// we can't change assessmentID
+			// we can't change limitAttempts and individualSchedules, but can change maxAttempts
+			if (maxAttempts!=new Integer(xData.getValue("maxAttempts")).intValue()) {
+				xData.setValue("maxAttempts", new Integer(maxAttempts).toString());
+				update=true;
+			}
+			if (accessPeriod!=xData.getValue("accessPeriod").equals("true")) {
+				xData.setValue("accessPeriod", accessPeriod?"true":"false");
+				update=true;
+			}
+			// we can't change the gradebook behaviour but catch this for future
+			if (!gradebookScore.equals(xData.getValue("gradebookScore"))) {
+				xData.setValue("gradebookScore", gradebookScore);
+				update=true;
+			}			
+			if (!gradebookScoreType.equals(xData.getValue("gradebookScoreType"))) {
+				xData.setValue("gradebookScoreType", gradebookScoreType);
+				update=true;
+			}			
+		}
+		courseDoc.setExtendedData(xData);		
 		return update;
 	}
 	
@@ -493,8 +697,14 @@ public class QMPContentItem {
 		//first get the persister object instance
 		ContentDbPersister persister = (ContentDbPersister)ctx.bbPm.getPersister( ContentDbPersister.TYPE );
 		//now to persist!
-		//save details of this item.
 		persister.persist(courseDoc);
-		contentId=courseDoc.getId();
+		if (contentId==null) {
+			// This is the first time we've persisted this content item, record the Id
+			contentId=courseDoc.getId();
+			ExtendedData xData=courseDoc.getExtendedData();
+			xData.setValue("contentID", contentId.toExternalString());
+			courseDoc.setExtendedData(xData);
+			persister.persist(courseDoc);
+		}
 	}
 }

@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletResponse;
 import com.questionmark.QMWISe.Assessment;
 import com.questionmark.QMWISe.ScheduleV42;
 
+import blackboard.data.ValidationException;
 import blackboard.data.content.CourseDocument;
 import blackboard.persist.Id;
 import blackboard.persist.PersistenceException;
@@ -51,6 +52,8 @@ public class QMPContentCreator extends QMPCourseContext {
 			selectAssessmentList=GetAssessmentTree(null,null);
 		} catch (PersistenceException e) {
 			Fail("Unexpected PersistenceException",e.getMessage());
+		} catch (ValidationException e) {
+			Fail("Unexpected ValidationException",e.getMessage());
 		} catch (QMWiseException e) {
 			FailQMWISe(e);
 		}
@@ -108,6 +111,8 @@ public class QMPContentCreator extends QMPCourseContext {
 				Fail("Missing Schedule","This schedule cannot be edited as it is missing in Perception");
 		} catch (PersistenceException e) {
 			Fail("Unexpected PersistenceException",e.getMessage());
+		} catch (ValidationException e) {
+			Fail("Unexpected ValidationException",e.getMessage());
 		} catch (QMWiseException e) {
 			FailQMWISe(e);
 		}
@@ -124,6 +129,8 @@ public class QMPContentCreator extends QMPCourseContext {
 			}
 		} catch (PersistenceException e) {
 			Fail("Unexpected PersistenceException",e.getMessage());
+		} catch (ValidationException e) {
+			Fail("Unexpected ValidationException",e.getMessage());
 		} catch (QMWiseException e) {
 			FailQMWISe(e);
 		}
@@ -151,6 +158,8 @@ public class QMPContentCreator extends QMPCourseContext {
 			result=contentItem.Delete();
 		} catch (PersistenceException e) {
 			Fail("Unexpected PersistenceException",e.getMessage());
+		} catch (ValidationException e) {
+			Fail("Unexpected ValidationException",e.getMessage());
 		} catch (QMWiseException e) {
 			FailQMWISe(e);
 		}

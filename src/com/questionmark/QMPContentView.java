@@ -8,6 +8,7 @@ import javax.servlet.http.HttpServletRequest;
 import com.questionmark.QMWISe.Assessment;
 import com.questionmark.QMWISe.ScheduleV42;
 
+import blackboard.data.ValidationException;
 import blackboard.data.content.Content;
 import blackboard.persist.Id;
 import blackboard.persist.PersistenceException;
@@ -50,6 +51,8 @@ public class QMPContentView extends QMPCourseContext {
 			FailQMWISe(e);
 		} catch (PersistenceException e) {
 			Fail("Unexpected PersistenceException",e.getMessage());
+		} catch (ValidationException e) {
+			Fail("Unexpected ValidationException",e.getMessage());
 		}
 	}
 
