@@ -165,6 +165,37 @@ public class QMPContentCreator extends QMPCourseContext {
 		}
 		return result;
 	}
+
+
+	public void ProcessQuickForm() {
+		try {
+			if (ValidateQuickForm()) {
+				contentItem=new QMPContentItem(this,request);
+				title = contentItem.name;
+				contentItem.QuickCreate();
+			}
+		} catch (PersistenceException e) {
+			Fail("Unexpected PersistenceException",e.getMessage());
+		}
+	}
+	
+	
+	public boolean ValidateQuickForm() {
+		String limit=request.getParameter("limit");
+		if (limit!=null && !limit.matches("[1-9][0-9]*")) {
+			Fail("Form Validation Error","Limit for attempts must be an integer");
+			return false;
+		}
+		if (request.getParameter("set_access_period")!=null) {
+			Calendar startCal = DatePickerUtil.pickerDatetimeStrToCal(request.getParameter("scheduleStart_datetime"));
+			Calendar endCal = DatePickerUtil.pickerDatetimeStrToCal(request.getParameter("scheduleEnd_datetime"));
+			if (endCal.before(startCal) || endCal.equals(startCal)) {
+				Fail("Form Validation Error","The end date must be after the start date");
+				return false;
+			}
+		}
+		return true;
+	}
 }
 
 

@@ -98,9 +98,12 @@ public class QMPContentItem {
 	public QMPContentItem(QMPContentCreator ctx, HttpServletRequest request) throws PersistenceException {
 		this.ctx=ctx;
 		String parent_id=request.getParameter("parent_id");
-		parentId=ctx.bbPm.generateId(CourseDocument.DATA_TYPE,parent_id);
+		if (parent_id!=null)
+			parentId=ctx.bbPm.generateId(CourseDocument.DATA_TYPE,parent_id);
 		name=request.getParameter("schedule");
 		description=request.getParameter("schedule_text_area");
+		if (description==null)
+			description="";
 		assessmentID=request.getParameter("assessment");
 		limitAttempts = request.getParameter("limit_attempts") != null;
 		if (limitAttempts)
@@ -156,6 +159,28 @@ public class QMPContentItem {
 		} catch(ValidationException e) {
 			ctx.Fail("Unexpected ValidationException","Error while saving content item: "+e.getMessage());
 		}
+	}
+
+	
+	public void QuickCreate() {
+		try {
+			if (!CheckDuplicateLineItem(name)) {
+				ctx.Fail("Duplicate Name","There is already a gradebook column with that name.");
+				return;
+			}
+			schedule=NewSchedule();
+			NewLineItem();
+			// skip the course document
+			PersistLineitem();
+			CreateSchedule();
+		} catch(ValidationException e) {
+			ctx.Fail("Unexpected ValidationException","Error while saving content item: "+e.getMessage());
+		} catch(PersistenceException e) {
+			ctx.Fail("Unexpected PersistenceException","Error while saving content item: "+e.getMessage());
+		} catch(RemoteException e) {
+			QMWiseException qe=new QMWiseException(e);
+			ctx.FailQMWISe(qe);
+		}	
 	}
 
 	
@@ -247,8 +272,10 @@ public class QMPContentItem {
 	
 	public void CreateSchedule() throws RemoteException {
 		// just before creating the schedule we add the prefix for the content Id
-		String prefix="BB"+contentId.toExternalString()+" ";
-		schedule.setSchedule_Name(prefix+name);
+		if (contentId!=null) {
+			String prefix="BB"+contentId.toExternalString()+" ";
+			schedule.setSchedule_Name(prefix+name);
+		}
 		@SuppressWarnings("unused")
 		String[] scheduleids = ctx.stub.createScheduleGroupV42(schedule,individualSchedules);
 	}
@@ -637,9 +664,11 @@ public class QMPContentItem {
 			lineitemdbpersister.persist(lineitem);
 			if (lineitemId == null) {
 				lineitemId=lineitem.getId();
-				ExtendedData xData=courseDoc.getExtendedData();
-				xData.setValue("lineitemID", lineitemId.toExternalString());
-				courseDoc.setExtendedData(xData);
+				if (courseDoc!=null) {
+					ExtendedData xData=courseDoc.getExtendedData();
+					xData.setValue("lineitemID", lineitemId.toExternalString());
+					courseDoc.setExtendedData(xData);
+				}
 			}
 		}
 	}
@@ -669,7 +698,7 @@ public class QMPContentItem {
 				score="percent";
 			} else {
 				// read the point score from the request
-				scoreType="point";
+				score="point";
 			}
 		} else if (score.equals("percet")) // fix spelling mistake in previous builds
 			score="percent";
