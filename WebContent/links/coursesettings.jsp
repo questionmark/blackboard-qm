@@ -57,12 +57,3 @@
 		} //End of error view
 	%>
 </bbNG:learningSystemPage>
-
-
-<%@ taglib uri="/bbUI" prefix="bbUI" %>
-<%@ taglib uri="/bbData" prefix="bbData" %>
-<%
-	String path = request.getContextPath();
-	String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+path+"/";
-%>
-
