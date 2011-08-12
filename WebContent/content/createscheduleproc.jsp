@@ -36,7 +36,6 @@
 	org.apache.commons.lang.StringEscapeUtils"
 %>
 
-<%@ taglib uri="/bbUI" prefix="bbUI" %>
 <%@ taglib uri="/bbData" prefix="bbData" %>
 <%@ taglib uri="/bbNG" prefix="bbNG" %>
 

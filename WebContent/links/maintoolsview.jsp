@@ -20,7 +20,6 @@
 		com.questionmark.QMWISe.*
 	"%>
 
-<%@ taglib uri="/bbUI" prefix="bbUI"%>
 <%@ taglib uri="/bbData" prefix="bbData"%>
 <%@ taglib uri="/bbNG" prefix="bbNG"%>
 

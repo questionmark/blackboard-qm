@@ -36,7 +36,6 @@
     
 <%@ taglib uri="/bbNG" prefix="bbNG" %>
 <%@ taglib uri="/bbData" prefix="bbData" %>
-<%@ taglib uri="/bbUI" prefix="bbUI" %>
 
 <bbNG:learningSystemPage ctxId="ctx">
 	<%

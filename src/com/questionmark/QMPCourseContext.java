@@ -100,6 +100,13 @@ public class QMPCourseContext extends QMPContext {
 	}
 
 	
+	public void UpdateSettings(HttpServletRequest request) {
+		Boolean hideSchedules = request.getParameter("hide_schedules") != null;
+		courseSettings.setProperty("hide_schedules",hideSchedules?"1":"0");
+		courseSettings.saveSettingsFile();	
+	}
+	
+	
 	public void SetCourseUser(CourseMembership newMembership) throws PersistenceException {
 		try {
 			if (newMembership==null) {
