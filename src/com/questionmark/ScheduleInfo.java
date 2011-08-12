@@ -83,8 +83,10 @@ public class ScheduleInfo {
 				active=false;
 			}
 			if (active) {
+				String nameFix=schedule.getSchedule_Name();
+				nameFix=QMPContentItem.FixScheduleName(nameFix);
 				Parameter[] parameters = {
-						new Parameter("bb_schedulename", contentName==null?schedule.getSchedule_Name():contentName),
+						new Parameter("bb_schedulename", nameFix),
 						new Parameter("bb_scheduleid", new Integer(
 							schedule.getSchedule_ID()).toString()),
 						new Parameter("bb_courseid", ctx.course.getBatchUid())

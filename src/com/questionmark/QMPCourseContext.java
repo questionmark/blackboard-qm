@@ -28,6 +28,7 @@ import blackboard.persist.KeyNotFoundException;
 import blackboard.persist.PersistenceException;
 import blackboard.persist.course.CourseDbLoader;
 import blackboard.persist.course.CourseMembershipDbLoader;
+import blackboard.persist.user.UserDbLoader;
 import blackboard.platform.context.Context;
 import blackboard.platform.plugin.PlugInException;
 
@@ -51,31 +52,41 @@ public class QMPCourseContext extends QMPContext {
 	public String userID=null;
 	Administrator userAdministratorInfo = null;
 	Participant userParticipantInfo = null;
+	ScheduleV42[] limitedSchedules = null;
+	ScheduleV42[] groupSchedules = null;
 	public Vector<ScheduleInfo> scheduleInfo=null;
 	
 	public QMPCourseContext(HttpServletRequest request, Context ctx) {
 		super(request, ctx);
-		courseId = request.getParameter("course_id");
 		try {
+			courseLoader = (CourseDbLoader) bbPm.getLoader(CourseDbLoader.TYPE);
+			if (user==null) {
+				// a call back - not an authenticated session, uses group name not external id
+				courseId = request.getParameter("bb_courseid");
+				if (courseId!=null) {
+					course = courseLoader.loadByBatchUid(courseId);
+					courseIdObject=course.getId();
+					courseId=courseIdObject.toExternalString();
+				}
+			}
+			else {
+				courseId = request.getParameter("course_id");
+				if (courseId!=null) {
+					courseIdObject = bbPm.generateId(Course.DATA_TYPE, courseId);
+					course = courseLoader.loadById(courseIdObject);
+				}
+			}
 			FindPhantomUserId();
-			if(courseId != null) {
+			if(course != null) {
 				// load the courseSettings file...
 				courseSettings = new CourseSettings(courseId);
-				// Generate a persistence framework course Id to be used for loading the course
-				courseIdObject = bbPm.generateId(Course.DATA_TYPE, courseId);
-				courseLoader = (CourseDbLoader) bbPm.getLoader(CourseDbLoader.TYPE);
-				course = courseLoader.loadById(courseIdObject);
-				if (course != null) {
-					groupID=courseSettings.getProperty("groupid");
-					folderID=courseSettings.getProperty("folderid");
-					// get the membership data to determine the User's Role
-					crsMembershipLoader = (CourseMembershipDbLoader) bbPm.getLoader(CourseMembershipDbLoader.TYPE);
-					SetCourseUser(null);
-					if (userRole.equals(CourseMembership.Role.GUEST))
-						Fail("Course Role","You do not have permission to see this page.");
-				} else {
-					FailCourse();
-				}
+				groupID=courseSettings.getProperty("groupid");
+				folderID=courseSettings.getProperty("folderid");
+				// get the membership data to determine the User's Role
+				crsMembershipLoader = (CourseMembershipDbLoader) bbPm.getLoader(CourseMembershipDbLoader.TYPE);
+				SetCourseUser(null);
+				if (userRole.equals(CourseMembership.Role.GUEST))
+					Fail("Course Role","You do not have permission to see this page.");
 			} else {
 				FailCourse();
 			}
@@ -92,9 +103,16 @@ public class QMPCourseContext extends QMPContext {
 	public void SetCourseUser(CourseMembership newMembership) throws PersistenceException {
 		try {
 			if (newMembership==null) {
-				courseUser=user;
-				Id sessionUserId = courseUser.getId();
-				crsMembership = crsMembershipLoader.loadByCourseAndUserId(courseIdObject, sessionUserId);
+				if (user==null) {
+					String userName=request.getParameter("Participant_Name");
+					UserDbLoader userdbloader = (UserDbLoader) bbPm.getLoader(UserDbLoader.TYPE);
+					courseUser=userdbloader.loadByUserName(userName);
+					crsMembership=crsMembershipLoader.loadByCourseAndUserId(courseIdObject, courseUser.getId());
+				} else {
+					courseUser=user;
+					Id sessionUserId = courseUser.getId();
+					crsMembership = crsMembershipLoader.loadByCourseAndUserId(courseIdObject, sessionUserId);					
+				}
 			} else {
 				courseUser=newMembership.getUser();
 				crsMembership = newMembership;
@@ -659,16 +677,17 @@ public class QMPCourseContext extends QMPContext {
 			// number of courses x number of schedules is less than...
 			// max(number of students in a course) x number of limited attempt schedules in that course
 			// Either way we would prefer a method that also filtered by group
-			ScheduleV42[] limitedSchedules = null;
-			if (isAdministrator) {
-				limitedSchedules = stub.getScheduleListByParticipantV42(new Integer(phantomID).intValue());
-			} else {
-				limitedSchedules = stub.getScheduleListByParticipantV42(new Integer(userID).intValue());
+			if (limitedSchedules==null) {
+				if (isAdministrator) {
+					limitedSchedules = stub.getScheduleListByParticipantV42(new Integer(phantomID).intValue());
+				} else {
+					limitedSchedules = stub.getScheduleListByParticipantV42(new Integer(userID).intValue());
+				}
 			}
-			ScheduleV42[] groupSchedules = null;
 			// Not sure how well documented using 0 is here
 			// returns approx (number of courses x number of group schedules) records
-			groupSchedules=stub.getScheduleListByParticipantV42(0);
+			if (groupSchedules==null)
+				groupSchedules=stub.getScheduleListByParticipantV42(0);
 			if (idFilter!=null) {
 				// First pass; match against the contentID magic prefix
 				for(int i = 0; i < limitedSchedules.length; i++) {

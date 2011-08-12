@@ -4,7 +4,7 @@
 		<name value="Questionmark Perception"/>
 		<description value="Plugin to connect Blackboard to the Questionmark Perception assessment platform"/>
 		<handle value="qmpp"/>
-		<version value="9.1.1"/>
+		<version value="9.1.2"/>
 		<requires>
 			<bbversion value="9.1.0"/>
 		</requires>
@@ -48,6 +48,28 @@
       			</types>
       			
       		</content-handler>
+
+			<content-handler>
+				<name value="Legacy Questionmark Assessment"/>
+				<handle value= "qm/assessment-link"/>
+				<http-actions>
+                    <view value="content/viewschedule.jsp"/>
+                    <cpview value="content/viewschedule.jsp"/>
+                    <create value="content/createscheduleform.jsp"/>
+                    <modify value="content/editschedule.jsp"/>
+                    <remove value="content/deleteschedule.jsp"/>
+				</http-actions>
+				<icons>
+				  <toolbar value="images/qm.gif"/>
+				  <listitem value="images/qm.gif"/>
+				</icons>
+				<types>
+					<type>
+            			<action-type value="none"/>
+         			</type>
+      			</types>
+			</content-handler>
+      		
 		</content-handlers>
 				
 		<application-defs>
