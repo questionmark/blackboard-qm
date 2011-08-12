@@ -316,7 +316,19 @@ public class QMPContentItem {
 			}
 			break;
 		}
-		return (mode=='$')?sb.toString():"";
+		if (mode=='$') {
+			try {
+				String id=sb.toString();
+				Id contentId = Id.generateId(Content.DATA_TYPE, id);
+				ContentDbLoader courseDocumentLoader = ContentDbLoader.Default.getInstance();
+				@SuppressWarnings("unused")
+				Content courseDoc = courseDocumentLoader.loadById( contentId );
+				return id;
+			} catch (PersistenceException e) {
+				return "";
+			}
+		}
+		return "";
 	}
 
 	
