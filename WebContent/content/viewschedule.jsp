@@ -58,7 +58,7 @@
 				<%
 				if(cv.pb.getProperty("perception.singlesignon") != null) {
 					%>
-					<bbNG:actionButton url='<%=cv.path+"/links/enterprisemanager.jsp"%>' 
+					<bbNG:actionButton url='<%=cv.path+"/links/enterprisemanager.jsp?course_id="+cv.courseId %>' 
 						title="Log in to Enterprise Manager" target="_blank"/>
 					<%
 				}

@@ -101,11 +101,32 @@ public class QMPCourseContext extends QMPContext {
 
 	
 	public void UpdateSettings(HttpServletRequest request) {
-		Boolean hideSchedules = request.getParameter("hide_schedules") != null;
-		courseSettings.setProperty("hide_schedules",hideSchedules?"1":"0");
-		courseSettings.saveSettingsFile();	
+		if (isAdministrator) {
+			Boolean hideSchedules = request.getParameter("hide_schedules") != null;
+			courseSettings.setProperty("hide_schedules",hideSchedules?"1":"0");
+			courseSettings.saveSettingsFile();
+		} else {
+			Fail("Course Role","You do not have permission to see this page.");
+		}
 	}
 	
+	
+	public String EnterpriseManagerLink() {
+		try {
+			if (Synchronize() && isAdministrator) {
+				if (pb.getProperty("perception.singlesignon") != null)
+					return stub.getAccessAdministrator(courseUser.getUserName());
+				else
+					Fail("Enterprise Manager","Login to Enterprise Manager has been disabled by the site administrator.");
+			} else {
+				Fail("Course Role","You do not have permission to see this page.");
+			}
+		} catch (RemoteException e) {
+			QMWiseException qe=new QMWiseException(e);
+			FailQMWISe(qe);
+		}
+		return null;
+	}
 	
 	public void SetCourseUser(CourseMembership newMembership) throws PersistenceException {
 		try {

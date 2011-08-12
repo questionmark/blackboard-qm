@@ -44,7 +44,7 @@
 		<%
 				if(rc.pb.getProperty("perception.singlesignon") != null) {
 		%>
-		<bbNG:actionButton url='<%=rc.path+"/links/enterprisemanager.jsp"%>' 
+		<bbNG:actionButton url='<%=rc.path+"/links/enterprisemanager.jsp?course_id="+rc.courseId %>' 
 			title="Log in to Enterprise Manager" target="_blank"/>
 		<%
 				}
