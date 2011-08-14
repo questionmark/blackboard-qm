@@ -37,7 +37,6 @@
 		
 %>
 
-<%@ taglib uri="/bbUI" prefix="bbUI" %>
 <%@ taglib uri="/bbData" prefix="bbData" %>
 <%@ taglib uri="/bbNG" prefix="bbNG"%>
 
@@ -61,7 +60,7 @@
 		<%
 		if(cc.pb.getProperty("perception.singlesignon") != null) {
 		%>
-			<bbNG:actionButton url='<%=cc.path+"/links/enterprisemanager.jsp"%>' 
+			<bbNG:actionButton url='<%=cc.path+"/links/enterprisemanager.jsp?course_id="+cc.courseId %>' 
 				title="Log in to Enterprise Manager" target="_blank"/>
 		<%
 		}

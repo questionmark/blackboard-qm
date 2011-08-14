@@ -36,7 +36,6 @@
     
 <%@ taglib uri="/bbNG" prefix="bbNG" %>
 <%@ taglib uri="/bbData" prefix="bbData" %>
-<%@ taglib uri="/bbUI" prefix="bbUI" %>
 
 <bbNG:learningSystemPage ctxId="ctx">
 	<%
@@ -137,7 +136,19 @@
 							id="addComments" ><%=StringEscapeUtils.escapeHtml(cc.contentItem.description)%></textarea>		
 						<br />
 						Enter a short description for this Content item, N.B. plain text only.		
-					</bbNG:dataElement>				
+					</bbNG:dataElement>
+					<%
+					if (cc.contentItem.gradebookScore.equals("no")) {
+					%>
+					<p>The results of this assessment will not be stored in the grade center.</p>
+					<%
+					} else {
+					%>
+					<p>The <%=cc.contentItem.gradebookScoreType.toLowerCase()%> result of this assessment will be stored in the gradebook.
+					Renaming this schedule will also rename the associated column in the grade center.</p>
+					<%
+					}
+					%>
 				</bbNG:step>				
 				<%
 				if(cc.contentItem.limitAttempts){

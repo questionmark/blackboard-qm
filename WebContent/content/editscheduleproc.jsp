@@ -35,7 +35,6 @@
 	pageEncoding="ISO-8859-1"
 %>
 
-<%@ taglib uri="/bbUI" prefix="bbUI" %>
 <%@ taglib uri="/bbData" prefix="bbData" %>
 <%@ taglib uri="/bbNG" prefix="bbNG" %>
 

@@ -22,48 +22,38 @@
 		com.questionmark.QMWISe.*"
 %>
 
-<%@ taglib uri="/bbUI" prefix="bbUI" %>
-<%@ taglib uri="/bbData" prefix="bbData" %>
-<%
-	String path = request.getContextPath();
-	String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+path+"/";
-%>
+<%@ taglib uri="/bbData" prefix="bbData"%>
+<%@ taglib uri="/bbNG" prefix="bbNG"%>
 
+<bbNG:learningSystemPage ctxId="ctx"
+	title="Questionmark Perception Connector Settings">
+	<%
+	QMPCourseContext qbc=new QMPCourseContext(request,ctx);
+	if (qbc.failTitle == null)
+		qbc.UpdateSettings(request);
+	%>
+	<bbNG:pageHeader>
+		<bbNG:pageTitleBar iconUrl='<%=qbc.path+"/images/qm.gif"%>'
+			title="Course Settings" />
+	</bbNG:pageHeader>
 
-<bbData:context id="ctx">
+	<%
+		if (qbc.failTitle == null) {
+			String recallurl = "main.jsp?course_id=" + qbc.courseId;
+	%>
 
-		<bbUI:docTemplate>
-			<%
+	<bbNG:receipt type="SUCCESS" title="Settings Saved" recallUrl="<%=recallurl%>">
+		Your settings have been saved.
+	</bbNG:receipt>
 
-			// Retrieve the course identifier from the form
-			String courseId = request.getParameter("course_id");
+	<%	} else {
+	%>
 
-			try {
-				CourseSettings courseSettings = new CourseSettings(courseId);
-	
-				Boolean hideSchedules = request.getParameter("hide_schedules") != null;
-				
-				courseSettings.setProperty("hide_schedules",hideSchedules?"1":"0");
-				
-				courseSettings.saveSettingsFile();
-			
-			} catch(PlugInException e) {
-				%>
-				<bbUI:receipt type="FAIL" title="Error saving course settings">
-					<%=e.getMessage()%>
-				</bbUI:receipt>
-				<%
-				return;
-			}
+	<bbNG:receipt type="FAIL" title="<%=qbc.failTitle %>">
+		<%=qbc.failMsg %>
+	</bbNG:receipt>
 
-			String recallurl = "main.jsp?course_id=" + request.getParameter("course_id");
-			%>
-
-			<bbUI:receipt type="SUCCESS" title="Success" recallUrl="<%=recallurl%>">
-				Course settings were successfully saved
-			</bbUI:receipt>
-
-		</bbUI:docTemplate>
-
-</bbData:context>
-
+	<%
+		} //End of error view
+	%>
+</bbNG:learningSystemPage>

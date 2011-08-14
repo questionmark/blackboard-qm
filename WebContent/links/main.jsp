@@ -20,7 +20,6 @@
 		com.questionmark.QMWISe.*"
 %>
 
-<%@ taglib uri="/bbUI" prefix="bbUI"%>
 <%@ taglib uri="/bbData" prefix="bbData"%>
 <%@ taglib uri="/bbNG" prefix="bbNG"%>
 
@@ -52,7 +51,7 @@
 		<%
 				if(panel.pb.getProperty("perception.singlesignon") != null) {
 		%>
-		<bbNG:actionButton url='<%=panel.path+"/links/enterprisemanager.jsp"%>' 
+		<bbNG:actionButton url='<%=panel.path+"/links/enterprisemanager.jsp?course_id="+panel.courseId %>' 
 			title="Log in to Enterprise Manager" target="_blank"/>
 		<%
 				}
@@ -97,11 +96,36 @@
 			</bbNG:stepGroup>
 		</bbNG:dataCollection>
 	 </form>
+
+	<%
+	if (panel.legacyItems!=null && panel.legacyItems.size()>0) {
+		String linkBase=panel.path+"/content/editschedule.jsp?course_id="+panel.courseId;
+	%>
+	<h1 id="Legacy">Warning: Legacy Content</h1>
 	
-	<h1 id="Schedules">Schedules</h1>
+	<p>This course contains legacy schedules created with version 4.3 or 4.4 of the connector.
+	These <em>must</em> be upgraded before they can be used in this course.</p>
 	
-	<p>Schedule names prefixed with [BB_...] are associated with content items in this course.</p>
+	<bbNG:inventoryList collection="<%=panel.legacyItems %>" objectVar="contentItem"
+		className="blackboard.data.content.Content" description="Legacy Content Items"
+		emptyMsg="No legacy content found" showAll="true">
+		<bbNG:listElement name="schedule_name" label="Schedule Name" isRowHeader="true">
+			<%=contentItem.getTitle() %>
+		</bbNG:listElement>
+		<bbNG:listElement name="update" label="Update?">
+			<a href='<%=linkBase+"&amp;content_id="+contentItem.getId().toExternalString()%>'>Update Now</a>
+		</bbNG:listElement>
+	</bbNG:inventoryList>
+	<%
+	}
+	%>
 	
+	<h1 id="Schedules">Assessment Schedules</h1>
+	
+	<p>This list does <em>not</em> show schedules associated with content items, these schedules
+	are visible to students in the connectors course tool view unless <em>Hide schedules...</em>
+	has been selected above.</p>
+		
 	<bbNG:inventoryList collection="<%=panel.scheduleInfo %>" objectVar="s"
 		className="com.questionmark.ScheduleInfo" description="Scheduled Assessments"
 		emptyMsg="No assessments scheduled" showAll="true">
@@ -140,7 +164,7 @@
 			Calendar startdate = Calendar.getInstance();
 			Calendar enddate = Calendar.getInstance();
 			enddate.add(Calendar.DAY_OF_MONTH, 7);			
-			if (panel.assessmentList.length == 0) {
+			if (panel.selectAssessmentList.length == 0) {
 	%>
 	<p>You do not have permission to schedule any assessments in Perception.</p>
 

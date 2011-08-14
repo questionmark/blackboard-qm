@@ -36,7 +36,6 @@
 
 	pageEncoding="ISO-8859-1"%>
 	
-<%@ taglib uri="/bbUI" prefix="bbUI" %> 
 <%@ taglib uri="/bbData" prefix="bbData" %>
 <%@ taglib uri="/bbNG" prefix="bbNG"%>
 
@@ -59,7 +58,7 @@
 				<%
 				if(cv.pb.getProperty("perception.singlesignon") != null) {
 					%>
-					<bbNG:actionButton url='<%=cv.path+"/links/enterprisemanager.jsp"%>' 
+					<bbNG:actionButton url='<%=cv.path+"/links/enterprisemanager.jsp?course_id="+cv.courseId %>' 
 						title="Log in to Enterprise Manager" target="_blank"/>
 					<%
 				}
@@ -100,6 +99,17 @@
 				</bbNG:listElement>
 			</bbNG:inventoryList>
 			<%
+			if (cv.isAdministrator) {
+				if (cv.contentItem.gradebookScore.equals("no")) {
+			%>
+			<p>The results of this assessment will not be stored in the grade center.</p>
+			<%
+				} else {
+			%>
+			<p>The <%=cv.contentItem.gradebookScoreType.toLowerCase()%> result of this assessment will be stored in the grade center.</p>
+			<%
+				}
+			}
 		} else {
 		%>
 		<bbNG:receipt type="FAIL" title="<%=cv.failTitle %>">

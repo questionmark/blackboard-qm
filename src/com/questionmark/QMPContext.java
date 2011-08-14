@@ -50,8 +50,12 @@ public class QMPContext {
 		basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+path+"/";
 		//Retrieve the Db persistence manager from the persistence service
 		bbPm = PersistenceServiceFactory.getInstance().getDbPersistenceManager();
-		user = ctx.getUser();
-		sysAdmin = user.getSystemRole().equals(User.SystemRole.SYSTEM_ADMIN);
+		if (ctx.hasUserContext()) {
+			user = ctx.getUser();
+			sysAdmin = user.getSystemRole().equals(User.SystemRole.SYSTEM_ADMIN);
+		} else {
+			sysAdmin=false;
+		}
 		qmwise = new QMWise();				
 		// Get our properties object
 		pb = new PropertiesBean();
@@ -107,7 +111,7 @@ public class QMPContext {
 			newuser.setFirst_Name("Phantom");
 			newuser.setLast_Name("User"); 							
 			newuser.setParticipant_Name("bb-phantom");
-			newuser.setPassword(user.getPassword().substring(0, 20));
+			newuser.setPassword(RandomPassword());
 			phantomID = stub.createParticipant(newuser);
 			pb.setProperty("phantomid",phantomID);
 		} catch(RemoteException e) {
@@ -168,6 +172,16 @@ public class QMPContext {
         return sb.toString();	
 	}
 	
+	
+	public static String RandomPassword() {
+		// Generates a random hex string suitable for stuffing in QMWISe create user calls.
+		StringBuilder sb=new StringBuilder(20);
+		for (;sb.length()<20;) {
+			sb.append(Long.toHexString(Double.doubleToLongBits(Math.random())));
+		}
+		return sb.toString().substring(0,20);
+	}
+
 	
 	public void Fail(String title, String text) {
 		if (failTitle == null) {
