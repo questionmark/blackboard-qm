@@ -371,6 +371,7 @@ public class UserSynchronizer {
 						try {
 							//build new user
 							Administrator newuser = new Administrator();
+							newuser.setAdministrator_ID("0");
 							newuser.setAdministrator_Name(currentmembership.getUser().getUserName());
 							newuser.setPassword(currentmembership.getUser().getPassword().substring(0, 20));
 							newuser.setProfile_Name(currentmembership.getRole() == CourseMembership.Role.INSTRUCTOR ? "Blackboard Instructor" : "Blackboard TA");
@@ -422,7 +423,6 @@ public class UserSynchronizer {
 		}
 
 		return "Success: " + added + " user" + (added == 1 ? "" : "s") + " added and " + removed + " user" + (removed == 1 ? "" : "s") + " removed from Perception group";
-		
 	}
 
 	//Static routine to help handle invalid special characters in the Blackboard user details, which would break Perception

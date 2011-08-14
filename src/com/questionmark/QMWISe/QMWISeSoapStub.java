@@ -3405,22 +3405,25 @@ public class QMWISeSoapStub extends org.apache.axis.client.Stub implements com.q
 
         setRequestHeaders(_call);
         setAttachments(_call);
- try {        java.lang.Object _resp = _call.invoke(new java.lang.Object[] {});
+        try {        
+        	java.lang.Object _resp = _call.invoke(new java.lang.Object[] {});
 
-        if (_resp instanceof java.rmi.RemoteException) {
-            throw (java.rmi.RemoteException)_resp;
-        }
-        else {
-            extractAttachments(_call);
-            try {
-                return (com.questionmark.QMWISe.ScheduleV42[]) _resp;
-            } catch (java.lang.Exception _exception) {
-                return (com.questionmark.QMWISe.ScheduleV42[]) org.apache.axis.utils.JavaUtils.convert(_resp, com.questionmark.QMWISe.ScheduleV42[].class);
+	        if (_resp instanceof java.rmi.RemoteException) {
+	            throw (java.rmi.RemoteException)_resp;
+	        }
+	        else {
+	        	extractAttachments(_call);
+	        	try {
+	        		return (com.questionmark.QMWISe.ScheduleV42[]) _resp;
+	        	} catch (java.lang.Exception _exception) {
+	        		return (com.questionmark.QMWISe.ScheduleV42[]) 
+	        			org.apache.axis.utils.JavaUtils.convert(_resp, com.questionmark.QMWISe.ScheduleV42[].class);
             }
         }
   } catch (org.apache.axis.AxisFault axisFaultException) {
-  throw axisFaultException;
-}
+	  System.out.println("Axisfault recorded: " + axisFaultException.dumpToString());
+	  throw axisFaultException;
+  }
     }
 
     public com.questionmark.QMWISe.ScheduleV42[] getScheduleListByParticipantV42(int participantId) throws java.rmi.RemoteException {
@@ -3453,6 +3456,7 @@ public class QMWISeSoapStub extends org.apache.axis.client.Stub implements com.q
             }
         }
   } catch (org.apache.axis.AxisFault axisFaultException) {
+	  System.out.println("Axisfault recorded: " + axisFaultException.dumpToString() + "");
   throw axisFaultException;
 }
     }
@@ -3517,7 +3521,9 @@ public class QMWISeSoapStub extends org.apache.axis.client.Stub implements com.q
             try {
                 return (com.questionmark.QMWISe.ScheduleV42[]) _resp;
             } catch (java.lang.Exception _exception) {
-                return (com.questionmark.QMWISe.ScheduleV42[]) org.apache.axis.utils.JavaUtils.convert(_resp, com.questionmark.QMWISe.ScheduleV42[].class);
+                
+            	return (com.questionmark.QMWISe.ScheduleV42[]) 
+                	org.apache.axis.utils.JavaUtils.convert(_resp, com.questionmark.QMWISe.ScheduleV42[].class);
             }
         }
   } catch (org.apache.axis.AxisFault axisFaultException) {
