@@ -15,6 +15,7 @@ import blackboard.data.ValidationException;
 import blackboard.data.content.Content;
 import blackboard.data.content.CourseDocument;
 import blackboard.data.gradebook.Lineitem;
+import blackboard.data.gradebook.Score;
 import blackboard.persist.Id;
 import blackboard.persist.KeyNotFoundException;
 import blackboard.persist.PersistenceException;
@@ -22,6 +23,8 @@ import blackboard.persist.content.ContentDbLoader;
 import blackboard.persist.content.ContentDbPersister;
 import blackboard.persist.gradebook.LineitemDbLoader;
 import blackboard.persist.gradebook.LineitemDbPersister;
+import blackboard.persist.gradebook.ScoreDbLoader;
+import blackboard.persist.gradebook.ScoreDbPersister;
 import blackboard.servlet.util.DatePickerUtil;
 
 import com.questionmark.QMWISe.ScheduleV42;
@@ -54,7 +57,7 @@ public class QMPContentItem {
 	public String gradebookScore="no";
 	public String gradebookScoreType=null;
 	
-	public QMPContentItem(QMPCourseContext ctx, String content_id, String parent_id) throws PersistenceException, QMWiseException {
+	public QMPContentItem(QMPCourseContext ctx, String content_id, String parent_id) throws PersistenceException, ValidationException, QMWiseException {
 		this.ctx=ctx;
 		if (content_id != null) {
 			// ignore parent_id
@@ -72,9 +75,12 @@ public class QMPContentItem {
 	public QMPContentItem(QMPContentCreator ctx, HttpServletRequest request) throws PersistenceException {
 		this.ctx=ctx;
 		String parent_id=request.getParameter("parent_id");
-		parentId=ctx.bbPm.generateId(CourseDocument.DATA_TYPE,parent_id);
+		if (parent_id!=null)
+			parentId=ctx.bbPm.generateId(CourseDocument.DATA_TYPE,parent_id);
 		name=request.getParameter("schedule");
 		description=request.getParameter("schedule_text_area");
+		if (description==null)
+			description="";
 		assessmentID=request.getParameter("assessment");
 		limitAttempts = request.getParameter("limit_attempts") != null;
 		if (limitAttempts)
@@ -114,7 +120,7 @@ public class QMPContentItem {
 				return;
 			}
 			schedule=NewSchedule();
-			lineitem=NewLineItem();
+			NewLineItem();
 			courseDoc=NewCourseDocument();
 			PersistLineitem();
 			PersistCourseDocument();
@@ -128,6 +134,28 @@ public class QMPContentItem {
 		} catch(ValidationException e) {
 			ctx.Fail("Unexpected ValidationException","Error while saving content item: "+e.getMessage());
 		}
+	}
+
+	
+	public void QuickCreate() {
+		try {
+			if (!CheckDuplicateLineItem(name)) {
+				ctx.Fail("Duplicate Name","There is already a gradebook column with that name.");
+				return;
+			}
+			schedule=NewSchedule();
+			NewLineItem();
+			// skip the course document
+			PersistLineitem();
+			CreateSchedule();
+		} catch(ValidationException e) {
+			ctx.Fail("Unexpected ValidationException","Error while saving content item: "+e.getMessage());
+		} catch(PersistenceException e) {
+			ctx.Fail("Unexpected PersistenceException","Error while saving content item: "+e.getMessage());
+		} catch(RemoteException e) {
+			QMWiseException qe=new QMWiseException(e);
+			ctx.FailQMWISe(qe);
+		}	
 	}
 
 	
@@ -219,8 +247,10 @@ public class QMPContentItem {
 	
 	public void CreateSchedule() throws RemoteException {
 		// just before creating the schedule we add the prefix for the content Id
-		String prefix="[BB"+contentId.toExternalString()+"] ";
-		schedule.setSchedule_Name(prefix+name);
+		if (contentId!=null) {
+			String prefix="BB"+contentId.toExternalString()+" ";
+			schedule.setSchedule_Name(prefix+name);
+		}
 		@SuppressWarnings("unused")
 		String[] scheduleids = ctx.stub.createScheduleGroupV42(schedule,individualSchedules);
 	}
@@ -235,6 +265,8 @@ public class QMPContentItem {
 			case '[':
 				if (c==mode)
 					mode='1';
+				else if (c=='B')
+					mode='2';
 				else
 					mode='X';
 				continue;
@@ -251,7 +283,7 @@ public class QMPContentItem {
 					mode='X';
 				continue;
 			case 'I':
-				if (c==']')
+				if (c==']' || c==' ' || c=='.' || c=='-')
 					mode='$';
 				else
 					sb.append(c);
@@ -259,12 +291,36 @@ public class QMPContentItem {
 			}
 			break;
 		}
-		return (mode=='$')?sb.toString():"";
+		if (mode=='$') {
+			try {
+				String id=sb.toString();
+				Id contentId = Id.generateId(Content.DATA_TYPE, id);
+				ContentDbLoader courseDocumentLoader = ContentDbLoader.Default.getInstance();
+				@SuppressWarnings("unused")
+				Content courseDoc = courseDocumentLoader.loadById( contentId );
+				return id;
+			} catch (PersistenceException e) {
+				return "";
+			}
+		}
+		return "";
+	}
+
+	
+	public static String FixScheduleName(String nameFix) {
+		StringBuilder sb = new StringBuilder(10);
+		for (int i=0;i<nameFix.length();i++) {
+			char c=nameFix.charAt(i);
+			if (c=='[' || c==']')
+				continue;
+			sb.append(c);
+		}
+		return sb.toString();
 	}
 
 	
 	public void LoadSchedule() throws QMWiseException {
-		ctx.Log("Loading schedule for [BB"+contentId.toExternalString()+"] "+name);
+		ctx.Log("Loading schedule for BB"+contentId.toExternalString()+" "+name);
 		schedules=ctx.GroupSchedules(name,contentId);
 		if (schedules.size()>0) {
 			schedule=schedules.get(0);
@@ -303,7 +359,7 @@ public class QMPContentItem {
 	
 	public void UpdateSchedule(ScheduleV42 s, boolean newLimit) throws RemoteException {
 		boolean update=false;
-		String prefixedName="[BB"+contentId.toExternalString()+"] "+name;
+		String prefixedName="BB"+contentId.toExternalString()+" "+name;
 		if (!s.getSchedule_Name().equals(prefixedName)) {
 			s.setSchedule_Name(prefixedName);
 			update=true;
@@ -360,9 +416,9 @@ public class QMPContentItem {
 	}
 	
 	
-	public Lineitem NewLineItem() {
+	public void NewLineItem() {
 		if (!gradebookScore.equals("no")) {
-			Lineitem lineitem = new Lineitem();
+			lineitem = new Lineitem();
 			lineitem.setName(name);
 			lineitem.setCourseId(ctx.course.getId());
 			lineitem.setIsAvailable(true);						
@@ -370,9 +426,7 @@ public class QMPContentItem {
 			if (gradebookScore.equals("percent")) {
 				lineitem.setPointsPossible(100f);
 			}
-			return lineitem;
-		} else
-			return null;
+		}
 	}
 	
 	
@@ -383,8 +437,21 @@ public class QMPContentItem {
 		if (lineitems.size()>=1) {
 			lineitem=lineitems.get(0);
 			gradebookScore=(lineitem.getPointsPossible()==100f)?"percent":"point";
-			// TODO need to figure out how to load the score type from the line item
-			gradebookScoreType="";
+			String lineitemType=lineitem.getType();
+			if (lineitemType==null)
+				lineitemType="BEST";
+			if (lineitemType.endsWith("FIRST"))
+				gradebookScoreType="FIRST";
+			else if (lineitemType.endsWith("WORST"))
+				gradebookScoreType="WORST";
+			else if (lineitemType.endsWith("LAST"))
+				gradebookScoreType="LAST";
+			else // if (lineitemType.endsWith("BEST")) - default behaviour before lineitemType
+				gradebookScoreType="BEST";
+		} else {
+			lineitem=null;
+			gradebookScore="no";
+			gradebookScoreType="BEST";
 		}
 	}
 	
@@ -412,6 +479,96 @@ public class QMPContentItem {
 		LineitemDbLoader lineitemdbloader = (LineitemDbLoader)ctx.bbPm.getLoader(LineitemDbLoader.TYPE);
 		List<Lineitem> lineitems = lineitemdbloader.loadByCourseIdAndLineitemName(ctx.courseIdObject,checkName);
 		return (lineitems.size()==0);
+	}
+
+	
+	public void UpdateGradebook(float scoreMax, String percentage, String points) throws PersistenceException, ValidationException {
+		if (lineitem!=null) {
+			UpdateGradebook(ctx,lineitem,gradebookScore,gradebookScoreType,scoreMax,percentage,points);
+		}
+	}
+
+	public static void UpdateGradebook(QMPCourseContext ctx, Lineitem lineitem, String score,
+			String scoreType, float scoreMax, String percentage, String points) throws PersistenceException, ValidationException {
+		ScoreDbLoader scoredbloader = (ScoreDbLoader) ctx.bbPm.getLoader(ScoreDbLoader.TYPE);
+		Score gbScore=null;
+		float value=0;
+		if (score==null) {
+			if(lineitem.getPointsPossible() == 100f) {
+				// read the percentage score from the request
+				score="percent";
+			} else {
+				// read the point score from the request
+				score="point";
+			}
+		} else if (score.equals("percet")) // fix spelling mistake in previous builds
+			score="percent";
+		if (score.equals("percent")) {
+			if (percentage==null) {
+				ctx.Fail("Perception callback","Expected percentage score but found null");
+				return;
+			}
+			value=new Float(percentage).floatValue();
+		} else if (score.equals("point")) {
+			if (points==null) {
+				ctx.Fail("Perception callback","Expected points score but found null");
+				return;
+			}
+			value=new Float(points).floatValue();
+		} else if (score.equals("no")) {
+			return;
+		}
+		if (scoreType==null) {
+			String lineitemType=lineitem.getType();
+			if (lineitemType==null)
+				lineitemType="BEST";
+			if (lineitemType.endsWith("FIRST"))
+				scoreType="FIRST";
+			else if (lineitemType.endsWith("WORST"))
+				scoreType="WORST";
+			else if (lineitemType.endsWith("LAST"))
+				scoreType="LAST";
+			else // if (lineitemType.endsWith("BEST")) - default behaviour before lineitemType
+				scoreType="BEST";
+			
+		}
+		try {
+			gbScore=scoredbloader.loadByCourseMembershipIdAndLineitemId(ctx.crsMembership.getId(), lineitem.getId());
+			if (scoreType.equals("FIRST")) {
+				if (!(gbScore.getGrade().equalsIgnoreCase("-"))) {
+					//This is not the first score coming in so therefore is ignored.
+					ctx.Fail("Perception Callback","ignored a score since it was not the first attempt: FIRST Score option selected");
+				}
+			} else if (scoreType.equals("BEST")) {
+				if(new Float(gbScore.getGrade()).floatValue() >= value) {
+					// new score is less than old score -- ignore
+					ctx.Fail("Perception Callback","ignored a score since it was less than or equal to old score : BEST Score option selected");
+					return;
+				}
+			} else if (scoreType.equals("WORST")) {
+				if(new Float(gbScore.getGrade()).floatValue() <= value) {
+					//new score is more than old score -- ignore
+					ctx.Fail("Perception Callback","ignored a score since it was more than or equal to old score: WORST score option selected");
+					return;
+				}				
+			} else { // scoreType.equals("LAST")
+				// nothing to do
+				;
+			}
+			gbScore.setGrade(new Float(value).toString());
+			gbScore.setDateChanged();
+		} catch (KeyNotFoundException e) {
+			gbScore=new Score();
+			gbScore.setCourseMembershipId(ctx.crsMembership.getId());
+			gbScore.setDateAdded();
+			gbScore.setLineitemId(lineitem.getId());
+			gbScore.setGrade(new Float(value).toString());
+		}
+		gbScore.validate();
+		//get score persister
+		ScoreDbPersister scoredbpersister = (ScoreDbPersister)ctx.bbPm.getPersister(ScoreDbPersister.TYPE);
+		//persist it (write it to the database)
+		scoredbpersister.persist(gbScore);
 	}
 
 	

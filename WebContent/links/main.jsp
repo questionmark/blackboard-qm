@@ -96,29 +96,6 @@
 			</bbNG:stepGroup>
 		</bbNG:dataCollection>
 	 </form>
-
-	<%
-	if (panel.legacyItems!=null && panel.legacyItems.size()>0) {
-		String linkBase=panel.path+"/content/editschedule.jsp?course_id="+panel.courseId;
-	%>
-	<h1 id="Legacy">Warning: Legacy Content</h1>
-	
-	<p>This course contains legacy schedules created with version 4.3 or 4.4 of the connector.
-	These <em>must</em> be upgraded before they can be used in this course.</p>
-	
-	<bbNG:inventoryList collection="<%=panel.legacyItems %>" objectVar="contentItem"
-		className="blackboard.data.content.Content" description="Legacy Content Items"
-		emptyMsg="No legacy content found" showAll="true">
-		<bbNG:listElement name="schedule_name" label="Schedule Name" isRowHeader="true">
-			<%=contentItem.getTitle() %>
-		</bbNG:listElement>
-		<bbNG:listElement name="update" label="Update?">
-			<a href='<%=linkBase+"&amp;content_id="+contentItem.getId().toExternalString()%>'>Update Now</a>
-		</bbNG:listElement>
-	</bbNG:inventoryList>
-	<%
-	}
-	%>
 	
 	<h1 id="Schedules">Assessment Schedules</h1>
 	
