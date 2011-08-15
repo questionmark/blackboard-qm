@@ -10,36 +10,32 @@
 <%@ taglib uri="/bbUI" prefix="bbUI"%>
 <%@ taglib uri="/bbData" prefix="bbData"%>
 
-<bbData:context>
-	<bbUI:docTemplate title="Custom My Courses Module">
-		<bbUI:breadcrumbBar></bbUI:breadcrumbBar>
-		<bbUI:titleBar iconUrl="/images/ci/icons/tools_u.gif">
-			Test connection to Questionmark Perception
-		</bbUI:titleBar>
+<bbData:context id="ctx">
+	<bbUI:docTemplate title="Testing Connection to Questionmark Perception">
+	<%
+	QMPSysAdminContext qbc=new QMPSysAdminContext(request,ctx);
+	Version2 version = qbc.Test();
+	%>
 
-		<%
-		QMWise qmwise = null;
+	<%
+		if (qbc.failTitle == null) {
+	%>
 
-		try {
-			qmwise = new QMWise();
-		} catch(Exception e) {
-			%>
-			<bbUI:receipt type="FAIL" title="Error connecting to Perception server" recallUrl="config.jsp">
-				<%=e.getMessage()%>
-			</bbUI:receipt>
-			<%
-			return;
-		}
-
-		//get version info
-		Version2 version = qmwise.getStub().getAbout2();
-
-		%>
-		<bbUI:receipt type="SUCCESS" title="Connection successful!" recallUrl="/webapps/blackboard/admin/manage_plugins.jsp">
-			Perception version <%=version.getBuildString()%><br>
+	<bbUI:receipt type="SUCCESS" title="Connection successful!" recallUrl="/webapps/blackboard/admin/manage_plugins.jsp">
+		Perception version <%=version.getBuildString()%><br>
 			<%=version.getLicenseText()%><br>
-			Licence expires <%=version.getLicenseExpires()%>
-		</bbUI:receipt>
+			License expires <%=version.getLicenseExpires()%>
+	</bbUI:receipt>
 
+	<%	} else {
+	%>
+
+	<bbUI:receipt type="FAIL" title="<%=qbc.failTitle %>">
+		<%=qbc.failMsg %>
+	</bbUI:receipt>
+
+	<%
+		} //End of error view
+	%>
 	</bbUI:docTemplate>
 </bbData:context>

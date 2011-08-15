@@ -1,6 +1,9 @@
 package com.questionmark;
 
 import java.rmi.RemoteException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Vector;
@@ -25,7 +28,6 @@ import blackboard.persist.gradebook.LineitemDbLoader;
 import blackboard.persist.gradebook.LineitemDbPersister;
 import blackboard.persist.gradebook.ScoreDbLoader;
 import blackboard.persist.gradebook.ScoreDbPersister;
-import blackboard.servlet.util.DatePickerUtil;
 
 import com.questionmark.QMWISe.ScheduleV42;
 
@@ -89,8 +91,24 @@ public class QMPContentItem {
 				|| request.getParameter("per_participant_hidden").equals("1");
 		accessPeriod=request.getParameter("set_access_period") != null;
 		if (accessPeriod) {
-			startdate=DatePickerUtil.pickerDatetimeStrToCal(request.getParameter("scheduleStart_datetime"));
-			enddate=DatePickerUtil.pickerDatetimeStrToCal(request.getParameter("scheduleEnd_datetime"));
+			try {
+				DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+				String startString=request.getParameter("start_0"); 				
+				if (startString.length()>=10)
+					// fix for broken form submit in some browsers
+					startdate.setTime(df.parse(startString.substring(0,10)));
+				startdate.set(Calendar.HOUR_OF_DAY, new Integer(request.getParameter("start_hour")).intValue());
+				startdate.set(Calendar.MINUTE, new Integer(request.getParameter("start_minute")).intValue());
+				String endString=request.getParameter("end_1");
+				if (endString.length()>=10)
+					// fix for broken form submit in some browsers
+					enddate.setTime(df.parse(endString.substring(0,10)));
+				enddate.set(Calendar.HOUR_OF_DAY, new Integer(request.getParameter("end_hour")).intValue());
+				enddate.set(Calendar.MINUTE, new Integer(request.getParameter("end_minute")).intValue());
+			} catch (ParseException e) {
+				accessPeriod=false;
+				SetDefaultAccessPeriod();
+			}
 		} else {
 			SetDefaultAccessPeriod();
 		}
@@ -161,8 +179,6 @@ public class QMPContentItem {
 	
 	public void Update(HttpServletRequest request) {
 		try {
-			Calendar newStartdate=null;
-			Calendar newEnddate=null;
 			String newName = request.getParameter("new_schedule_name");
 			boolean newLimit = false;
 			if (newName != null) {
@@ -181,8 +197,24 @@ public class QMPContentItem {
 			}
 			if (request.getParameter("set_access_period") != null) {
 				accessPeriod=true;
-				startdate=DatePickerUtil.pickerDatetimeStrToCal(request.getParameter("scheduleStart_datetime"));
-				enddate=DatePickerUtil.pickerDatetimeStrToCal(request.getParameter("scheduleEnd_datetime"));			
+				try {
+					DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+					String startString=request.getParameter("start_0"); 				
+					if (startString.length()>=10)
+						// fix for broken form submit in some browsers
+						startdate.setTime(df.parse(startString.substring(0,10)));
+					startdate.set(Calendar.HOUR_OF_DAY, new Integer(request.getParameter("start_hour")).intValue());
+					startdate.set(Calendar.MINUTE, new Integer(request.getParameter("start_minute")).intValue());
+					String endString=request.getParameter("end_1");
+					if (endString.length()>=10)
+						// fix for broken form submit in some browsers
+						enddate.setTime(df.parse(endString.substring(0,10)));
+					enddate.set(Calendar.HOUR_OF_DAY, new Integer(request.getParameter("end_hour")).intValue());
+					enddate.set(Calendar.MINUTE, new Integer(request.getParameter("end_minute")).intValue());
+				} catch (ParseException e) {
+					accessPeriod=false;
+					SetDefaultAccessPeriod();
+				}
 			}
 			// slightly different, on update we keep the current available value unless we
 			// have some input.
@@ -594,6 +626,7 @@ public class QMPContentItem {
 		}
 		//set content resource type(Set content handler)
 		courseDoc.setContentHandler("qm/schedule-link"); //NB Must match the entry in bb-manifest!!
+		// need to setUrl once we know the contentId
 		//set parent id
 		courseDoc.setParentId(parentId);
 		//set course id
@@ -652,6 +685,11 @@ public class QMPContentItem {
 		//now to persist!
 		//save details of this item.
 		persister.persist(courseDoc);
-		contentId=courseDoc.getId();
+		if (contentId==null || courseDoc.getRenderType()!=Content.RenderType.URL) {
+			contentId=courseDoc.getId();
+			courseDoc.setUrl(ctx.path+"/content/viewschedule.jsp?course_id="+ctx.courseId+"&content_id="+contentId.toExternalString());
+			courseDoc.setRenderType(Content.RenderType.URL);
+			persister.persist(courseDoc);
+		}
 	}
 }

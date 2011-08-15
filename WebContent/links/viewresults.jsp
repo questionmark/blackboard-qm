@@ -25,337 +25,118 @@
 <%@ taglib uri="/bbUI" prefix="bbUI" %> 
 <%@ taglib uri="/bbData" prefix="bbData" %>
 
-<%
-	String path = request.getContextPath();
-	String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+path+"/";
-	
-	
-	//Qm result related members initialised here.
-	
-	Result[] results = new Result[0];	//initialised to empy, zero length array to avoid NPE
-	String[] reports = new String[0];	//initialised to empy, zero length array to avoid NPE
-	//date format
-	DateFormat pdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-	int resultsPerPage = 0;
-	
-%>
 <bbData:context id="ctx">
-	<bbUI:docTemplateHead title="Questionmark Perception connector" />
-
-	<bbUI:docTemplateBody onLoad="disable_set_access()">
-		<bbUI:titleBar iconUrl='<%=path+"/images/qm.gif"%>' >
-			Questionmark Perception connector
-		</bbUI:titleBar>
-		
-		<bbUI:breadcrumbBar environment="COURSE" isContent="false">
-			<bbUI:breadcrumb>QUESTIONMARK PERCEPTION VIEW RESULTS</bbUI:breadcrumb>
-		</bbUI:breadcrumbBar>
-
 	<%
-		// Retrieve the course identifier from the URL
-		String courseId = request.getParameter("course_id");
-
-		if(courseId == null) {
-			%>
-			<bbUI:receipt type="FAIL" title="No course ID was given">
-				No course ID was given with the request
-			</bbUI:receipt>
-			<%
-			return;
-		}
-
-		//connect to QMWise
-		QMWise qmwise = null;
-		try {
-			qmwise = new QMWise();
-		} catch(Exception e) {
-			QMWiseException qe = new QMWiseException(e);
-			%>
-			<bbUI:receipt type="FAIL" title="Error connecting to Perception server">
-				<%=qe.getMessage()%>
-			</bbUI:receipt>
-			<%
-			return;
-		}
-
-		//Retrieve the Db persistence manager from the persistence service
-		BbPersistenceManager bbPm = PersistenceServiceFactory.getInstance().getDbPersistenceManager();
-
-
-		// Generate a persistence framework course Id to be used for 
-		// loading the course
-		Id courseIdObject = bbPm.generateId(Course.DATA_TYPE, courseId);
-
-		CourseDbLoader courseLoader = (CourseDbLoader) bbPm.getLoader(CourseDbLoader.TYPE);
-		Course course = courseLoader.loadById(courseIdObject);
-
-		PropertiesBean pb = new PropertiesBean();
-
-		//-----------------------------------------------------------------------
-		//view specific to current user
-		//-----------------------------------------------------------------------
-
-		//Get a User instance via user context
-		User sessionUser = ctx.getUser();
-		Id sessionUserId = sessionUser.getId();
-		
-		// get the membership data to determine the User's Role
-		CourseMembershipDbLoader crsMembershipLoader = (CourseMembershipDbLoader) bbPm.getLoader(CourseMembershipDbLoader.TYPE);
-		CourseMembership crsMembership = null;
-
-		try {
-			crsMembership = crsMembershipLoader.loadByCourseAndUserId(courseIdObject, sessionUserId);
-		} catch (KeyNotFoundException e) {
-			// There is no membership record.
-			%>
-			<bbUI:receipt type="FAIL" title="You don't have a role on this course">
-				<%=e.getMessage()%>
-			</bbUI:receipt>
-			<%
-			return;
-		} catch (PersistenceException pe) {
-			// There is no membership record.
-			%>
-			<bbUI:receipt type="FAIL" title="Error loading the current user">
-				<%=pe.getMessage()%>
-			</bbUI:receipt>
-			<%
-			return;
-		}
-
-		if(crsMembership.getRole() == CourseMembership.Role.INSTRUCTOR
-			|| crsMembership.getRole() == CourseMembership.Role.TEACHING_ASSISTANT) {
-			//-----------------------------------------------------------------------
-			//Administrator or TA
-			//-----------------------------------------------------------------------
-
-			%>
-		
-		<div id="actionbar" class="actionBar clearfix editmode" align="right">
-			<ul id="nav" class="nav clearfix">
-
-				<li class="mainButton">
-					<a href='<%=path+"/links/main.jsp?course_id="+courseId%>'>
-						ViewSchedules
-					</a>
-				</li>									
-			<%
-				if(pb.getProperty("perception.singlesignon") != null) {
-			%>
-				<li class="mainButton">
-					<a href='<%=path+"/links/enterprisemanager.jsp"%>' target="_blank">Log in to Enterprise Manager</a>
-				</li>
-			<%
-				}
-			%>
-			</ul>
-		</div>		
-		
-			<%
-			//-----------------------------------------------------------------------
-			// Results
-			//-----------------------------------------------------------------------
-			
-			try {
-				//Get results via qmwise call
-				results = qmwise.getStub().getResultListByGroup(course.getBatchUid());
-				
-			} catch(Exception e) {
-				
-				QMWiseException qe = new QMWiseException(e);
-
-				//catch invalid group id error, this occurs when the incorrect or no group id is returned from the returning
-				// via PIP
-				if (qe.getQMErrorCode() == 202) {
-					%>					
-						<p>
-							<em>Error getting results list - Group ID invalid - 0 or cannot be converted to an integer</em>
-							<br />Course id returned: <%=StringEscapeUtils.escapeHtml(course.getBatchUid())%>
-						</p>
-						<p><%=StringEscapeUtils.escapeHtml(qe.getMessage())%></p>				
-					<%
-					//return;
-					
-				} else {
-			
-					%>
-						<p>
-							<em>Error getting results list</em>
-							<br />
-							<%=StringEscapeUtils.escapeHtml(qe.getMessage())%>
-						</p>				
-					<%
-					//return;
-				}
-			
-			}
-			
-			
-			if ( results.length > 0 ){
-				
-				//sort results by date
-				Arrays.sort(results, new ResultComparator());
-				
-				//get report for each result
-				reports = new String[results.length];				
-				
-				if(request.getParameter("resultsPerPage") != null) {
-					resultsPerPage = new Integer(request.getParameter("resultsPerPage")).intValue();
-				}
-				else {
-					resultsPerPage = 10;
-				}
-				
-				if(resultsPerPage < 10) resultsPerPage = 10;
-				
-			}			
-
-			%>
-			<h1 id="Results">Results</h1>
-			<% 		
-				if (results.length == 0) { 
-					%>
-						<p>There are not yet results for this course.</p>
-					<% 
-				}
-				else { 
-			%>
-		
-				<form action='<%=path+"/links/viewresults.jsp"%>' method="GET" >
-					<input type="hidden" name="course_id" value="<%=courseId%>" />
-					Results to show per page (minimum 10): <input type="text" size="4" name="resultsPerPage" value="<%=resultsPerPage %>" />
-					<input type="submit" value="Update table" />
-				</form>
-				
-				<table border="2" cellpadding="1">
-					<tr>
-						<!--<th>Assessment ID</th>-->
-						<!--<th>Schedule Name</th> requires QMWISe fix -->
-						<th>Participant</th>
-						<th>Score</th>
-						<th>Time taken</th>
-						<th>Started</th>
-						<th>Finished</th>
-						<th>Report</th>
-					</tr>
-					
-			<%
-			
-			int listStart;
-			
-			if(request.getParameter("resultPage") != null)
-				listStart = (new Integer(request.getParameter("resultPage")) -1 ) * new Integer(resultsPerPage);
-			else
-				listStart = 0;
-			if(listStart < 0)
-				listStart = 0;
-			
-			for(int i = listStart; i < results.length && i < listStart+resultsPerPage; i++) {
-				Date started = null;
-				Date finished = null;
-				try {
-					started = pdf.parse(results[i].getWhen_Started());
-					if(!results[i].isStill_Going()) {
-						finished = pdf.parse(results[i].getWhen_Finished());
-					}
-				} catch(ParseException e) {
-					%>
-					<bbUI:receipt type="FAIL" title="Error parsing date from Perception">
-						<%=StringEscapeUtils.escapeHtml(e.getMessage())%>
-					</bbUI:receipt>
-					<%
-					return;
-				}
-				try {
-					if (reports[i] == null) {
-						reports[i] = qmwise.getStub().getAccessReport(results[i].getResult_ID());
-					}
-				} catch(Exception e) {
-					QMWiseException qe = new QMWiseException(e);
-					reports[i]="error: "+ qe.getMessage();
-				}
-				
-			%>
-				<tr>
-					<!--<td><%=results[i].getAssessment_ID()%></td>-->
-					<!--<td><%=results[i].getSchedule_Name()%></td> Requires QMWISe fix-->
-					<td><%=results[i].getParticipant() + " (" + results[i].getSpecial_1() + " " + results[i].getSpecial_2() + ")"%></td>
-					<td><%=!results[i].isStill_Going() ? results[i].getTotal_Score() + "/" + results[i].getMax_Score() + " (" + results[i].getPercentage_Score() + "%)" : ""%></td>
-					<td><%=!results[i].isStill_Going() ? results[i].getTime_Taken() + "s" : ""%></td>
-					<td><%=started.toString()%></td>
-					<td><%=!results[i].isStill_Going() ? finished.toString() : "Unfinished"%></td>
-					<% 
-					if (reports[i].startsWith("error:")) { %>
-					<td>No report available (<%=reports[i]%>)</td>
-					<% }
-					else {
-					%>
-					<td><a href="<%=reports[i]%>" target="_blank">View report</a></td>
-					<% }
-					%>
-				</tr>
-	<%	 }
+	QMPResultsContext rc=new QMPResultsContext(request,ctx);
+	if (rc.failTitle==null && rc.reportLink!=null) {
+		response.sendRedirect(rc.reportLink);
+	} else {
 	%>
-	</table>
-	<%
-				
-		int numPages = new Double(Math.ceil(results.length/new Double(resultsPerPage))).intValue();
-		
-		out.println("<p>Page: ");
-		
-			for(int i = 1; i <= numPages; i++) {
-				if(request.getParameter("resultPage") != null && new Integer(request.getParameter("resultPage")).intValue() == i) {
-					out.println("<strong>" + i + "</strong> ");
-				} else {
-					out.println("<a href=\""+path+"/links/viewresults.jsp?course_id=" + courseId + 
-						"&amp;resultPage=" + i +
-						"&amp;resultsPerPage=" + resultsPerPage +
-						"\">" + i + "</a> ");
-				}
-			}
-		
-		out.println("</p>");
-			 	
-	} //fi results 
-	
-	%>
-			<bbUI:spacer height="20" />
-
-
-	<% 	} else {
-			//-----------------------------------------------------------------------
-			//Student
-			//-----------------------------------------------------------------------
-
-			//get Perception user id
-			int perceptionuserid = 0;
-			try {
-				perceptionuserid = new Integer(qmwise.getStub().getParticipantByName(sessionUser.getUserName()).getParticipant_ID()).intValue();
-			} catch(Exception e) {
-				QMWiseException qe = new QMWiseException(e);
-				%>
-				<bbUI:receipt type="FAIL" title="Error retrieving participant from Perception">
-					<%=qe.getMessage()%>
-				</bbUI:receipt>
+	<bbUI:docTemplate title="Questionmark Perception Results">
+		<bbUI:coursePage>
+		<%
+		int resultsPerPage = 25;
+		int resultPage= 0;
+		int numPages=0;
+		int listStart = 0;
+		int listEnd = 0;
+		if(request.getParameter("resultsPerPage") != null) {
+			resultsPerPage = new Integer(request.getParameter("resultsPerPage")).intValue();
+			if(resultsPerPage < 5) resultsPerPage = 5;
+		}	
+		if(request.getParameter("resultPage") != null) {
+			resultPage=new Integer(request.getParameter("resultPage")).intValue();
+			if (resultPage<0) resultPage=0;
+		}
+		listStart=resultPage*resultsPerPage;
+		if (listStart<0) listStart=0;
+		if (listStart>=rc.resultList.size())
+			// something went wrong
+			listStart=0;
+		listEnd=listStart+resultsPerPage;
+		if (listEnd>=rc.resultList.size()) listEnd=rc.resultList.size();
+		resultPage=listStart/resultsPerPage;
+		if (rc.resultList.size()>0)
+			numPages=(rc.resultList.size()-1)/resultsPerPage+1;
+		else
+			numPages=0;	
+		%>
+			<bbUI:breadcrumbBar environment="COURSE" isContent="true">
+				<bbUI:breadcrumb>View Results</bbUI:breadcrumb>
+			</bbUI:breadcrumbBar>
+		<%
+			if (rc.failTitle == null) {
+				DateFormat pdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+		%>
+			<bbUI:actionBar>
+				<bbUI:actionItem title="Control Panel" href='<%=rc.path+"/links/main.jsp?course_id="+rc.courseId %>'
+					imgUrl='<%=rc.path+"/images/qmsmall.gif" %>'/>
 				<%
-				return;
-
+					if(rc.pb.getProperty("perception.singlesignon") != null) {
+				%>
+				<bbUI:actionItem title="Log in to Enterprise Manager" href='<%=rc.path+"/links/enterprisemanager.jsp?course_id="+rc.courseId %>'
+					imgUrl='<%=rc.path+"/images/link.gif" %>' target="_blank"/>
+				<%
+					}
+				%>
+			</bbUI:actionBar>
+	
+		<h1 id="Results">Assessment Results</h1>
+				
+		<bbUI:list collection="<%=rc.resultList.subList(listStart,listEnd) %>" objectId="r"
+			className="com.questionmark.QMWISe.Result" collectionLabel="Assessment Results">
+			<!-- emptyMsg="No results available" showAll="false"  -->
+			<!--<td><%=r.getAssessment_ID()%></td>-->
+			<!--<td><%=r.getSchedule_Name()%></td> Requires QMWISe fix-->
+			<bbUI:listElement name="participant" label="Participant">
+				<%=r.getParticipant()+" ("+r.getSpecial_1()+" "+r.getSpecial_2()+")" %>
+			</bbUI:listElement>
+			<bbUI:listElement name="score" label="Score">
+				<%=!r.isStill_Going() ? r.getTotal_Score() + "/" + r.getMax_Score() + " (" + r.getPercentage_Score() + "%)" : "Incomplete" %>
+			</bbUI:listElement>
+			<bbUI:listElement name="time_taken" label="Time taken">
+				<%=!r.isStill_Going() ? r.getTime_Taken() + "s" : "" %>
+			</bbUI:listElement>
+			<bbUI:listElement name="end_time" label="When Finished">
+				<%=!r.isStill_Going() ? pdf.parse(r.getWhen_Finished()).toString() : "Unfinished" %>
+			</bbUI:listElement>
+			<bbUI:listElement name="link" label="Coaching Report">
+				<a href='<%="viewresults.jsp?course_id="+rc.courseId+"&result_id="+r.getResult_ID() %>' target="_blank">View Now</a>
+			</bbUI:listElement>
+		</bbUI:list>
+	
+		<p>	
+			<%
+			for(int i = 0; i<numPages; i++) {
+				if(i*resultsPerPage==listStart) {
+					%>
+					<strong><%=i+1 %></strong>
+					<%
+				} else {
+					%>
+					<a href='<%=rc.path+"/links/viewresults.jsp?course_id="+rc.courseId+"&amp;resultPage="+i+
+						"&amp;resultsPerPage="+resultsPerPage %>'><%=i+1 %></a>
+					<%
+				}
 			}
-	%>			
+			%>
+		</p>
 			
-		<div id="actionbar" class="actionBar clearfix editmode" align="right">
-
-					<a href='<%=path+"/links/main.jsp?course_id="+courseId%>'>
-						Return to schedules
-					</a>
-
-		</div>					
-			
-			<p>Results information is not available to Students using this tool.</p>			
-	<%
-		}
-	%>
-
-	</bbUI:docTemplateBody>
+		<%			
+			} else {
+		%>
+	
+		<bbUI:receipt type="FAIL" title="<%=rc.failTitle %>">
+			<%=rc.failMsg %>
+		</bbUI:receipt>
+	
+		<%
+			} //End of other view
+		%>
+		</bbUI:coursePage>
+	</bbUI:docTemplate>
+<%
+	} //End of main page (not redirect)
+%>
 </bbData:context>
 

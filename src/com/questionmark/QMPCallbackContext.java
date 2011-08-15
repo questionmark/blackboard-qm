@@ -33,10 +33,10 @@ public class QMPCallbackContext extends QMPCourseContext {
 		String content_id=QMPContentItem.ExtractContentId(scheduleName);
 		try {
 			if (Synchronize()) {
-				if (content_id.isEmpty()) {
+				if (content_id.length()==0) {
 					// old style logic for a quick schedule or unconverted 8.0/9.0 item
 					LineitemDbLoader lineitemLoader = (LineitemDbLoader) bbPm.getLoader(LineitemDbLoader.TYPE);
-					Lineitem lineitem = lineitemLoader.loadByCourseIdAndLineitemName(courseIdObject,scheduleName).get(0);
+					Lineitem lineitem = (Lineitem) lineitemLoader.loadByCourseIdAndLineitemName(courseIdObject,scheduleName).get(0);
 					LineitemDbPersister lineitemdbpersister = (LineitemDbPersister) bbPm.getPersister(LineitemDbPersister.TYPE);
 					// check if points possible is zero -- if so we need to update it
 					if(lineitem.getPointsPossible() == 0f) {

@@ -35,579 +35,91 @@
 		com.questionmark.QMWISe.*"	
 
 	pageEncoding="ISO-8859-1"%>
-	
-<%@ taglib uri="/bbUI" prefix="bbUI" %> 
-<%@ taglib uri="/bbData" prefix="bbData" %>
 
+
+<%@ taglib uri="/bbData" prefix="bbData" %>
+<%@ taglib uri="/bbUI" prefix="bbUI"%>
 
 
 <bbData:context id="ctx">
-
-	<%	
-
-
-	String path = request.getContextPath();
-	String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+path+"/";
+	<% QMPContentView cv=new QMPContentView(request,ctx); %>
+	<bbUI:docTemplate title='<%=StringEscapeUtils.escapeHtml(cv.title)%>'>
 	
-	// Retrieve the course identifier from the URL
-	String courseId = request.getParameter("course_id");	
-	//null checks..
-	if(courseId == null) {
-	%>
+	<bbUI:titleBar iconUrl='<%=cv.path+"/images/qm.gif"%>'>
+		<%=StringEscapeUtils.escapeHtml(cv.title)%>
+	</bbUI:titleBar>
 	
-		<bbUI:receipt type="FAIL" title="No course ID was given">
-			No course ID was given with the request
-		</bbUI:receipt>
-		
-	<%
-		return;
-	}
-
-	//Retreive the content identifier from the url
-	
-	String content_id = request.getParameter("content_id");
-	//null check..
-	if(content_id == null) {
-	%>
-	
-		<bbUI:receipt type="FAIL" title="No content ID was given">
-			No content ID was given with the request
-		</bbUI:receipt>
-		
-	<%
-		return;
-	}
-
-	
-	//Get a User , course membership details, and Course instance via context
-	User sessionUser = ctx.getUser();
-	Id sessionUserId = sessionUser.getId();
-	Course courseCtx = ctx.getCourse();	
-	CourseMembership cMembership = ctx.getCourseMembership(); // may be null if a SysAdmin!	
-	
-	//Retrieve the Db persistence manager from the persistence service
-	BbPersistenceManager bbPm = PersistenceServiceFactory.getInstance().getDbPersistenceManager();
-
-	// Generate a persistence framework course Id to be used for 
-	// loading the course
-	
-	Id courseIdObject = bbPm.generateId(Course.DATA_TYPE, courseId);
-	CourseDbLoader courseLoader = (CourseDbLoader) bbPm.getLoader(CourseDbLoader.TYPE);
-	Course course = courseLoader.loadById(courseIdObject);
-
-	PropertiesBean pb = new PropertiesBean();	//probably not needed
-		
-	//Now get the content id informataion
-	
-	Id contentId = Id.generateId(Content.DATA_TYPE, content_id);
-	ContentDbLoader courseDocumentLoader = ContentDbLoader.Default.getInstance();
-	Content courseDoc = courseDocumentLoader.loadById( contentId ); 
-
-	// can now query this from the content item object reference...
-	
-	String handler = courseDoc.getContentHandler();
-	
-	String persistantParentId = courseDoc.getParentId().toExternalString();
-	Id parentId = bbPm.generateId(Content.DATA_TYPE, persistantParentId);
-	
-	
-	
-	String persistentScheduleName = courseDoc.getTitle();	
-	
-	%>
-
-	<bbUI:docTemplateHead title="Questionmark Perception connector" />
-
-	<bbUI:docTemplateBody onLoad="disable_set_access()">
-		<bbUI:titleBar iconUrl='<%=path+"/images/qm.gif"%>' >
-			Questionmark Scheduled Assessment
-		</bbUI:titleBar>
-		
-		<bbUI:breadcrumbBar environment="COURSE" isContent="true">
-			<bbUI:breadcrumb><%=persistentScheduleName%></bbUI:breadcrumb>
-		</bbUI:breadcrumbBar>
-	
-	
-	<%
-
-		//create a ConfigFileReader, to check whether this course needs 
-		//to sync its members and to show date last synchronized
-		ConfigFileReader configReader = new ConfigFileReader(courseId);
-		//load the courseSettings file too...
-		CourseSettings courseSettings = new CourseSettings(courseId);
-		
-		//connect to QMWise
-		QMWise qmwise;
-		try {
-			qmwise = new QMWise();
-		} catch(Exception e) {
-			QMWiseException qe = new QMWiseException(e);
-			%>
-	<bbUI:receipt type="FAIL" title="Error connecting to Perception server">
-		<%=qe.getMessage()%>
-	</bbUI:receipt>
-	<%
-			return;
-		}
-
-		//-----------------------------------------------------------------------
-		//synchronization: No Automatic or manual option for synching code needed 
-		//for Content item view. Only code for 'forced' sync if group not found:
-		//-----------------------------------------------------------------------
-%>
-		<%@ include file="../common/gsynchronization.jspf" %>
-<%			
-		//-----------------------------------------------------------------------
-		//view (still) specific to current user, i.e. Student can only Take assessments
-		// and Staff can "Test Assessments"
-		//-----------------------------------------------------------------------
-
-		
-		// get the membership data to determine the User's Role
-		CourseMembershipDbLoader crsMembershipLoader = (CourseMembershipDbLoader) 
-			bbPm.getLoader(CourseMembershipDbLoader.TYPE);
-		CourseMembership crsMembership = null;
-
-		try {
-			crsMembership = crsMembershipLoader.loadByCourseAndUserId(courseIdObject, sessionUserId);
-		} catch (KeyNotFoundException e) {
-			// There is no membership record.
-	%>
-	<bbUI:receipt type="FAIL" title="You don't have a role on this course">
-		<%=e.getMessage()%>
-	</bbUI:receipt>
-	<%
-			return;
-		} catch (PersistenceException pe) {
-			// There is no membership record.
-	%>
-	<bbUI:receipt type="FAIL" title="Error loading the current user">
-		<%=pe.getMessage()%>
-	</bbUI:receipt>
-	<%
-			return;
-		}		
-
-			if(crsMembership.getRole() == CourseMembership.Role.INSTRUCTOR
-					|| crsMembership.getRole() == CourseMembership.Role.TEACHING_ASSISTANT
-						|| sessionUser.getSystemRole() == sessionUser.getSystemRole().SYSTEM_ADMIN)
-					
-				{
-					//-----------------------------------------------------------------------
-					//System Administrator or Instructor or Teaching Assistant 
-					// Can be altered upon code request, or through system admin control panel
-					//-----------------------------------------------------------------------
-				if(!PlugInUtil.authorizeForCourseControlPanelContent(request, response))
-				return;						
-
-	%>
-			
-			
-			<div id="actionbar" class="actionBar clearfix editmode" align="right">
-				<ul id="nav" class="nav clearfix">										
-	<%
-				if(pb.getProperty("perception.singlesignon") != null) {
-	%>
-					<li class="mainButton">						
-						<a href='<%=path+"/links/enterprisemanager.jsp"%>' target="_blank">Log in to Enterprise Manager</a>
-					</li>
-	<%
-				}
-	%>
-				</ul>
-			</div>	
-		
-			
-	<%
-	
-	ScheduleV42[] schedulesarray = null;
-	try {				
-		schedulesarray = qmwise.getStub().getScheduleListByParticipantV42(new Integer(UserSynchronizer.getPhantomUserId()).intValue());
-	} catch (Exception e){			
-		if( e instanceof QMWiseException ){
-			QMWiseException qe = new QMWiseException(e);
-			if(qe.getQMErrorCode() == 1301){
-				String assessmentErrorOutput = "Perception: course " + courseId + 
-				": Error getting group schedule list. Cause: Assessment not found, check whether assessment exists in Perception."
-				+ " For more information please check Perception server logs - QMWISe trace log. Message: "
-				+ qe.getMessage();
-				System.out.println(assessmentErrorOutput);					
-				%>							
-					<p>
-						<em>Error getting group schedule list, assessment missing!</em>
-						<br />
-						<%=StringEscapeUtils.escapeHtml(assessmentErrorOutput)%>
-					</p>
-				<%						
-			} else {
-				String qmErrorOutput = "Perception: course " + courseId + ": Error getting group schedule list. Cause: " + qe.getMessage();
-				
-				System.out.println(qmErrorOutput);
-				%>
-					<p>
-						<em>Error getting group schedule list, QMWISe error!</em>
-						<br />
-						<%=StringEscapeUtils.escapeHtml(qmErrorOutput)%>
-					</p>
-				<%
-			}
-		} else {
-			String errorMessage = e.getMessage();
-			System.out.println("Unknown Exception returned: details: " + e.getMessage());
-			%>
-				<p>
-					<em>Error getting schedules, unknown exception</em>
-					<br />							
-					<%=StringEscapeUtils.escapeHtml(errorMessage)%>
-				</p>	
-			<%						
-		
-		}
-		// Return disabled to allow for the page to continue loading.
-		//return;
-		
-	}
-
-	Vector<ScheduleV42> schedules = new Vector<ScheduleV42>();
-
-	for(int i = 0; i < schedulesarray.length; i++) {
-		if(schedulesarray[i].getGroup_ID() == perceptiongroupid)
-			schedules.add(schedulesarray[i]);
-	}
-
-	ScheduleV42[] zeroschedulesarray = null;
-	try {
-		zeroschedulesarray = qmwise.getStub().getScheduleListByParticipantV42(0);
-	} catch(Exception e) {
-		QMWiseException qe = new QMWiseException(e);
-		%>
-			<p>
-				<em>Error getting zero user schedule list</em>
-				<br />
-				<%=StringEscapeUtils.escapeHtml(qe.getMessage())%>
-			</p>
+	<bbUI:breadcrumbBar environment="COURSE" isContent="true">
+		<bbUI:breadcrumb>Schedule Details</bbUI:breadcrumb>
+	</bbUI:breadcrumbBar>
 
 		<%
-			return;
-	}
+		if (cv.failTitle == null) {
+			if (cv.isAdministrator) {
+				%>
+			<bbUI:actionBar>
+				<%
+					if(cv.pb.getProperty("perception.singlesignon") != null) {
+				%>
+				<bbUI:actionItem title="Log in to Enterprise Manager" href='<%=cv.path+"/links/enterprisemanager.jsp?course_id="+cv.courseId %>'
+					imgUrl='<%=cv.path+"/images/link.gif" %>' target="_blank"/>
+				<%
+					}
+				%>
+			</bbUI:actionBar>
 
-	for(int i = 0; i < zeroschedulesarray.length; i++)
-		if(zeroschedulesarray[i].getGroup_ID() == perceptiongroupid)
-			schedules.add(zeroschedulesarray[i]);
-
-		String[] scheduleurls = new String[schedules.size()];
-		boolean[] schedulesactive = new boolean[schedules.size()];
-
-	for(int i = 0; i < schedules.size(); i++) {
-		try {
-			scheduleurls[i] = qmwise.getStub().getAccessAssessment(
-				schedules.get(i).getAssessment_ID(),
-				sessionUser.getUserName(),
-				"", //participant details
-				"" //group name
-			);
-		} catch(Exception e) {
-			QMWiseException qe = new QMWiseException(e);
-			if(qe.getQMErrorCode() == 1301){
-				String assessmentErrorOutput = "Perception: course " + courseId + 
-				": Error getting group schedule list. Cause: Assessment not found, check whether assessment exists in Perception."
-				+ " For more information please check Perception server logs - QMWISe trace log. Message: "
-				+ qe.getMessage();
-				System.out.println(assessmentErrorOutput);
-				
-				//Set the schedule url to blank and check for blank url later on to decide whether schedule is active or broken.						
-				scheduleurls[i] = "ASSESSMENT_ERROR: Assessment not found, check whether assessment exists in Perception";
-										
+				<p><em>Warning:</em> you are currently logged in with a Perception administrator role.
+				You are not subject to schedule restrictions and may use the "Start" link to try
+				out the assessment.</p>
+				<%
 			}
-			else {
-				
-				//Set the schedule url to blank and check for blank url later on to decide whether schedule is active or broken.						
-				scheduleurls[i] = "ERROR: " + qe.getMessage().substring(0, 40);						
-				
+			%>
+			<bbUI:list collection="<%=cv.scheduleInfo %>" objectId="s"
+				className="com.questionmark.ScheduleInfo" collectionLabel="Scheduled Assessments">
+				<!-- emptyMsg="There are no assessments scheduled for this course" showAll="true" -->
+				<bbUI:listElement name="schedule_name" label="Schedule Name">
+					<%=s.DisplayName() %>
+				</bbUI:listElement>
+				<bbUI:listElement name="max_attempts" label="Attempts Remaining">
+					<%=s.schedule.isRestrict_Attempts() ? s.schedule.getMax_Attempts() : "no limit" %>
+				</bbUI:listElement>
+				<bbUI:listElement name="start_time" label="Start Time">
+					<%=s.schedule.isRestrict_Times() ? s.schedule.readSchedule_Starts_asCalendar().getTime().toString() : "" %>
+				</bbUI:listElement>
+				<bbUI:listElement name="end_time" label="End Time">
+					<%=s.schedule.isRestrict_Times() ? s.schedule.readSchedule_Stops_asCalendar().getTime().toString() : "" %>
+				</bbUI:listElement>
+				<bbUI:listElement name="active" label="Active?">
+					<%=s.active ? "active" : "inactive" %>
+				</bbUI:listElement>
+				<bbUI:listElement name="launch" label="Launch">
+					<% if (s.launchURL!=null) {
+						%><a href="<%=s.launchURL%>" target="_blank">Start the Test</a><%
+					} else {
+						%>Unavailable<%
+					}
+					%>
+				</bbUI:listElement>
+			</bbUI:list>
+			<%
+			if (cv.isAdministrator) {
+				if (cv.contentItem.gradebookScore.equals("no")) {
+			%>
+			<p>The results of this assessment will not be stored in the grade center.</p>
+			<%
+				} else {
+			%>
+			<p>The <%=cv.contentItem.gradebookScoreType.toLowerCase()%> result of this assessment will be stored in the grade center.</p>
+			<%
+				}
 			}
-		}
-
-			Long schedule_start = schedules.get(i).readSchedule_Starts_asCalendar().getTime().getTime();
-			Long schedule_stop = schedules.get(i).readSchedule_Stops_asCalendar().getTime().getTime();
-			Long now = new Date().getTime();
-			if (schedules.get(i).isRestrict_Times() && (
-				schedule_start > now //not started yet
-				|| schedule_stop >= 0 && schedule_stop < now //stop time is set (not 0001 AD) && already finished
-			)) {
-				schedulesactive[i] = false;
-			} else {
-				schedulesactive[i] = true;
-			}
-		}
-
-
-	%>
-			
-			<table border="2" cellpadding="1">
-				<script type="text/javascript">
-						function showhideScheduleURL(box,rowID) {
-							var row = document.getElementById(rowID) 
-							row.style.display = box.checked? "table-row":"none"
-							}
-				</script>
-				<tr>
-					<!--<th>Assessment ID</th>-->
-					<th>Schedule name</th>
-					<th>Maximum attempts</th>
-					<th>Start datetime</th>
-					<th>End datetime</th>
-					<th>Active?</th>
-					<th>Try Out</th>
-					<th>Show URL</th>
-					<!--<th>Group</th>-->
-				</tr>
-	<%
-						for(int i = 0; i < schedules.size(); i++) {
-							String idStr="scheduleURL_"+Integer.toString(i);
-							if(schedules.get(i) == null) continue;
-							if(persistentScheduleName!=null && persistentScheduleName.length()>0 && 
-									!persistentScheduleName.equals(schedules.get(i).getSchedule_Name())) continue;						
-									//this is what is different in the content item view. Want to see 
-									//just the schedule created through the content item creation form.	
-									
-									
-	%>
-				<tr>
-					<!--<td><%=schedules.get(i).getAssessment_ID()%></td>-->
-					<td><%=schedules.get(i).getSchedule_Name()%></td>
-					<td><%=schedules.get(i).isRestrict_Attempts() ? schedules.get(i).getMax_Attempts() : "no limit"%></td>
-					<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).readSchedule_Starts_asCalendar().getTime().toString()%></td>
-					<td><%=!schedules.get(i).isRestrict_Times() ? "None" : schedules.get(i).readSchedule_Stops_asCalendar().getTime().toString()%></td>
-					<td><%=schedulesactive[i] ? "active" : "inactive"%></td>
-						<% 
-						
-						if (scheduleurls[i].contains("ASSESSMENT_ERROR")) {						
-							%>
-								<td bgcolor="yellow"><i>Schedule Disabled: <%=StringEscapeUtils.escapeHtml(scheduleurls[i])%> </i></td>
-							<% 
-							
-						} else if(scheduleurls[i].contains("ERROR")){
-							%>
-								<td bgcolor="yellow"><i>Schedule Disabled: <%=StringEscapeUtils.escapeHtml(scheduleurls[i])%> </i></td>
-							<% 
-						}
-						else {
-							%>							
-								<td><a href="<%=StringEscapeUtils.escapeHtml(scheduleurls[i])%>" target="_blank">Test assessment</a></td>
-							<% 
-						} 
-						
-						%>
-					<td><input type="checkbox" name="switchBox"
-						onClick="showhideScheduleURL(this,'<%=idStr%>')" /></td>
-					<!--<td><%=schedules.get(i).getGroup_ID()%></td>-->
-				</tr>
-				<tr id='<%=idStr%>' style="display: none;">
-					<td><i>URL:</i></td>
-					<td colspan="6"><code><%=basePath+"links/main.jsp?course_id="+courseId+"&amp;schedule_name="+URLEncoder.encode(schedules.get(i).getSchedule_Name())%></code></td>
-				</tr>
-	<%		 			}
-	%>
-			
-			</table>
-			
-			<bbUI:spacer height="20" />
-
-	<%
-					//-----------------------------------------------------------------------
-					// No Schedule-authoring form in tools view: code removed.
-					//-----------------------------------------------------------------------
-				
-				
-				} // End of Staff View!!
-				
-				else 
-				{
-					//-----------------------------------------------------------------------
-					//Student
-					//-----------------------------------------------------------------------
-
-					//get Perception user id
-					int perceptionuserid;
-					try {
-						perceptionuserid = new Integer(qmwise.getStub().getParticipantByName(
-							sessionUser.getUserName()).getParticipant_ID()).intValue();
-					} catch(Exception e) {
-						QMWiseException qe = new QMWiseException(e);
-	%>
-			
-					<bbUI:receipt type="FAIL"
-						title="Error retrieving participant from Perception">
-						<%=qe.getMessage()%>
-					</bbUI:receipt>
-	<%
-			
-						return;
-					}
-
-					ScheduleV42[] schedulesarray;
-					try {
-						schedulesarray = qmwise.getStub().getScheduleListByParticipantV42(perceptionuserid);
-					} catch(Exception e) {
-						QMWiseException qe = new QMWiseException(e);
-	%>
-					<bbUI:receipt type="FAIL"
-						title="Error getting participant schedule list">
-						<%=qe.getMessage()%>
-					</bbUI:receipt>
-	<%
-						return;
-					}
-
-					Vector<ScheduleV42> schedules = new Vector<ScheduleV42>();
-
-					for(int i = 0; i < schedulesarray.length; i++) {
-						if(schedulesarray[i].getGroup_ID() == perceptiongroupid)
-							schedules.add(schedulesarray[i]);
-					}
-
-					ScheduleV42[] zeroschedulesarray;
-					try {
-						zeroschedulesarray = qmwise.getStub().getScheduleListByParticipantV42(0);
-					} catch(Exception e) {
-						QMWiseException qe = new QMWiseException(e);
-			
-	%>
-					<bbUI:receipt type="FAIL" title="Error getting zero user schedule list">
-						<%=qe.getMessage()%>
-					</bbUI:receipt>
-	<%
-						return;
-					}
-
-					for(int i = 0; i < zeroschedulesarray.length; i++) {
-						if(zeroschedulesarray[i].getGroup_ID() == perceptiongroupid)
-							schedules.add(zeroschedulesarray[i]);
-					}
-
-					String[] scheduleurls = new String[schedules.size()];
-					boolean[] schedulesactive = new boolean[schedules.size()];
-					
-					if ((persistentScheduleName == null || persistentScheduleName.length()==0) && 
-						courseSettings.getProperty("hide_schedules","0").equals("1")) {
-						persistentScheduleName="HIDE_ALL_SCHEDULES";
-					}
-					
-					for(int i = 0; i < schedules.size(); i++) {
-						//if the schedule is currently active get a URL to 
-						//launch it
-						//haven't coded any timezone handling in here, so this 
-						//may be dodgy
-						Long schedule_start = schedules.get(i).readSchedule_Starts_asCalendar().getTime().getTime();
-						Long schedule_stop = schedules.get(i).readSchedule_Stops_asCalendar().getTime().getTime();
-						Long now = new Date().getTime();
-						if(
-							schedules.get(i).isRestrict_Times()
-							&& (
-								schedule_start > now //not started yet
-								|| schedule_stop >= 0 && schedule_stop < now 
-								//stop time is set (not 0001 AD) && already finished
-							)
-						) {
-							schedulesactive[i] = false;
-							scheduleurls[i] = null;
-						} else {
-							schedulesactive[i] = true;
-							try {
-								Parameter[] parameters = {
-									new Parameter("bb_schedulename", schedules.get(i).getSchedule_Name()),
-									new Parameter("bb_scheduleid", new Integer(
-										schedules.get(i).getSchedule_ID()).toString()),
-									new Parameter("bb_courseid", course.getBatchUid())
-								};
-								try {
-									scheduleurls[i] = qmwise.getStub().getAccessScheduleNotify(
-										new Integer(schedules.get(i).getSchedule_ID()).toString(),
-										sessionUser.getUserName(),
-										request.getScheme() + "://" + request.getServerName() 
-											+ request.getContextPath() + "/links/callback.jsp",	
-												"blackboard.pip", parameters);
-								} catch(Exception ne) {
-									//this method hasn't been programmed well 
-									//and doesn't have unique error codes for 
-									//each kind of exception. we avoided the 
-									//"schedule hasn't started or already 
-									//finished" one by checking that first, so 
-									//we can hopefully assume that this 
-									//exception is saying "no attempts left"
-									scheduleurls[i] = null;
-								}
-							} catch(Exception e) {
-								QMWiseException qe = new QMWiseException(e);
-	%>
-			<bbUI:receipt type="FAIL" title="Error getting assessment URL">
-				<%=qe.getMessage()%>
-			</bbUI:receipt>
-	<%
-								return;
-							}
-						}
-					}
-
-	%>
-			
-				<table border="2" cellpadding="1">
-					<tr>
-						<!--<th>Assessment ID</th>-->
-						<th>Schedule name</th>
-						<th>Remaining attempts</th>
-						<th>Start datetime</th>
-						<th>End datetime</th>
-						<th>Actions</th>
-						<!--<th>Group</th>-->
-					</tr>
-	<%
-					for(int i = 0; i < schedules.size(); i++) {
-						if(schedules.get(i) == null) continue;
-						//if(showOnlySchedule!=null && showOnlySchedule.length()>0 && 
-						//		!showOnlySchedule.equals(schedules.get(i).getSchedule_Name())) continue;
-						
-						if(persistentScheduleName!=null && persistentScheduleName.length()>0 && 
-								!persistentScheduleName.equals(schedules.get(i).getSchedule_Name())) continue;						
-								//this is what is different in the content item view. Want to see 
-								//just the schedule created through the content item creation form.						
-	%>
-					<tr>
-						<!--<td><%=schedules.get(i).getAssessment_ID()%></td>-->
-						<td><%=schedules.get(i).getSchedule_Name()%></td>
-						<td><%=schedules.get(i).isRestrict_Attempts() ? schedules.get(i).getMax_Attempts() 
-							: "no limit"%></td>
-						<td><%=!schedules.get(i).isRestrict_Times() ? "None" 
-							: schedules.get(i).readSchedule_Starts_asCalendar().getTime().toString()%></td>
-						<td><%=!schedules.get(i).isRestrict_Times() ? "None" 
-							: schedules.get(i).readSchedule_Stops_asCalendar().getTime().toString()%></td>
-						<td>
-			
-	<%		 		if(schedulesactive[i]) {  if(scheduleurls[i] == null) { %>
-			 			No attempts remaining 
-	<%		 		} else 
-					{ 
-	%>
-						<form><input type="button" value="Take assessment"
-							onclick="window.open('<%=scheduleurls[i]%>');">
-						</form>
-	<%		 		}
-	%> 
-	<%		 		} else { 
-	%>					 inactive 
-	<%		 		} 
-	%>
-						</td>
-						<!--<td><%=schedules.get(i).getGroup_ID()%></td>-->
-					</tr>
-	<%		 		}
-			
-	%>
-				</table>
-	<%
-				} //end of Student view if-else statement				
-
-	%>			
-			
-	</bbUI:docTemplateBody>
-</bbData:context>	
+		} else {
+		%>
+		<bbUI:receipt type="FAIL" title="<%=cv.failTitle %>">
+			<%=cv.failMsg %>
+		</bbUI:receipt>
+		<%
+	} //End of other view
+%>
+	</bbUI:docTemplate>
+</bbData:context>

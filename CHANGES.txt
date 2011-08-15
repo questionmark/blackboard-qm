@@ -1,3 +1,9 @@
+Version 8.0.6
+-------------
+
+[#307] improved error handling when profiles have not been created in Perception
+
+
 Version 8.0.5
 -------------
 

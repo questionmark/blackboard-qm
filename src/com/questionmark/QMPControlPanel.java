@@ -78,7 +78,7 @@ public class QMPControlPanel extends QMPCourseContext {
 			ScheduleV42 s=schedules.get(i);
 			String sName=s.getSchedule_Name();
 			String sContentId=QMPContentItem.ExtractContentId(sName);
-			if (!sContentId.isEmpty()) {
+			if (sContentId.length()>0) {
 				schedules.remove(i);
 				contentIDHash.put(sContentId,s);
 				continue;
@@ -90,7 +90,7 @@ public class QMPControlPanel extends QMPCourseContext {
 			ScheduleV42 s=schedules.get(i);
 			String sName=s.getSchedule_Name();
 			String sContentId=QMPContentItem.ExtractContentId(sName);
-			if (sContentId.isEmpty() && contentNameHash.containsKey(sName)) {
+			if (sContentId.length()==0 && contentNameHash.containsKey(sName)) {
 				Content c=contentNameHash.get(sName);
 				if (!contentIDHash.containsKey(c.getId().toExternalString())) {
 					// matching name; wasn't in the ID hash; filter it

@@ -214,7 +214,7 @@ public class QMPCourseContext extends QMPContext {
 	
 	public void FindPerceptionFolderID() throws QMWiseException {
 		//get Perception group id, make it if it doesn't exist yet
-		if (folderID != null && folderID.isEmpty() && pb.getProperty("perception.syncfolders")!=null)
+		if (folderID != null && folderID.length()==0 && pb.getProperty("perception.syncfolders")!=null)
 			// sync got turned on? have another go...
 			folderID=null;
 		if (folderID == null && Connect()) {
@@ -452,7 +452,7 @@ public class QMPCourseContext extends QMPContext {
 	
 	public void AddToFolder() throws QMWiseException {
 		try {
-			if (isAdministrator && folderID!=null && !folderID.isEmpty()) {
+			if (isAdministrator && folderID!=null && folderID.length()>0) {
 				StringHolder permissions=new StringHolder();
 				if (userRole.equals(CourseMembership.Role.INSTRUCTOR))
 					permissions.value="3";
@@ -526,7 +526,7 @@ public class QMPCourseContext extends QMPContext {
 	public String ForceSynchronization() {
 		StringBuilder sb = new StringBuilder(4096); // arbitrary 4K chunk
 		boolean syncmembers=(pb.getProperty("perception.syncmembers")!=null);
-		boolean syncfolders=(pb.getProperty("perception.syncfolders")!=null && folderID!=null && !folderID.isEmpty());
+		boolean syncfolders=(pb.getProperty("perception.syncfolders")!=null && folderID!=null && folderID.length()>0);
 		if (userRole.equals(CourseMembership.Role.INSTRUCTOR) || userRole.equals(CourseMembership.Role.TEACHING_ASSISTANT)) {
 			sb.append("Perception: course " + course.getBatchUid() + ": user synchronization forced\n");
 			try {
@@ -772,7 +772,7 @@ public class QMPCourseContext extends QMPContext {
 	public void FailAccess(String msg) {
 		String link=pb.getProperty("perception.accesslink");
 		msg=StringEscapeUtils.escapeHtml(msg);
-		if (link!=null && !link.isEmpty())
+		if (link!=null && link.length()>0)
 			msg=msg+"  <a href=\""+StringEscapeUtils.escapeHtml(link)+"\">More information...</a>";
 		FailRaw("Connector Disabled",msg);
 	}

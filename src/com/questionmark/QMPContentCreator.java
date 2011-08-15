@@ -1,5 +1,8 @@
 package com.questionmark;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Vector;
@@ -17,7 +20,6 @@ import blackboard.persist.PersistenceException;
 import blackboard.platform.context.Context;
 import blackboard.platform.plugin.PlugInUtil;
 import blackboard.platform.plugin.PlugInException;
-import blackboard.servlet.util.DatePickerUtil;
 
 public class QMPContentCreator extends QMPCourseContext {
 
@@ -87,17 +89,48 @@ public class QMPContentCreator extends QMPCourseContext {
 			Fail("Form Validation Error","Limit for attempts must be an integer");
 			return false;
 		}
+		if (!ValidateDates())
+			return false;
+		return true;
+	}
+
+	
+	public boolean ValidateDates() {
 		if (request.getParameter("set_access_period")!=null) {
-			Calendar startCal = DatePickerUtil.pickerDatetimeStrToCal(request.getParameter("scheduleStart_datetime"));
-			Calendar endCal = DatePickerUtil.pickerDatetimeStrToCal(request.getParameter("scheduleEnd_datetime"));
-			if (endCal.before(startCal) || endCal.equals(startCal)) {
-				Fail("Form Validation Error","The end date must be after the start date");
+			try {
+				DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+				Calendar startCal=Calendar.getInstance();
+				Calendar endCal=Calendar.getInstance();
+				String startString=request.getParameter("start_0");
+				if (startString.length()>=10) {
+					startCal.setTime(df.parse(startString.substring(0,10)));
+				} else {
+					// probably means "don't change this time"
+					//	Log("Unexpected end string from datePicker: "+startString);
+					startCal=contentItem.startdate;
+				}
+				startCal.set(Calendar.HOUR_OF_DAY, new Integer(request.getParameter("start_hour")).intValue());
+				startCal.set(Calendar.MINUTE, new Integer(request.getParameter("start_minute")).intValue());
+				String endString=request.getParameter("end_1");
+				if (endString.length()>=10) {
+					endCal.setTime(df.parse(endString.substring(0,10)));
+				} else {
+					//	Log("Unexpected end string from datePicker: "+endString);
+					endCal=contentItem.enddate;
+				}
+				endCal.set(Calendar.HOUR_OF_DAY, new Integer(request.getParameter("end_hour")).intValue());
+				endCal.set(Calendar.MINUTE, new Integer(request.getParameter("end_minute")).intValue());
+				if (endCal.before(startCal) || endCal.equals(startCal)) {
+					Fail("Form Validation Error","The end date must be after the start date");
+					return false;
+				}
+			} catch (ParseException e) {
+				Fail("Unexpected ParseException","While parsing start or end date");
 				return false;
 			}
 		}
 		return true;
 	}
-
 	
 	public void EditForm() {
 		try {
@@ -121,9 +154,9 @@ public class QMPContentCreator extends QMPCourseContext {
 
 	public void ProcessEditForm() {
 		try {
+			String content_id = request.getParameter("content_id");
+			contentItem=new QMPContentItem(this,content_id,null);
 			if (ValidateEditForm()) {
-				String content_id = request.getParameter("content_id");
-				contentItem=new QMPContentItem(this,content_id,null);
 				title = contentItem.name;
 				contentItem.Update(request);
 			}
@@ -186,14 +219,8 @@ public class QMPContentCreator extends QMPCourseContext {
 			Fail("Form Validation Error","Limit for attempts must be an integer");
 			return false;
 		}
-		if (request.getParameter("set_access_period")!=null) {
-			Calendar startCal = DatePickerUtil.pickerDatetimeStrToCal(request.getParameter("scheduleStart_datetime"));
-			Calendar endCal = DatePickerUtil.pickerDatetimeStrToCal(request.getParameter("scheduleEnd_datetime"));
-			if (endCal.before(startCal) || endCal.equals(startCal)) {
-				Fail("Form Validation Error","The end date must be after the start date");
-				return false;
-			}
-		}
+		if (!ValidateDates())
+			return false;
 		return true;
 	}
 }

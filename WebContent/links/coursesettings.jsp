@@ -22,56 +22,36 @@
 		com.questionmark.QMWISe.*"
 %>
 
-<%@ taglib uri="/bbUI" prefix="bbUI" %>
-<%@ taglib uri="/bbData" prefix="bbData" %>
-<%
-	String path = request.getContextPath();
-	String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+path+"/";
-%>
-
+<%@ taglib uri="/bbData" prefix="bbData"%>
+<%@ taglib uri="/bbUI" prefix="bbUI"%>
 
 <bbData:context id="ctx">
+	<bbUI:docTemplate title="Course Settings">
+	<%
+	QMPCourseContext qbc=new QMPCourseContext(request,ctx);
+	if (qbc.failTitle == null)
+		qbc.UpdateSettings(request);
+	%>
+	<%
+		if (qbc.failTitle == null) {
+			String recallurl = "main.jsp?course_id=" + qbc.courseId;
+	%>
 
-		<bbUI:docTemplate>
-		
-			<bbUI:titleBar iconUrl='<%=path+"/images/qm.gif"%>' >
-				Questionmark Perception connector
-			</bbUI:titleBar>
+	<bbUI:receipt type="SUCCESS" title="Settings Saved" recallUrl="<%=recallurl%>">
+		Your settings have been saved.
+	</bbUI:receipt>
 
-			<bbUI:breadcrumbBar environment="COURSE" isContent="false">
-				<bbUI:breadcrumb>COURSE SETTINGS</bbUI:breadcrumb>
-			</bbUI:breadcrumbBar>		
-			<%
+	<%	} else {
+	%>
 
-			// Retrieve the course identifier from the form
-			String courseId = request.getParameter("course_id");
+	<bbUI:receipt type="FAIL" title="<%=qbc.failTitle %>">
+		<%=qbc.failMsg %>
+	</bbUI:receipt>
 
-			try {
-				CourseSettings courseSettings = new CourseSettings(courseId);
-	
-				Boolean hideSchedules = request.getParameter("hide_schedules") != null;
-				
-				courseSettings.setProperty("hide_schedules",hideSchedules?"1":"0");
-				
-				courseSettings.saveSettingsFile();
-			
-			} catch(PlugInException e) {
-				%>
-				<bbUI:receipt type="FAIL" title="Error saving course settings">
-					<%=e.getMessage()%>
-				</bbUI:receipt>
-				<%
-				return;
-			}
-
-			String recallurl = path+"/links/main.jsp?course_id=" + request.getParameter("course_id");
-			%>
-
-			<bbUI:receipt type="SUCCESS" title="Success" recallUrl="<%=recallurl%>">
-				Course settings were successfully saved
-			</bbUI:receipt>
-
-		</bbUI:docTemplate>
-
+	<%
+		} //End of error view
+	%>
+	</bbUI:docTemplate>
 </bbData:context>
+
 
