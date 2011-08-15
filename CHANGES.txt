@@ -1,7 +1,30 @@
-Version 8.0.6
+Version 8.0.7
 -------------
 
-[#307] improved error handling when profiles have not been created in Perception
+This is a significant upgrade to the version 8 connector which bring it in line with the
+connector for Blackboard 9.0.
+
+This release addresses an important security issue; users are encouraged to try this
+release out now and report back problems ASAP.
+
+Issues resolved in this release (numeric order):
+
+[#209] Use tree-views for Assessment list browsing
+[#213] Course menus now visible in instructor and student views
+[#216] Manual Synchronization Option for Large Courses
+[#220] Improved control over which attempt appears in the gradebook
+	Now supports first, last, best and worst
+[#222] New option to delete schedules in Perception from Blackboard
+[#223] New option to edit schedules in Perception from Blackboard content items
+[#306] Content items can now have additional descriptive text
+[#321] Save schedule restricted times in Blackboard content item
+[#325] Improve Synchronization
+[#326] Make Schedule Unavailable
+[#334] Connector setting page does not remember https setting
+[#358] Syncrhonize Email Address with Perception
+[#361] Limit use of the connector to specified courses
+[#368] Bug fix to add a default administrator ID (compatibility issue with QMWISe in Perception 5.3)
+[#369] Fixed the manifest to list a single application and modified the handlers
 
 
 Version 8.0.5
