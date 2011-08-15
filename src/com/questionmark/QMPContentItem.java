@@ -186,8 +186,6 @@ public class QMPContentItem {
 	
 	public void Update(HttpServletRequest request) {
 		try {
-			Calendar newStartdate=null;
-			Calendar newEnddate=null;
 			String newName = request.getParameter("new_schedule_name");
 			boolean newLimit = false;
 			if (newName != null) {

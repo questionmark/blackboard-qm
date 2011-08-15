@@ -69,7 +69,7 @@
 
 		<h1 id="Scheduleform">Schedule an Assessment</h1>
 		<%
-		if (cc.assessmentList.length == 0) {
+		if (cc.selectAssessmentList.length == 0) {
 			%>
 			<p>You do not have permission to schedule any assessments in Perception.</p>
 			<%
