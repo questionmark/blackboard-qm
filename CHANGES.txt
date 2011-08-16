@@ -1,3 +1,36 @@
+Version 9.1.3
+-------------
+
+This is the first release specific to Blackboard Learn 9.1.
+
+This release addresses an important security issue; users are encouraged to try this
+release out now and report back problems ASAP.
+
+It introduces several important new features.  Content items created by the
+connector can now be copied between courses, either individually or
+as part of the more general course copy procedure.
+
+Content items created with version 4.3/4.4 of the connector can now
+be upgraded for use with this version of the connector.  To make this
+easier the course control panel now detects these 'legacy' content
+items and provides links to make it easier to upgrade them.
+
+List of all issues resolved in this release (numeric order):
+
+[#209] Use tree-views for Assessment list browsing
+[#216] Manual Synchronization Option for Large Courses
+[#224] Automatic Creation/Linking to Assessment Folders (Topics are *not* supported in this release)
+[#247] Migrated all bbUI tags to bbNG to improve look and feel
+[#309] Assessments created in 4 series connectors are 'dead' links
+[#312] Schedules do not work after a course is copied
+[#321] Save schedule restricted times in Blackboard content item
+[#325] Improve Synchronization
+[#326] Make Schedule Unavailable
+[#334] Connector setting page does not remember https setting
+[#358] Synchronize Email Address with Perception
+[#361] Limit use of the connector to specified courses
+
+
 Version 9.0.30
 --------------
 
