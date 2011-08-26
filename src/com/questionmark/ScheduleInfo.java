@@ -1,6 +1,7 @@
 package com.questionmark;
 
 import java.rmi.RemoteException;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Vector;
 
@@ -32,6 +33,17 @@ public class ScheduleInfo {
 			return contentName;
 		else
 			return schedule.getSchedule_Name();
+	}
+
+	
+	public static class SortComparator implements Comparator<ScheduleInfo> {
+		public int compare(ScheduleInfo a, ScheduleInfo b) {
+			return a.DisplayName().toLowerCase().compareTo(b.DisplayName().toLowerCase());
+		}
+
+		public boolean equals(ScheduleInfo a, ScheduleInfo b) {
+			return a.DisplayName().toLowerCase().equals(b.DisplayName().toLowerCase());
+		}
 	}
 
 	
