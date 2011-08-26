@@ -78,6 +78,7 @@ public class QMPContentItem {
 	public String gradebookScoreType="BEST";
 	private ContentSettings legacyInfo=null;
 	
+
 	public QMPContentItem(QMPCourseContext ctx, String content_id, String parent_id) throws PersistenceException, QMWiseException, ValidationException {
 		this.ctx=ctx;
 		if (content_id != null) {
@@ -390,8 +391,7 @@ public class QMPContentItem {
 					while(iterator.hasNext()) {
 						CourseMembership membership = (CourseMembership) iterator.next();
 						Role userRole=membership.getRole();
-						if (!(userRole.equals(CourseMembership.Role.INSTRUCTOR) || 
-								userRole.equals(CourseMembership.Role.TEACHING_ASSISTANT)))
+						if (userRole.equals(CourseMembership.Role.STUDENT))
 							participantHash.put(membership.getUser().getUserName(), 0);
 					}
 					String[] scheduleIDs=legacyInfo.getParticipantScheduleIds();

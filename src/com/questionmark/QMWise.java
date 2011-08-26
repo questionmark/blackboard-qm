@@ -22,7 +22,7 @@ public class QMWise {
 	public QMWISeSoapStub getStub() throws QMWiseException {
 		String failMsg = null;
 		String url="";
-		if (stub == null) {
+		if (stub == null || PropertiesBean.idCache.get("qmwisestub")==null) {
 			try {
 				PropertiesBean pb = new PropertiesBean();
 				java.util.Properties p = pb.getProperties();
@@ -49,6 +49,9 @@ public class QMWise {
 					stub.getHeader("http://questionmark.com/QMWISe/", "Security").addChild(
 							new SOAPHeaderElement("http://questionmark.com/QMWISe/", "Checksum", checksum)
 					);
+				// This ensures QMWISe stub is shared across all pages using this node
+				//	...until the next time the properties are reloaded from disk!
+				PropertiesBean.idCache.put("qmwisestub", "");
 				}
 			} catch (AxisFault e) {
 				failMsg=e.getMessage();
