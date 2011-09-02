@@ -7,6 +7,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Enumeration;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
+
 import javax.servlet.http.HttpServletRequest;
 
 import blackboard.platform.plugin.PlugInException;
@@ -14,13 +16,17 @@ import blackboard.platform.plugin.PlugInUtil;
 
 public class PropertiesBean implements java.io.Serializable {
 
-	private static PropertiesBean propertiesBean;
+//	private static PropertiesBean propertiesBean;
 	private static String vendorId = "qm";
 	private static String applicationHandle = "qmpp";
 	private static String propertiesFilename = "qmpp.properties";
 	private Properties p=null;
-
+	private static Object pCacheLock=new Object();
+	private static Properties pCache=null;
+	private static long pCacheTime=0;
+	public static ConcurrentHashMap<String,String> idCache=new ConcurrentHashMap<String,String>(100);
 	public PropertiesBean() {
+		p = this.getProperties();
 	}
 
 	public void setProperties( HttpServletRequest request ) {
@@ -54,13 +60,13 @@ public class PropertiesBean implements java.io.Serializable {
 		}
 	}
 
-	public static PropertiesBean getInstance() {
-		if ( propertiesBean == null ) {
-			propertiesBean = new PropertiesBean();
-		}
-		System.out.println( "PropertiesManager getInstance() Initialized" );
-		return propertiesBean;
-	}
+//	public static PropertiesBean getInstance() {
+//		if ( propertiesBean == null ) {
+//			propertiesBean = new PropertiesBean();
+//		}
+//		System.out.println( "PropertiesManager getInstance() Initialized" );
+//		return propertiesBean;
+//	}
 
 	public Properties getProperties() {
 		File _dir = null;
@@ -73,11 +79,19 @@ public class PropertiesBean implements java.io.Serializable {
 			File _configFile = new File( _dir, propertiesFilename );
 			if ( !_configFile.exists() )
 				throw new FileNotFoundException();
-			else
-				_in = new FileInputStream(_configFile);
-
-			_props.load( _in );
-			_in.close();
+			synchronized (pCacheLock) {
+				if (pCache!=null && _configFile.lastModified()>pCacheTime)
+					pCache=null;
+				if (pCache==null) {
+					_in = new FileInputStream(_configFile);
+					_props.load( _in );
+					_in.close();
+					pCache=_props;
+					pCacheTime=_configFile.lastModified();
+					idCache.clear();
+				} else
+					_props=pCache;
+			}
 		} catch (PlugInException e) {
 			System.out.println("Unexpected PlugInException: "+e.getMessage());
 		} catch (FileNotFoundException e) {
@@ -85,14 +99,11 @@ public class PropertiesBean implements java.io.Serializable {
 		} catch (IOException e) {
 			System.out.println("Unexpected IOException: "+e.getMessage());
 		}
-//		p = _props;
 		return _props;
 	}
 
 	public String getProperty(String propertyName) {
 		String _prop = "";
-		if (p == null)
-			p = this.getProperties();
 		if (p != null)
 			_prop = p.getProperty(propertyName);
 		return _prop;

@@ -8,11 +8,13 @@ import blackboard.data.course.CourseMembership;
 import blackboard.data.gradebook.Lineitem;
 import blackboard.persist.BbPersistenceManager;
 import blackboard.persist.Id;
+import blackboard.persist.KeyNotFoundException;
 import blackboard.persist.PersistenceException;
 import blackboard.persist.course.CourseDbLoader;
 import blackboard.persist.course.CourseMembershipDbLoader;
 import blackboard.persist.gradebook.LineitemDbLoader;
 import blackboard.persist.gradebook.LineitemDbPersister;
+import blackboard.persist.user.UserDbLoader;
 import blackboard.platform.context.Context;
 
 public class QMPCallbackContext extends QMPCourseContext {
@@ -21,7 +23,7 @@ public class QMPCallbackContext extends QMPCourseContext {
 	public float scoreMax=0;
 	
 	public QMPCallbackContext(HttpServletRequest request, Context ctx) {
-		super(request, ctx);
+		super(request, ctx, "Participant_Name");
 		if (failTitle!=null)
 			return;
 		if (userRole.equals(CourseMembership.Role.GUEST) || isAdministrator) {

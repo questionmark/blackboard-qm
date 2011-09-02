@@ -28,6 +28,8 @@ public class QMPContentCreator extends QMPCourseContext {
 	
 	public QMPContentCreator(HttpServletRequest request, Context ctx, HttpServletResponse response) {
 		super(request, ctx);
+		if (failTitle!=null)
+			return;
 		try {
 			if (isAdministrator && PlugInUtil.authorizeForCourseControlPanelContent(request,response)) {
 				if (Synchronize()) {				

@@ -25,6 +25,8 @@ public class QMPContentView extends QMPCourseContext {
 	
 	public QMPContentView(HttpServletRequest request, Context ctx) {
 		super(request, ctx);
+		if (failTitle!=null)
+			return;
 		content_id=request.getParameter("content_id");
 		try {
 			if (Synchronize()) {

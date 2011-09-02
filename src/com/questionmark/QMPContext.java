@@ -59,19 +59,15 @@ public class QMPContext {
 		qmwise = new QMWise();				
 		// Get our properties object
 		pb = new PropertiesBean();
-		phantomID = pb.getProperty("phantomid");
-		//	return;
-	}
-
-	public boolean Connect() {
+		phantomID = PropertiesBean.idCache.get("phantomid");
 		try {
 			stub = qmwise.getStub();
-			return (stub != null);
 		} catch (QMWiseException e) {
 			Fail("QMWISe Exception",e.getMessage());
 		}
-		return false;
+		//	return;
 	}
+
 	
 	public Version2 Test() {
 		try {
@@ -86,10 +82,10 @@ public class QMPContext {
 
 	public void FindPhantomUserId() throws QMWiseException {
 		//get Perception group id, make it if it doesn't exist yet
-		if (phantomID == null && Connect()) {
+		if (phantomID == null && stub!=null) {
 			try {
 				phantomID=stub.getParticipantByName("bb-phantom").getParticipant_ID();
-				pb.setProperty("phantomid",phantomID);
+				PropertiesBean.idCache.put("phantomid",phantomID);
 			} catch (RemoteException e) {
 				QMWiseException qe = new QMWiseException(e);
 				if(qe.getQMErrorCode() == 1101) {
@@ -113,7 +109,7 @@ public class QMPContext {
 			newuser.setParticipant_Name("bb-phantom");
 			newuser.setPassword(RandomPassword());
 			phantomID = stub.createParticipant(newuser);
-			pb.setProperty("phantomid",phantomID);
+			PropertiesBean.idCache.put("phantomid",phantomID);
 		} catch(RemoteException e) {
 			throw new QMWiseException(e);
 		}
