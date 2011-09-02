@@ -32,6 +32,8 @@ public class QMPControlPanel extends QMPCourseContext {
 	
 	public QMPControlPanel(HttpServletRequest request, Context ctx) {
 		super(request, ctx);
+		if (failTitle!=null)
+			return;
 		String schedule_name = request.getParameter("schedule_name");
 		linkView=(schedule_name != null);
 		try {

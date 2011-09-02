@@ -12,7 +12,7 @@ import javax.xml.soap.SOAPException;
 
 public class QMWiseException extends AxisFault {
 	private String qmmessage = null;
-	private Integer qmerrorcode = null;
+	private Integer qmerrorcode = new Integer(0);
 
 	public QMWiseException(Exception e) {
 		if(e instanceof AxisFault) {

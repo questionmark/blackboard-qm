@@ -22,6 +22,8 @@ public class QMPResultsContext extends QMPCourseContext {
 	
 	public QMPResultsContext(HttpServletRequest request, Context ctx) {
 		super(request, ctx);
+		if (failTitle!=null)
+			return;
 		resultID=request.getParameter("result_id");
 		try {
 			if (Synchronize()) {
