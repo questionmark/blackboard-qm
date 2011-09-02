@@ -3,6 +3,7 @@ package com.questionmark;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.ListIterator;
@@ -19,8 +20,6 @@ import com.questionmark.QMWISe.AssessmentFolder;
 import com.questionmark.QMWISe.AssessmentTreeItem;
 import com.questionmark.QMWISe.Participant;
 import com.questionmark.QMWISe.ScheduleV42;
-
-import edu.emory.mathcs.backport.java.util.Collections;
 
 import blackboard.data.course.Course;
 import blackboard.data.course.CourseMembership;
