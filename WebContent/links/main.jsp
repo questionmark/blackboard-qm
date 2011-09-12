@@ -210,7 +210,7 @@
 						<option value="LAST">Last</option>
 					</select>
 				</bbNG:dataElement>
-				<bbNG:dataElement label="Assessment name">
+				<bbNG:dataElement label="Select assessment to schedule">
 					<select name="assessment">
 						<% 
 						for(int i = 0; i < panel.selectAssessmentList.length; i++) { 

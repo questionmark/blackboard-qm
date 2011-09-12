@@ -24,7 +24,7 @@
 
 			<content-handler>
 
-				<name value="Questionmark Perception Assessment Schedule"></name>
+				<name value="Questionmark Schedule"></name>
 			
 				<handle value="qm/schedule-link"></handle>
 
@@ -50,7 +50,7 @@
       		</content-handler>
 
 			<content-handler>
-				<name value="Legacy Questionmark Assessment"/>
+				<name value="Questionmark Legacy"/>
 				<handle value= "qm/assessment-link"/>
 				<http-actions>
                     <view value="content/viewschedule.jsp"/>
