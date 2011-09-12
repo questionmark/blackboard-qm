@@ -136,7 +136,7 @@
 							<option value="LAST">Last</option>
 						</select>
 					</bbUI:dataElement>
-					<bbUI:dataElement label="Assessment name">
+					<bbUI:dataElement label="Select assessment to schedule">
 						<select name="assessment">
 							<% 
 							for(int i = 0; i < cc.selectAssessmentList.length; i++) { 
@@ -177,7 +177,7 @@
 						<input type="text" id="end_hour" name="end_hour" size="2" disabled value="<%=hourFormat.format(cc.contentItem.enddate.getTime()) %>" /> :
 						<input type="text" id="end_minute" name="end_minute" size="2" disabled value="<%=minFormat.format(cc.contentItem.enddate.getTime()) %>" />
 					</bbUI:dataElement>
-					<bbUI:dataElement label="Permit Users to View this Content">
+					<bbUI:dataElement label="Permit Users to View this Content?">
 						<input type="radio" name="available" value="true" checked="checked" /> Yes
 						<input type="radio" name="available" value="false" /> No
 					</bbUI:dataElement>

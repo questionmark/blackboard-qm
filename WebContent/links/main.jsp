@@ -102,7 +102,7 @@
 		<bbUI:list collection="<%=panel.scheduleInfo %>" objectId="s"
 			className="com.questionmark.ScheduleInfo" collectionLabel="Scheduled Assessments">
 			<!--  emptyMsg="No assessments scheduled" showAll="true"  -->
-			<bbUI:listElement name="schedule_name" label="Schedule Name">
+			<bbUI:listElement name="schedule" label="Schedule Name">
 				<%=s.DisplayName() %>
 			</bbUI:listElement>
 			<bbUI:listElement name="max_attempts" label="Maximum attempts">
@@ -163,7 +163,7 @@
 		<form name="schedule_assessment" action='<%=panel.path+"/links/scheduleassessment.jsp"%>' method="post">
 			<bbUI:step title="Enter Information">
 				<bbUI:dataElement required="true" label="Schedule name">
-					<input type="text" name=""  /><br />
+					<input type="text" name="schedule"  /><br />
 					The schedule name must be unique if results are to be stored in the Grade Center
 				</bbUI:dataElement>	
 				<bbUI:dataElement label="Store results in Grade Center?">
@@ -181,7 +181,7 @@
 						<option value="LAST">Last</option>
 					</select>
 				</bbUI:dataElement>
-				<bbUI:dataElement label="Assessment name">
+				<bbUI:dataElement label="Select assessment to schedule">
 					<select name="assessment">
 						<% 
 						for(int i = 0; i < panel.selectAssessmentList.length; i++) { 
