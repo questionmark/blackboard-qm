@@ -1,3 +1,21 @@
+Version 8.0.8
+-------------
+
+This is a release candidate for Questionmark's next supported release.
+
+Minor wording changes to the user interface.
+
+Completes the security update work reported in 8.0.7
+
+New features in this release:
+[#382] Now sorts the list of schedules on the Control Panel page alphabetically
+
+Bug fixes:
+[#384] Synchronize Assessment Folders causes QMWISe 1802 Error
+[#385] Deleting the group in Perception causes crashes in Connector screens
+[#386] NPE when QMWISe fails without a SOAP fault code
+
+
 Version 8.0.7
 -------------
 
