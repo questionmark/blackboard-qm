@@ -1,3 +1,23 @@
+Version 9.1.5
+-------------
+
+Minor wording changes to the user interface only.
+This is a release candidate for Questionmark's next supported release.
+
+Version 9.1.4
+-------------
+
+Completes the security update work reported in 9.1.3.
+
+New features:
+[#382] Now sorts the list of schedules on the Control Panel page alphabetically
+
+Bug fixes:
+[#384] Synchronize Assessment Folders causes QMWISe 1802 Error
+[#385] Deleting the group in Perception causes crashes in Connector screens
+[#386] NPE when QMWISe fails without a SOAP fault code
+
+
 Version 9.1.3
 -------------
 
