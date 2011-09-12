@@ -24,7 +24,7 @@
 
 			<content-handler>
 
-				<name value="Questionmark Perception Assessment Schedule"></name>
+				<name value="Questionmark Schedule"></name>
 			
 				<handle value="qm/schedule-link"></handle>
 

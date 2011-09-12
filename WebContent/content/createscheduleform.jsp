@@ -122,7 +122,7 @@
 								<option value="LAST">Last</option>
 							</select>
 						</bbNG:dataElement>
-						<bbNG:dataElement label="Assessment name">
+						<bbNG:dataElement label="Select assessment to schedule">
 							<select name="assessment">
 								<% 
 								for(int i = 0; i < cc.selectAssessmentList.length; i++) { 
@@ -157,7 +157,7 @@
 								<bbNG:datePicker baseFieldName="scheduleEnd" dateTimeValue="<%= cc.contentItem.enddate%>" showDate="true" showTime="true"/>
 							</bbNG:dataElement>
 						</bbNG:dataElement>
-						<bbNG:dataElement label="Permit Users to View this Content">
+						<bbNG:dataElement label="Permit Users to View this Content?">
 							<input type="radio" name="available" value="true" checked="checked" /> Yes
 							<input type="radio" name="available" value="false" /> No
 						</bbNG:dataElement>
