@@ -1,3 +1,10 @@
+Version 8.0.9
+-------------
+
+Bug fixe:
+Fixed Javascript on Control Panel page that prevented schedule times being set.
+
+ 
 Version 8.0.8
 -------------
 

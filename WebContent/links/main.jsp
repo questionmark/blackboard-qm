@@ -146,6 +146,17 @@
 		<%		} else { 
 		%>
 		<script type="text/javascript">
+				function disable_set_access() {
+					if(document.getElementById('set_access_period')) {
+						var disabled = !document.getElementById('set_access_period').checked;
+						
+						document.getElementById('start_hour').disabled = disabled;
+						document.getElementById('start_minute').disabled = disabled;
+						
+						document.getElementById('end_hour').disabled = disabled;
+						document.getElementById('end_minute').disabled = disabled;
+					}
+				}
 				function disable_limit_attempts() {
 					if(document.getElementById('limit_attempts')) {
 						var checked = document.getElementById('limit_attempts').checked;
@@ -205,7 +216,7 @@
 				</bbUI:dataElement>
 				<bbUI:dataElement label="Set access period?">							
 					<input type="checkbox" id="set_access_period"
-						name="set_access_period" value="true" />
+						name="set_access_period" value="true" onclick="disable_set_access()"/>
 						<br/>							
 				</bbUI:dataElement>
 					<bbUI:dataElement label="Start date">
