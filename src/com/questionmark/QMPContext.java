@@ -1,6 +1,7 @@
 package com.questionmark;
 
 import java.rmi.RemoteException;
+import java.util.Enumeration;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -197,5 +198,30 @@ public class QMPContext {
 	
 	public void Log(String msg) {
 		System.out.println(msg);
+	}
+	
+	
+	public String GetRequestString() {
+		StringBuilder sb = new StringBuilder(4096);
+		Enumeration e = request.getHeaderNames();
+		while (e.hasMoreElements()) {
+			String header = (String) e.nextElement();
+			if (header != null) {
+				sb.append(header);
+				sb.append(": ");
+				sb.append(request.getHeader(header));
+				sb.append("\r\n");
+			}
+		}
+		sb.append("\r\n");
+		e = request.getParameterNames();
+		while (e.hasMoreElements()) {
+			String paramName = (String) e.nextElement();
+			sb.append(paramName);
+			sb.append(" = ");
+			sb.append(request.getParameter(paramName));
+			sb.append("\r\n");
+		}
+		return sb.toString();
 	}
 }
