@@ -47,6 +47,8 @@ boolean single_signon = false;
 				<bbNG:dataElement label="Perception server details" isRequired="true">
 					<%
 						protocol = qbc.pb.getProperty("perception.protocol");
+						if (protocol == null)
+							protocol = "https://";
 						host = qbc.pb.getProperty("perception.host");
 						port = qbc.pb.getProperty("perception.port");
 						directory = qbc.pb.getProperty("perception.directory");
@@ -55,11 +57,11 @@ boolean single_signon = false;
 						<option value="https://" <%=protocol.equals("https://")?"selected=\"selected\"":""%>>https://</option>
 						<option value="http://" <%=protocol.equals("http://")?"selected=\"selected\"":""%> >http://</option>
 					</select>
-					<input maxlength="100" size="40" type="text" name="perception.host" value="<%=( host == null )?"localhost":host%>">
+					<input maxlength="100" size="40" type="text" name="perception.host" value="<%=( host == null )?"perception.example.com":host%>">
 					:
-					<input maxlength="10" size="6" type="text" name="perception.port" value="<%=( port == null )?"80":port%>">
+					<input maxlength="10" size="6" type="text" name="perception.port" value="<%=( port == null )?"443":port%>">
 					/
-					<input maxlength="100" size="12" type="text" name="perception.directory" value="<%=( directory == null )?"QMWISe4":directory%>">
+					<input maxlength="100" size="12" type="text" name="perception.directory" value="<%=( directory == null )?"QMWISe5":directory%>">
 				</bbNG:dataElement>
 
 				<bbNG:dataElement label="Use Perception security (recommended)" isRequired="false">

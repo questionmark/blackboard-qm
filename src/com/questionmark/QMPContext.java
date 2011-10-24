@@ -70,17 +70,6 @@ public class QMPContext {
 	}
 
 	
-	public Version2 Test() {
-		try {
-			Version2 version=qmwise.getVersion();
-			return version;
-		} catch (QMWiseException e) {
-			Fail("QMWISe Exception",e.getMessage());
-		}
-		return null;
-	}
-
-
 	public void FindPhantomUserId() throws QMWiseException {
 		//get Perception group id, make it if it doesn't exist yet
 		if (phantomID == null && stub!=null) {
