@@ -47,6 +47,8 @@ boolean single_signon = false;
 				<bbNG:dataElement label="Perception server details" isRequired="true">
 					<%
 						protocol = qbc.pb.getProperty("perception.protocol");
+						if (protocol == null)
+							protocol = "https://";
 						host = qbc.pb.getProperty("perception.host");
 						port = qbc.pb.getProperty("perception.port");
 						directory = qbc.pb.getProperty("perception.directory");
@@ -55,11 +57,11 @@ boolean single_signon = false;
 						<option value="https://" <%=protocol.equals("https://")?"selected=\"selected\"":""%>>https://</option>
 						<option value="http://" <%=protocol.equals("http://")?"selected=\"selected\"":""%> >http://</option>
 					</select>
-					<input maxlength="100" enabled="1" size="40" type="text" name="perception.host" value="<%=( host == null )?"localhost":host%>">
+					<input maxlength="100" size="40" type="text" name="perception.host" value="<%=( host == null )?"perception.example.com":host%>">
 					:
-					<input maxlength="10" enabled="1" size="6" type="text" name="perception.port" value="<%=( port == null )?"80":port%>">
+					<input maxlength="10" size="6" type="text" name="perception.port" value="<%=( port == null )?"443":port%>">
 					/
-					<input maxlength="100" enabled="1" size="12" type="text" name="perception.directory" value="<%=( directory == null )?"QMWISe4":directory%>">
+					<input maxlength="100" size="12" type="text" name="perception.directory" value="<%=( directory == null )?"QMWISe5":directory%>">
 				</bbNG:dataElement>
 
 				<bbNG:dataElement label="Use Perception security (recommended)" isRequired="false">
@@ -69,12 +71,12 @@ boolean single_signon = false;
 
 				<bbNG:dataElement label="Perception username" isRequired="false">
 					<% username = qbc.pb.getProperty("perception.username"); %>
-					<input maxlength="100" enabled="1" size="30" type="text" name="perception.username" value="<%=( username == null )?"":username%>">
+					<input maxlength="100" size="30" type="text" name="perception.username" value="<%=( username == null )?"":username%>">
 				</bbNG:dataElement>
 
 				<bbNG:dataElement label="Perception checksum" isRequired="false">
 					<% checksum = qbc.pb.getProperty("perception.checksum"); %>
-					<input maxlength="100" enabled="1" size="30" type="text" name="perception.checksum" value="<%=( checksum == null )?"":checksum%>">
+					<input maxlength="100" size="30" type="text" name="perception.checksum" value="<%=( checksum == null )?"":checksum%>">
 				</bbNG:dataElement>
 
 			</bbNG:step>
@@ -146,7 +148,7 @@ boolean single_signon = false;
 					if (link == null)
 						link="";
 					%>
-					<input maxlength="1024" enabled="1" size="100" type="text" name="perception.accesslink" value="<%=link%>">
+					<input maxlength="1024" size="100" type="text" name="perception.accesslink" value="<%=link%>">
 					<bbNG:elementInstructions text="An optional link to a web page with information helpful to people denied access to Perception"/>
 				</bbNG:dataElement>
 

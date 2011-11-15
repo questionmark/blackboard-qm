@@ -20,15 +20,47 @@ public class PropertiesBean implements java.io.Serializable {
 	private static String vendorId = "qm";
 	private static String applicationHandle = "qmpp";
 	private static String propertiesFilename = "qmpp.properties";
+	// constants for getting and setting properties
+	public static final String protocol_key = "perception.protocol";
+	public static final String host_key = "perception.host";
+	public static final String port_key = "perception.port";
+	public static final String directory_key = "perception.directory";
+	public static final String security_key = "perception.security";
+	public static final String username_key = "perception.username";
+	public static final String checksum_key = "perception.checksum";
+	public static final String version_key = "perception.version";
+	public static final String syncusers_key = "perception.syncusers";
+	public static final String syncgroups_key = "perception.syncgroups";
+	public static final String syncmembers_key = "perception.syncmembers";
+	public static final String syncfolders_key = "perception.syncfolders";
+	public static final String accesslink_key = "perception.accesslink";
+	public static final String syncperiod_key = "perception.syncperiod";
+	public static final String singlesignon_key = "perception.singlesignon";
+	
 	private Properties p=null;
 	private static Object pCacheLock=new Object();
 	private static Properties pCache=null;
 	private static long pCacheTime=0;
 	public static ConcurrentHashMap<String,String> idCache=new ConcurrentHashMap<String,String>(100);
+
 	public PropertiesBean() {
 		p = this.getProperties();
 	}
 
+	
+	public static void SetDefaults(Properties pNew) {
+		if (pNew != null) {
+			pNew.setProperty(protocol_key,"https://");
+			pNew.setProperty(host_key,"ondemand.questionmark.com");
+			pNew.setProperty(port_key,"443");
+			pNew.setProperty(directory_key,"qmwise/123456");
+			pNew.setProperty(security_key,"Yes");
+			pNew.setProperty(username_key,"Manager");
+			pNew.setProperty(checksum_key,"434de524caad1f0bd4983c4cbf0cd0e9");
+			pNew.setProperty(version_key,"1");			
+		}
+	}
+	
 	public void setProperties( HttpServletRequest request ) {
 		Enumeration pNames = request.getParameterNames();
 		p = new Properties();
@@ -96,6 +128,7 @@ public class PropertiesBean implements java.io.Serializable {
 			System.out.println("Unexpected PlugInException: "+e.getMessage());
 		} catch (FileNotFoundException e) {
 			System.out.println("Questionmark Connector: missing properties file, assuming first run");
+			SetDefaults(_props);
 		} catch (IOException e) {
 			System.out.println("Unexpected IOException: "+e.getMessage());
 		}
