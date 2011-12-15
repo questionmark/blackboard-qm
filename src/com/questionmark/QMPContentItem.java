@@ -12,7 +12,6 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang.StringEscapeUtils;
 
-import blackboard.base.BbList;
 import blackboard.base.FormattedText;
 import blackboard.data.ExtendedData;
 import blackboard.data.ValidationException;
@@ -22,7 +21,6 @@ import blackboard.data.course.CourseMembership;
 import blackboard.data.course.CourseMembership.Role;
 import blackboard.data.gradebook.Lineitem;
 import blackboard.data.gradebook.Score;
-import blackboard.data.user.User;
 import blackboard.persist.Id;
 import blackboard.persist.KeyNotFoundException;
 import blackboard.persist.PersistenceException;
@@ -35,7 +33,6 @@ import blackboard.persist.gradebook.ScoreDbPersister;
 import blackboard.servlet.util.DatePickerUtil;
 
 import com.questionmark.QMWISe.Assessment;
-import com.questionmark.QMWISe.Participant;
 import com.questionmark.QMWISe.ScheduleV42;
 import com.questionmark.legacy.ContentSettings;
 import com.questionmark.legacy.PerceptionSettings;
@@ -84,7 +81,7 @@ public class QMPContentItem {
 		if (content_id != null) {
 			// ignore parent_id
 			LoadCourseDocument(content_id);
-			LoadSchedule();
+			LoadSchedule(true);
 			LoadLineitem();
 			if (copyFlag || version==LEGACY_VERSION)
 				PersistCourseDocument();
@@ -123,6 +120,16 @@ public class QMPContentItem {
 		// read the value of the "store results in gradebook" select menu
 		gradebookScore=request.getParameter("use_gradebook");
 		gradebookScoreType=request.getParameter("result_type");
+	}
+	
+	
+	public QMPContentItem(QMPCourseContext ctx, String content_id, boolean quickly) throws PersistenceException, QMWiseException, ValidationException {
+		this.ctx=ctx;
+		LoadCourseDocument(content_id);
+		LoadSchedule(quickly);
+		LoadLineitem();
+		if (copyFlag || version==LEGACY_VERSION)
+			PersistCourseDocument();
 	}
 	
 	
@@ -343,7 +350,7 @@ public class QMPContentItem {
 	}
 
 	
-	public void LoadSchedule() throws QMWiseException, KeyNotFoundException, PersistenceException {
+	private void LoadSchedule(boolean quickly) throws QMWiseException, KeyNotFoundException, PersistenceException {
 		String prefix="BB"+contentId.toExternalString()+" ";
 		ctx.Log("Loading schedule for BB"+contentId.toExternalString()+" "+name);
 		if (version>=XDATA_VERSION || version==LEGACY_VERSION) {
@@ -426,29 +433,32 @@ public class QMPContentItem {
 					// Important, we might well leave some course students without a schedule, catch below...
 				}
 			}
-			// we need only search for schedules which match the contentId in future
-			schedules=ctx.GroupSchedules(name,contentId);
-			if (schedules.size()>0)
-				schedule=schedules.get(0);
-			else if (individualSchedules && schedules.size()==0 && !ctx.isAdministrator && !assessmentMissing) {
-				// catch from above...
-				// this student has missed out on a synchronization so we correct the problem now
-				NewSchedule();
-				schedule.setSchedule_Name(prefix+name);
-				schedule.setParticipant_ID(new Integer(ctx.userID).intValue());
-				schedule.setParticipant_Name(ctx.user.getUserName());
-				try {
-					ctx.stub.createScheduleParticipantV42(schedule);
-				} catch (RemoteException re) {
-					throw new QMWiseException(re);
+			// quickly flag used to remove noisy QMWISe calls during callback processing
+			if (!quickly) {
+				// we need only search for schedules which match the contentId in future
+				schedules=ctx.GroupSchedules(name,contentId);
+				if (schedules.size()>0)
+					schedule=schedules.get(0);
+				else if (individualSchedules && schedules.size()==0 && !ctx.isAdministrator && !assessmentMissing) {
+					// catch from above...
+					// this student has missed out on a synchronization so we correct the problem now
+					NewSchedule();
+					schedule.setSchedule_Name(prefix+name);
+					schedule.setParticipant_ID(new Integer(ctx.userID).intValue());
+					schedule.setParticipant_Name(ctx.user.getUserName());
+					try {
+						ctx.stub.createScheduleParticipantV42(schedule);
+					} catch (RemoteException re) {
+						throw new QMWiseException(re);
+					}
+				} else {
+					// assessment, group or phantom schedule went missing in Perception; presumably by design?
+					// Workaround for accidental deletion: make a copy of the content item!
+					// It is possible that a missing assessment may be restored in future of course
+					ctx.Fail("Assessment Not Found","This assessment is no longer available (no matching schedule?)");
 				}
-			} else {
-				// assessment, group or phantom schedule went missing in Perception; presumably by design?
-				// Workaround for accidental deletion: make a copy of the content item!
-				// It is possible that a missing assessment may be restored in future of course
-				ctx.Fail("Assessment Not Found","This assessment is no longer available (no matching schedule?)");
 			}
-		} else {
+		} else if (!quickly) {
 			schedules=ctx.GroupSchedules(name,contentId);
 			if (schedules.size()>0) {
 				schedule=schedules.get(0);
@@ -932,7 +942,7 @@ public class QMPContentItem {
 				if (!gradebookScore.equals("no") && xData.getValue("lineitemID")!=null)
 					lineitemId=Id.generateId(Lineitem.LINEITEM_DATA_TYPE, xData.getValue("lineitemID"));
 			}
-		}			
+		}
 	}
 
 	
