@@ -81,7 +81,7 @@ public class QMPContentItem {
 		if (content_id != null) {
 			// ignore parent_id
 			LoadCourseDocument(content_id);
-			LoadSchedule(true);
+			LoadSchedule(false);
 			LoadLineitem();
 			if (copyFlag || version==LEGACY_VERSION)
 				PersistCourseDocument();
