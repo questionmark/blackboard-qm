@@ -35,8 +35,6 @@ public class QMPContext {
 	public HttpServletRequest request = null;
 	public String path;
 	public String basePath;
-	public QMWise qmwise = null;
-	public QMWISeSoapStub stub = null;
 	public BbPersistenceManager bbPm = null;
 	public User user = null;
 	public Boolean sysAdmin = false;
@@ -57,24 +55,20 @@ public class QMPContext {
 		} else {
 			sysAdmin=false;
 		}
-		qmwise = new QMWise();				
 		// Get our properties object
 		pb = new PropertiesBean();
 		phantomID = PropertiesBean.idCache.get("phantomid");
-		try {
-			stub = qmwise.getStub();
-		} catch (QMWiseException e) {
-			Fail("QMWISe Exception",e.getMessage());
-		}
 		//	return;
 	}
 
 	
 	public void FindPhantomUserId() throws QMWiseException {
 		//get Perception group id, make it if it doesn't exist yet
-		if (phantomID == null && stub!=null) {
+		if (phantomID == null) {
+			QMWise q=null;
 			try {
-				phantomID=stub.getParticipantByName("bb-phantom").getParticipant_ID();
+				q=QMWise.connect();
+				phantomID=q.stub.getParticipantByName("bb-phantom").getParticipant_ID();
 				PropertiesBean.idCache.put("phantomid",phantomID);
 			} catch (RemoteException e) {
 				QMWiseException qe = new QMWiseException(e);
@@ -85,23 +79,29 @@ public class QMPContext {
 				} else {
 					throw qe;
 				}
+			} finally {
+				QMWise.close(q);
 			}
 		}
 	}
 	
 	
 	public void CreatePhantomUser() throws QMWiseException {
+		QMWise q=null;
 		try {
+			q=QMWise.connect();
 			Participant newuser = new Participant();							
 			//Clean out special characters by replacing them with acceptable ones (By Perception)
 			newuser.setFirst_Name("Phantom");
 			newuser.setLast_Name("User"); 							
 			newuser.setParticipant_Name("bb-phantom");
 			newuser.setPassword(RandomPassword());
-			phantomID = stub.createParticipant(newuser);
+			phantomID = q.stub.createParticipant(newuser);
 			PropertiesBean.idCache.put("phantomid",phantomID);
 		} catch(RemoteException e) {
 			throw new QMWiseException(e);
+		} finally {
+			QMWise.close(q);
 		}
 	}
 

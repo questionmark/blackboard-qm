@@ -158,10 +158,12 @@ public class QMPCourseContext extends QMPContext {
 	
 	
 	public String EnterpriseManagerLink() {
+		QMWise q=null;
 		try {
+			q=QMWise.connect();
 			if (Synchronize() && isAdministrator) {
 				if (pb.getProperty("perception.singlesignon") != null)
-					return stub.getAccessAdministrator(courseUser.getUserName());
+					return q.stub.getAccessAdministrator(courseUser.getUserName());
 				else
 					Fail("Enterprise Manager","Login to Enterprise Manager has been disabled by the site administrator.");
 			} else {
@@ -170,6 +172,8 @@ public class QMPCourseContext extends QMPContext {
 		} catch (RemoteException e) {
 			QMWiseException qe=new QMWiseException(e);
 			FailQMWISe(qe);
+		} finally {
+			QMWise.close(q);
 		}
 		return null;
 	}
@@ -250,11 +254,13 @@ public class QMPCourseContext extends QMPContext {
 	public void FindPerceptionGroupID() throws QMWiseException {
 		//get Perception group id, make it if it doesn't exist yet
 		if (groupID == null) {
+			QMWise q=null;
 			try {
-				com.questionmark.QMWISe.Group group = stub.getGroupByName(course.getBatchUid());
+				q=QMWise.connect();
+				com.questionmark.QMWISe.Group group = q.stub.getGroupByName(course.getBatchUid());
 				groupID = group.getGroup_ID();
 				// Check that the phantom user is in the group
-				com.questionmark.QMWISe.Group[] groupList=stub.getParticipantGroupList(phantomID);
+				com.questionmark.QMWISe.Group[] groupList=q.stub.getParticipantGroupList(phantomID);
 				int iGroup;
 				boolean found=false;
 				for(iGroup = 0; iGroup < groupList.length; iGroup++) {
@@ -266,7 +272,7 @@ public class QMPCourseContext extends QMPContext {
 				if (!found) {
 					String[] userIDList=new String[1];
 					userIDList[0]=phantomID;
-					stub.addGroupParticipantList(groupID,userIDList);
+					q.stub.addGroupParticipantList(groupID,userIDList);
 				}
 				// Cache the group ID for future synchronization on this course
 				//courseSettings.setProperty("groupid", groupID);
@@ -279,6 +285,8 @@ public class QMPCourseContext extends QMPContext {
 				} else {
 					throw qe;
 				}
+			} finally {
+				QMWise.close(q);
 			}
 		}
 	}
@@ -286,14 +294,18 @@ public class QMPCourseContext extends QMPContext {
 	
 	public void CreatePerceptionGroup() throws QMWiseException {
 		//group doesn't exist -- make it
+		QMWise q=null;
 		try {
+			q=QMWise.connect();
 			com.questionmark.QMWISe.Group newgroup = new com.questionmark.QMWISe.Group();
 			newgroup.setParent_ID("0");
 			newgroup.setGroup_Name(course.getBatchUid());
 			newgroup.setDescription(course.getTitle());
-			groupID = stub.createGroup(newgroup);
+			groupID = q.stub.createGroup(newgroup);
 		} catch(RemoteException e) {
 			throw new QMWiseException(e);
+		} finally {
+			QMWise.close(q);
 		}
 	}
 
@@ -304,15 +316,17 @@ public class QMPCourseContext extends QMPContext {
 			// sync got turned on? have another go...
 			folderID=null;
 		if (folderID == null) {
+			QMWise q=null;
 			try {
+				q=QMWise.connect();
 				String username=pb.getProperty("perception.username");
 				String adminID=userID;
 				if (username!=null) {
 					// if possible use a powerful user
-					Administrator admin=stub.getAdministratorByName(username);
+					Administrator admin=q.stub.getAdministratorByName(username);
 					adminID=admin.getAdministrator_ID();
 				}
-				AssessmentTreeItem[] items=stub.getAssessmentTreeByAdministrator(adminID, "0", 0);
+				AssessmentTreeItem[] items=q.stub.getAssessmentTreeByAdministrator(adminID, "0", 0);
 				for (AssessmentTreeItem item: items) {
 					if (item.getType()==0 && item.getName().equalsIgnoreCase(course.getBatchUid())) {
 						folderID=item.getID();
@@ -326,6 +340,8 @@ public class QMPCourseContext extends QMPContext {
 			} catch(RemoteException e) {
 				QMWiseException qe = new QMWiseException(e);
 				throw qe;
+			} finally {
+				QMWise.close(q);
 			}
 		}
 	}
@@ -333,13 +349,15 @@ public class QMPCourseContext extends QMPContext {
 	
 	public void CreatePerceptionFolder() throws QMWiseException {
 		// folder doesn't exist -- make it
+		QMWise q=null;
 		try {
+			q=QMWise.connect();
 			AssessmentFolder folder = new AssessmentFolder();
 			folder.setParent_ID("0");
 			folder.setID("");
 			folder.setName(course.getBatchUid());
 			folder.setDescription(course.getTitle());
-			folderID = stub.createAssessmentFolder(folder);
+			folderID = q.stub.createAssessmentFolder(folder);
 		} catch(RemoteException e) {
 			QMWiseException qe = new QMWiseException(e);
 			if (qe.getQMErrorCode()==1802) {
@@ -347,38 +365,46 @@ public class QMPCourseContext extends QMPContext {
 				Fail("Connector Configuration Error","QMWISe user does not have permission to see all assessments");
 			} else
 				throw qe;
+		} finally {
+			QMWise.close(q);
 		}
 	}
 
 	
 	public void FindPerceptionUserID() throws QMWiseException {
 		if (userID == null) {
-			if (isAdministrator) {
-				try {
-					userAdministratorInfo=stub.getAdministratorByName(courseUser.getUserName());
-					userID = userAdministratorInfo.getAdministrator_ID();
-				} catch(RemoteException e) {
-					QMWiseException qe = new QMWiseException(e);
-					if(qe.getQMErrorCode() == 1601) {
-						//user doesn't exist
-						userID=null;
-					} else {
-						throw qe;
-					}
-				}				
-			} else if (GetPerceptionRole()==PERCEPTION_PARTICIPANT) {
-				try {
-					userParticipantInfo=stub.getParticipantByName(courseUser.getUserName());
-					userID=userParticipantInfo.getParticipant_ID();
-				} catch (RemoteException e) {
-					QMWiseException qe = new QMWiseException(e);
-					if(qe.getQMErrorCode() == 1101) {
-						// user doesn't exist yet
-						userID=null;
-					} else {
-						throw qe;
+			QMWise q=null;
+			try {
+				q=QMWise.connect();
+				if (isAdministrator) {
+					try {
+						userAdministratorInfo=q.stub.getAdministratorByName(courseUser.getUserName());
+						userID = userAdministratorInfo.getAdministrator_ID();
+					} catch(RemoteException e) {
+						QMWiseException qe = new QMWiseException(e);
+						if(qe.getQMErrorCode() == 1601) {
+							//user doesn't exist
+							userID=null;
+						} else {
+							throw qe;
+						}
+					}				
+				} else if (GetPerceptionRole()==PERCEPTION_PARTICIPANT) {
+					try {
+						userParticipantInfo=q.stub.getParticipantByName(courseUser.getUserName());
+						userID=userParticipantInfo.getParticipant_ID();
+					} catch (RemoteException e) {
+						QMWiseException qe = new QMWiseException(e);
+						if(qe.getQMErrorCode() == 1101) {
+							// user doesn't exist yet
+							userID=null;
+						} else {
+							throw qe;
+						}
 					}
 				}
+			} finally {
+				QMWise.close(q);
 			}
 		}
 	}
@@ -386,12 +412,14 @@ public class QMPCourseContext extends QMPContext {
 	
 	public void CheckProfiles() throws QMWiseException {
 		if (profileCheck) {
+			QMWise q=null;
 			try {
+				q=QMWise.connect();
 				//make sure admin profiles exist in Perception 
 				//(bug in QMWise causes createAdministrator call 
 				//with a non-existent profile name to fail with 
 				//a success message)
-				String[] profiles = stub.getProfileNameList();
+				String[] profiles = q.stub.getProfileNameList();
 				for(int k = 0; k < profiles.length; k++) {
 					if(profiles[k].equals(BLACKBOARD_TA_PROFILE)) {
 						taProfile=true;
@@ -401,6 +429,8 @@ public class QMPCourseContext extends QMPContext {
 				}
 			} catch(RemoteException e) {
 				throw new QMWiseException(e);
+			} finally {
+				QMWise.close(q);
 			}
 			profileCheck=false;
 		}
@@ -409,53 +439,59 @@ public class QMPCourseContext extends QMPContext {
 	
 	public void CreatePerceptionUser() throws QMWiseException {
 		// person doesn't exist -- create them
-		if (isAdministrator) {
-			String profile;
-			CheckProfiles();
-			if (GetBlackboardRole()==BLACKBOARD_INSTRUCTOR) {
-				if (! instructorProfile) {
-					throw new QMWiseException("Error creating administrator: the profile BLACKBOARD INSTRUCTOR does not exist in Perception");
+		QMWise q=null;
+		try {
+			q=QMWise.connect();
+			if (isAdministrator) {
+				String profile;
+				CheckProfiles();
+				if (GetBlackboardRole()==BLACKBOARD_INSTRUCTOR) {
+					if (! instructorProfile) {
+						throw new QMWiseException("Error creating administrator: the profile BLACKBOARD INSTRUCTOR does not exist in Perception");
+					}
+					profile=BLACKBOARD_INSTRUCTOR_PROFILE;
+				} else { // must be BLACKBOARD_TA
+					if (! taProfile ) {
+						throw new QMWiseException("Error creating administrator: the profile BLACKBOARD TA does not exist in Perception");
+					}
+					profile=BLACKBOARD_TA_PROFILE;
 				}
-				profile=BLACKBOARD_INSTRUCTOR_PROFILE;
-			} else { // must be BLACKBOARD_TA
-				if (! taProfile ) {
-					throw new QMWiseException("Error creating administrator: the profile BLACKBOARD TA does not exist in Perception");
+				try {
+					//build new user
+					Administrator newuser = new Administrator();
+					newuser.setAdministrator_ID("0");
+					newuser.setAdministrator_Name(courseUser.getUserName());
+					newuser.setPassword(courseUser.getPassword().substring(0, 20));
+					newuser.setProfile_Name(profile);
+					//make new user
+					userID = q.stub.createAdministrator(newuser);
+					AddToGroup();
+				} catch(RemoteException e) {
+					throw new QMWiseException(e);
+				}			
+			} else if (GetPerceptionRole()==PERCEPTION_PARTICIPANT) {
+				try {
+					Participant newuser = new Participant();							
+					//Clean out special characters by replacing them with acceptable ones (By Perception)
+					String userFirstName = replaceSpecChars(courseUser.getGivenName());
+					String userLastName = replaceSpecChars(courseUser.getFamilyName());	
+					newuser.setFirst_Name(userFirstName);
+					newuser.setLast_Name(userLastName); 							
+					newuser.setParticipant_Name(courseUser.getUserName());
+					newuser.setPassword(courseUser.getPassword().substring(0, 20));
+					newuser.setPrimary_Email(courseUser.getEmailAddress());
+					userID = q.stub.createParticipant(newuser);
+					AddToGroup();
+				} catch(RemoteException e) {
+					QMWiseException qe = new QMWiseException(e);
+					if(qe.getQMErrorCode()==4002)
+						System.out.println("Illegal character not handled");
+					throw qe;
 				}
-				profile=BLACKBOARD_TA_PROFILE;
+
 			}
-			try {
-				//build new user
-				Administrator newuser = new Administrator();
-				newuser.setAdministrator_ID("0");
-				newuser.setAdministrator_Name(courseUser.getUserName());
-				newuser.setPassword(courseUser.getPassword().substring(0, 20));
-				newuser.setProfile_Name(profile);
-				//make new user
-				userID = stub.createAdministrator(newuser);
-				AddToGroup();
-			} catch(RemoteException e) {
-				throw new QMWiseException(e);
-			}			
-		} else if (GetPerceptionRole()==PERCEPTION_PARTICIPANT) {
-			try {
-				Participant newuser = new Participant();							
-				//Clean out special characters by replacing them with acceptable ones (By Perception)
-				String userFirstName = replaceSpecChars(courseUser.getGivenName());
-				String userLastName = replaceSpecChars(courseUser.getFamilyName());	
-				newuser.setFirst_Name(userFirstName);
-				newuser.setLast_Name(userLastName); 							
-				newuser.setParticipant_Name(courseUser.getUserName());
-				newuser.setPassword(courseUser.getPassword().substring(0, 20));
-				newuser.setPrimary_Email(courseUser.getEmailAddress());
-				userID = stub.createParticipant(newuser);
-				AddToGroup();
-			} catch(RemoteException e) {
-				QMWiseException qe = new QMWiseException(e);
-				if(qe.getQMErrorCode()==4002)
-					System.out.println("Illegal character not handled");
-				throw qe;
-			}
-			
+		} finally {
+			QMWise.close(q);
 		}
 	}
 	
@@ -465,7 +501,9 @@ public class QMPCourseContext extends QMPContext {
 		boolean update=false;
 		// we cannot update administrator information
 		if (GetPerceptionRole()==PERCEPTION_PARTICIPANT) {
+			QMWise q=null;
 			try {
+				q=QMWise.connect();
 				// Clean out special characters by replacing them with acceptable ones (By Perception)
 				String userFirstName = replaceSpecChars(courseUser.getGivenName());
 				String userLastName = replaceSpecChars(courseUser.getFamilyName());	
@@ -483,26 +521,29 @@ public class QMPCourseContext extends QMPContext {
 					update=true;
 				}
 				if (update)
-					stub.setParticipant(userParticipantInfo);
+					q.stub.setParticipant(userParticipantInfo);
 			} catch(RemoteException e) {
 				QMWiseException qe = new QMWiseException(e);
 				if(qe.getQMErrorCode()==4002)
 					System.out.println("Illegal character not handled");
 				throw qe;
-			}
-			
+			} finally {
+				QMWise.close(q);
+			}			
 		}
 	}
 	
 	
 	public boolean IsGroupMember() throws QMWiseException {
 		boolean found=false;
+		QMWise q=null;
 		try {
+			q=QMWise.connect();
 			com.questionmark.QMWISe.Group[] groupList;
 			if (isAdministrator)
-				groupList=stub.getAdministratorGroupList(userID);
+				groupList=q.stub.getAdministratorGroupList(userID);
 			else if (GetPerceptionRole()==PERCEPTION_PARTICIPANT)
-				groupList=stub.getParticipantGroupList(userID);
+				groupList=q.stub.getParticipantGroupList(userID);
 			else
 				return false;
 			int iGroup;
@@ -514,6 +555,8 @@ public class QMPCourseContext extends QMPContext {
 			}
 		} catch (RemoteException e) {
 			throw new QMWiseException(e);
+		} finally {
+			QMWise.close(q);
 		}
 		return found;
 	}
@@ -522,19 +565,21 @@ public class QMPCourseContext extends QMPContext {
 	public void AddToGroup() throws QMWiseException {
 		String[] userIDList=new String[1];
 		userIDList[0]=userID;
+		QMWise q=null;
 		try {
+			q=QMWise.connect();
 			if (isAdministrator) {
-				stub.addGroupAdministratorList(groupID, userIDList);
+				q.stub.addGroupAdministratorList(groupID, userIDList);
 			} else if (GetPerceptionRole()==PERCEPTION_PARTICIPANT) {
-				stub.addGroupParticipantList(groupID,userIDList);
+				q.stub.addGroupParticipantList(groupID,userIDList);
 				//get schedules from phantom user
 				ScheduleV42[] schedulesarray;
-				schedulesarray = stub.getScheduleListByParticipantV42(new Integer(phantomID).intValue());
+				schedulesarray = q.stub.getScheduleListByParticipantV42(new Integer(phantomID).intValue());
 				for(int i = 0; i < schedulesarray.length; i++) {
 					ScheduleV42 schedule=schedulesarray[i];
 					if(schedule.getGroup_ID() == new Integer(groupID).intValue()) {
 						schedule.setParticipant_ID(new Integer(userID).intValue());					
-						stub.createScheduleParticipantV42(schedule);
+						q.stub.createScheduleParticipantV42(schedule);
 					}
 				}
 			}
@@ -542,24 +587,30 @@ public class QMPCourseContext extends QMPContext {
 			// groupID could have gone bad here; clear it from the cache
 			PropertiesBean.idCache.remove("groupid."+courseId);
 			throw new QMWiseException(e);
+		} finally {
+			QMWise.close(q);
 		}
 	}
 	
 	
 	public void AddToFolder() throws QMWiseException {
+		QMWise q=null;
 		try {
+			q=QMWise.connect();
 			if (isAdministrator && folderID!=null && folderID.length()>0) {
 				StringHolder permissions=new StringHolder();
 				if (GetBlackboardRole()==BLACKBOARD_INSTRUCTOR)
 					permissions.value="3";
 				else
 					permissions.value="1";
-				stub.assignAdministratorToAssessmentFolder(userID, folderID, permissions);
+				q.stub.assignAdministratorToAssessmentFolder(userID, folderID, permissions);
 			}
 		} catch (RemoteException e) {
 			// folderID could have gone bad here; clear it from the cache
 			PropertiesBean.idCache.remove("folderid."+courseId);
 			throw new QMWiseException(e);
+		} finally {
+			QMWise.close(q);
 		}
 	}
 	
@@ -628,96 +679,104 @@ public class QMPCourseContext extends QMPContext {
 		StringBuilder sb = new StringBuilder(4096); // arbitrary 4K chunk
 		boolean syncmembers=(pb.getProperty("perception.syncmembers")!=null);
 		boolean syncfolders=(pb.getProperty("perception.syncfolders")!=null && folderID!=null && folderID.length()>0);
-		if (isAdministrator) {
-			sb.append("Perception: course " + course.getBatchUid() + ": user synchronization forced\n");
-			try {
-				ArrayList<CourseMembership> allMembershipsList = crsMembershipLoader.loadByCourseId(courseIdObject, null, true);
-				ListIterator<CourseMembership> iterator = allMembershipsList.listIterator();
-				Hashtable<String,User> adminHash= new Hashtable<String,User>();
-				Hashtable<String,User> participantHash= new Hashtable<String,User>();
-				// sort course members into admins and participants as we go...
-				while(iterator.hasNext()) {
-					CourseMembership membership = (CourseMembership) iterator.next();
-					SetCourseUser(membership);
-					if (isAdministrator) {
-						//sb.append(courseUser.getUserName()+" is an administrator on the course\n");
-						adminHash.put(courseUser.getUserName(),courseUser);
-					} else if (GetPerceptionRole()==PERCEPTION_PARTICIPANT) {
-						//sb.append(courseUser.getUserName()+" is a participant on the course\n");
-						participantHash.put(courseUser.getUserName(), courseUser);
-					} else
-						continue;
-					if (!Synchronize(true)) {
-						sb.append(courseUser.getUserName()+": "+failTitle+"; "+failMsg+"\n");
-						failTitle=null;
-						failMsg=null;
-					}
-				}
-				// All users are synched into Perception now; return to the current user
-				SetCourseUser(null);
-				if (syncmembers) {
-					// now weed out people from the Perception group who are not in the hashmaps
-					Participant pMembers[];
-					Vector<String> killList=new Vector<String>();
-					pMembers=stub.getParticipantListByGroup(groupID);
-					for(int i = 0; i < pMembers.length; i++) {
-						Participant p=pMembers[i];
-						if (p.getParticipant_ID().equals(phantomID) || participantHash.containsKey(p.getParticipant_Name()))
+		QMWise q=null;
+		try {
+			q=QMWise.connect();
+			if (isAdministrator) {
+				sb.append("Perception: course " + course.getBatchUid() + ": user synchronization forced\n");
+				try {
+					ArrayList<CourseMembership> allMembershipsList = crsMembershipLoader.loadByCourseId(courseIdObject, null, true);
+					ListIterator<CourseMembership> iterator = allMembershipsList.listIterator();
+					Hashtable<String,User> adminHash= new Hashtable<String,User>();
+					Hashtable<String,User> participantHash= new Hashtable<String,User>();
+					// sort course members into admins and participants as we go...
+					while(iterator.hasNext()) {
+						CourseMembership membership = (CourseMembership) iterator.next();
+						SetCourseUser(membership);
+						if (isAdministrator) {
+							//sb.append(courseUser.getUserName()+" is an administrator on the course\n");
+							adminHash.put(courseUser.getUserName(),courseUser);
+						} else if (GetPerceptionRole()==PERCEPTION_PARTICIPANT) {
+							//sb.append(courseUser.getUserName()+" is a participant on the course\n");
+							participantHash.put(courseUser.getUserName(), courseUser);
+						} else
 							continue;
-						killList.add(p.getParticipant_ID());
-						sb.append(p.getParticipant_Name()+": participant marked for removal\n");
-						ScheduleV42[] schedulesarray;
-						schedulesarray = stub.getScheduleListByParticipantV42(new Integer(p.getParticipant_ID()).intValue());
-						for(int j = 0; j < schedulesarray.length; j++) {
-							ScheduleV42 schedule=schedulesarray[j];
-							if(schedule.getGroup_ID() == new Integer(groupID).intValue()) {
-								try {
-									stub.deleteSchedule(new Integer(schedule.getSchedule_ID()).toString());
-								} catch (RemoteException e) {
-									sb.append(p.getParticipant_Name()+": failed to remove schedule "+schedule.getSchedule_Name()+"\n");
+						if (!Synchronize(true)) {
+							sb.append(courseUser.getUserName()+": "+failTitle+"; "+failMsg+"\n");
+							failTitle=null;
+							failMsg=null;
+						}
+					}
+					// All users are synched into Perception now; return to the current user
+					SetCourseUser(null);
+					if (syncmembers) {
+						// now weed out people from the Perception group who are not in the hashmaps
+						Participant pMembers[];
+						Vector<String> killList=new Vector<String>();
+						pMembers=q.stub.getParticipantListByGroup(groupID);
+						for(int i = 0; i < pMembers.length; i++) {
+							Participant p=pMembers[i];
+							if (p.getParticipant_ID().equals(phantomID) || participantHash.containsKey(p.getParticipant_Name()))
+								continue;
+							killList.add(p.getParticipant_ID());
+							sb.append(p.getParticipant_Name()+": participant marked for removal\n");
+							ScheduleV42[] schedulesarray;
+							schedulesarray = q.stub.getScheduleListByParticipantV42(new Integer(p.getParticipant_ID()).intValue());
+							for(int j = 0; j < schedulesarray.length; j++) {
+								ScheduleV42 schedule=schedulesarray[j];
+								if(schedule.getGroup_ID() == new Integer(groupID).intValue()) {
+									try {
+										q.stub.deleteSchedule(new Integer(schedule.getSchedule_ID()).toString());
+									} catch (RemoteException e) {
+										sb.append(p.getParticipant_Name()+": failed to remove schedule "+schedule.getSchedule_Name()+"\n");
+									}
 								}
 							}
 						}
+						if (killList.size()>0) {
+							String[] killArray = (String[])killList.toArray(new String[killList.size()]);
+							q.stub.deleteGroupParticipantList(groupID,killArray);
+							sb.append("Removed "+new Integer(killList.size()).toString()+" participants from Perception group\n");
+						}
 					}
-					if (killList.size()>0) {
-						String[] killArray = (String[])killList.toArray(new String[killList.size()]);
-						stub.deleteGroupParticipantList(groupID,killArray);
-						sb.append("Removed "+new Integer(killList.size()).toString()+" participants from Perception group\n");
+					Administrator aMembers[];
+					Vector<String> killList=new Vector<String>();
+					aMembers=q.stub.getAdministratorListByGroup(groupID);
+					for(int i = 0; i < aMembers.length; i++) {
+						Administrator a=aMembers[i];
+						if (adminHash.containsKey(a.getAdministrator_Name()))
+							continue;
+						killList.add(a.getAdministrator_ID());
+						if (syncmembers)
+							sb.append(a.getAdministrator_Name()+": administrator marked for removal\n");
+						if (syncfolders) {
+							StringHolder permissions=new StringHolder();
+							permissions.value="0";
+							q.stub.assignAdministratorToAssessmentFolder(a.getAdministrator_ID(), folderID, permissions);
+						}
 					}
-				}
-				Administrator aMembers[];
-				Vector<String> killList=new Vector<String>();
-				aMembers=stub.getAdministratorListByGroup(groupID);
-				for(int i = 0; i < aMembers.length; i++) {
-					Administrator a=aMembers[i];
-					if (adminHash.containsKey(a.getAdministrator_Name()))
-						continue;
-					killList.add(a.getAdministrator_ID());
-					if (syncmembers)
-						sb.append(a.getAdministrator_Name()+": administrator marked for removal\n");
-					if (syncfolders) {
-						StringHolder permissions=new StringHolder();
-						permissions.value="0";
-						stub.assignAdministratorToAssessmentFolder(a.getAdministrator_ID(), folderID, permissions);
+					if (syncmembers) {
+						if (killList.size()>0) {
+							String[] killArray = (String[])killList.toArray(new String[killList.size()]);
+							q.stub.deleteGroupAdministratorList(groupID, killArray);
+							sb.append("Removed "+new Integer(killList.size()).toString()+" administrators from Perception group\n");						
+						}					
 					}
+					courseSettings.setProperty("lastsync", new Date().toString());
+					courseSettings.saveSettingsFile();
+				} catch (PersistenceException e) {
+					sb.append("Synchronization aborted: "+e.getMessage());
+				} catch (RemoteException e) {
+					QMWiseException qe=new QMWiseException(e);
+					sb.append("Synchronization aborted due to QMWISe error: "+qe.getMessage()+"\n");
 				}
-				if (syncmembers) {
-					if (killList.size()>0) {
-						String[] killArray = (String[])killList.toArray(new String[killList.size()]);
-						stub.deleteGroupAdministratorList(groupID, killArray);
-						sb.append("Removed "+new Integer(killList.size()).toString()+" administrators from Perception group\n");						
-					}					
-				}
-				courseSettings.setProperty("lastsync", new Date().toString());
-				courseSettings.saveSettingsFile();
-			} catch (PersistenceException e) {
-				sb.append("Synchronization aborted: "+e.getMessage());
-			} catch (RemoteException e) {
-				QMWiseException qe=new QMWiseException(e);
-				sb.append("Synchronization aborted due to QMWISe error: "+qe.getMessage()+"\n");
+			} else {
+				Fail("Course Administration","Your role is not authorized to view this page");
 			}
-		} else {
-			Fail("Course Administration","Your role is not authorized to view this page");
+		} catch (QMWiseException e) {
+			sb.append("Synchronization aborted due to QMWISe error: "+e.getMessage()+"\n");
+		} finally {
+			QMWise.close(q);
 		}
 		sb.append("Perception: course " + course.getBatchUid() + ": synchronization complete!\n");
 		return sb.toString();
@@ -726,16 +785,22 @@ public class QMPCourseContext extends QMPContext {
 	
 	@SuppressWarnings("unchecked")
 	public Assessment[] GetAssessments() throws QMWiseException {
-		Assessment[] assessments = null;
-		if (isAdministrator) {
-			try {				
-				assessments = stub.getAssessmentListByAdministrator(userID);
-			} catch (RemoteException e) {
-				throw new QMWiseException(e);
-			}			
+		QMWise q=null;
+		try {
+			q=QMWise.connect();
+			Assessment[] assessments = null;
+			if (isAdministrator) {
+				try {				
+					assessments = q.stub.getAssessmentListByAdministrator(userID);
+				} catch (RemoteException e) {
+					throw new QMWiseException(e);
+				}			
+			}
+			Arrays.sort(assessments, new AssessmentComparator());
+			return assessments;
+		} finally {
+			QMWise.close(q);
 		}
-		Arrays.sort(assessments, new AssessmentComparator());
-		return assessments;
 	}
 	
 	
@@ -749,9 +814,11 @@ public class QMPCourseContext extends QMPContext {
 		SelectAssessmentItem[] result=null;
 		if (folderID==null)
 			folderID="0";
+		QMWise q=null;
 		try {
+			q=QMWise.connect();
 			AssessmentTreeItem[] treeItems = null;
-			treeItems=stub.getAssessmentTreeByAdministrator(userID, folderID, 1);
+			treeItems=q.stub.getAssessmentTreeByAdministrator(userID, folderID, 1);
 			for (AssessmentTreeItem treeItem: treeItems) {
 				if (treeItem.getType()==0) {
 					// a folder
@@ -785,6 +852,8 @@ public class QMPCourseContext extends QMPContext {
 			}
 		} catch (RemoteException e) {
 			throw new QMWiseException(e);
+		} finally {
+			QMWise.close(q);
 		}
 		result=(SelectAssessmentItem[])selectItems.toArray(new SelectAssessmentItem[selectItems.size()]);
 		Arrays.sort(result,new SelectAssessmentItem.SortComparator());
@@ -799,7 +868,9 @@ public class QMPCourseContext extends QMPContext {
 	
 	public Vector<ScheduleV42> GroupSchedules(String filter, Id contentID) throws QMWiseException {
 		Vector<ScheduleV42> schedules = new Vector<ScheduleV42>();
+		QMWise q=null;
 		try {
+			q=QMWise.connect();
 			String idFilter=null;
 			if (contentID!=null)
 				idFilter=contentID.toExternalString();
@@ -809,9 +880,9 @@ public class QMPCourseContext extends QMPContext {
 			// Either way we would prefer a method that also filtered by group
 			if (limitedSchedules==null) {
 				if (isAdministrator) {
-					limitedSchedules = stub.getScheduleListByParticipantV42(new Integer(phantomID).intValue());
+					limitedSchedules = q.stub.getScheduleListByParticipantV42(new Integer(phantomID).intValue());
 				} else if (GetPerceptionRole()==PERCEPTION_PARTICIPANT) {
-					limitedSchedules = stub.getScheduleListByParticipantV42(new Integer(userID).intValue());
+					limitedSchedules = q.stub.getScheduleListByParticipantV42(new Integer(userID).intValue());
 				} else {
 					limitedSchedules = new ScheduleV42[0];
 				}
@@ -819,7 +890,7 @@ public class QMPCourseContext extends QMPContext {
 			// Not sure how well documented using 0 is here
 			// returns approx (number of courses x number of group schedules) records
 			if (groupSchedules==null)
-				groupSchedules=stub.getScheduleListByParticipantV42(0);
+				groupSchedules=q.stub.getScheduleListByParticipantV42(0);
 			if (idFilter!=null) {
 				// First pass; match against the contentID magic prefix
 				for(int i = 0; i < limitedSchedules.length; i++) {
@@ -848,6 +919,8 @@ public class QMPCourseContext extends QMPContext {
 			}
 		} catch (RemoteException e) {
 			throw new QMWiseException(e);
+		} finally {
+			QMWise.close(q);
 		}
 		return schedules;
 	}

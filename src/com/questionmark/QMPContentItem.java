@@ -145,7 +145,9 @@ public class QMPContentItem {
 	
 	
 	public void CreateNew() {
+		QMWise q=null;
 		try {
+			q=QMWise.connect();
 			if (!CheckDuplicateLineItem(name)) {
 				ctx.Fail("Duplicate Name","There is already a gradebook column with that name.");
 				return;
@@ -158,7 +160,7 @@ public class QMPContentItem {
 			// must persist the document after persisting the line item to record the Id
 			PersistCourseDocument();
 			// must create schedule after persisting document to get Id
-			CreateSchedule();
+			CreateSchedule(q);
 		} catch(RemoteException e) {
 			QMWiseException qe=new QMWiseException(e);
 			ctx.FailQMWISe(qe);
@@ -166,12 +168,16 @@ public class QMPContentItem {
 			ctx.Fail("Unexpected PersistenceException","Error while saving content item: "+e.getMessage());
 		} catch(ValidationException e) {
 			ctx.Fail("Unexpected ValidationException","Error while saving content item: "+e.getMessage());
+		} finally {
+			QMWise.close(q);
 		}
 	}
 
 	
 	public void QuickCreate() {
+		QMWise q=null;
 		try {
+			q=QMWise.connect();
 			if (!CheckDuplicateLineItem(name)) {
 				ctx.Fail("Duplicate Name","There is already a gradebook column with that name.");
 				return;
@@ -180,7 +186,7 @@ public class QMPContentItem {
 			NewLineItem();
 			// skip the course document
 			PersistLineitem();
-			CreateSchedule();
+			CreateSchedule(q);
 		} catch(ValidationException e) {
 			ctx.Fail("Unexpected ValidationException","Error while saving content item: "+e.getMessage());
 		} catch(PersistenceException e) {
@@ -188,7 +194,9 @@ public class QMPContentItem {
 		} catch(RemoteException e) {
 			QMWiseException qe=new QMWiseException(e);
 			ctx.FailQMWISe(qe);
-		}	
+		} finally {
+			QMWise.close(q);
+		}
 	}
 
 	
@@ -276,14 +284,14 @@ public class QMPContentItem {
 	}
 	
 	
-	public void CreateSchedule() throws RemoteException {
+	public void CreateSchedule(QMWise q) throws RemoteException {
 		// just before creating the schedule we add the prefix for the content Id
 		if (contentId!=null) {
 			String prefix="BB"+contentId.toExternalString()+" ";
 			schedule.setSchedule_Name(prefix+name);
 		}
 		@SuppressWarnings("unused")
-		String[] scheduleids = ctx.stub.createScheduleGroupV42(schedule,individualSchedules);
+		String[] scheduleids = q.stub.createScheduleGroupV42(schedule,individualSchedules);
 	}
 
 	
@@ -353,33 +361,78 @@ public class QMPContentItem {
 	private void LoadSchedule(boolean quickly) throws QMWiseException, KeyNotFoundException, PersistenceException {
 		String prefix="BB"+contentId.toExternalString()+" ";
 		ctx.Log("Loading schedule for BB"+contentId.toExternalString()+" "+name);
-		if (version>=XDATA_VERSION || version==LEGACY_VERSION) {
-			if (copyFlag) {
-				// there are no schedules, create them
-				NewSchedule();
-				try {
-					CreateSchedule();
-				} catch (RemoteException e) {
-					QMWiseException qe=new QMWiseException(e);
-					if(qe.getQMErrorCode() == 1301) {
-						// the assessment was missing
-						assessmentMissing=true;
-						ctx.Fail("Assessment Not Found","This assessment is no longer available.");
-					} else
-						throw qe;
-				}
-			} else if (version==LEGACY_VERSION) {
-				if (!individualSchedules) {
-					String scheduleID=legacyInfo.getScheduleId();
+		QMWise q=null;
+		try {
+			q=QMWise.connect();
+
+			if (version>=XDATA_VERSION || version==LEGACY_VERSION) {
+				if (copyFlag) {
+					// there are no schedules, create them
+					NewSchedule();
 					try {
-						schedule=ctx.stub.getScheduleV42(new Integer(scheduleID).intValue());
-						// Will be updated when/if we persist this.
-						schedule.setSchedule_Name(name);
+						CreateSchedule(q);
 					} catch (RemoteException e) {
-						// schedule has gone missing; treat as for copy
-						NewSchedule();
+						QMWiseException qe=new QMWiseException(e);
+						if(qe.getQMErrorCode() == 1301) {
+							// the assessment was missing
+							assessmentMissing=true;
+							ctx.Fail("Assessment Not Found","This assessment is no longer available.");
+						} else
+							throw qe;
+					}
+				} else if (version==LEGACY_VERSION) {
+					if (!individualSchedules) {
+						String scheduleID=legacyInfo.getScheduleId();
 						try {
-							CreateSchedule();
+							schedule=q.stub.getScheduleV42(new Integer(scheduleID).intValue());
+							// Will be updated when/if we persist this.
+							schedule.setSchedule_Name(name);
+						} catch (RemoteException e) {
+							// schedule has gone missing; treat as for copy
+							NewSchedule();
+							try {
+								CreateSchedule(q);
+							} catch (RemoteException re) {
+								QMWiseException qe=new QMWiseException(re);
+								if(qe.getQMErrorCode() == 1301) {
+									// the assessment was missing
+									assessmentMissing=true;
+									ctx.Fail("Assessment Not Found","This assessment is no longer available.");
+								} else
+									throw qe;
+							}
+						}
+					} else {
+						// We have some participant schedules; approximately right at best no doubt.
+						ArrayList<CourseMembership> allMembershipsList = ctx.crsMembershipLoader.loadByCourseId(ctx.courseIdObject, null, true);
+						ListIterator<CourseMembership> iterator = allMembershipsList.listIterator();
+						Hashtable<String,Integer> participantHash= new Hashtable<String,Integer>();
+						while(iterator.hasNext()) {
+							CourseMembership membership = (CourseMembership) iterator.next();
+							Role userRole=membership.getRole();
+							if (userRole.equals(CourseMembership.Role.STUDENT))
+								participantHash.put(membership.getUser().getUserName(), 0);
+						}
+						String[] scheduleIDs=legacyInfo.getParticipantScheduleIds();
+						for (String scheduleID: scheduleIDs) {
+							try {
+								schedule=q.stub.getScheduleV42(new Integer(scheduleID).intValue());
+								if (participantHash.containsKey(schedule.getParticipant_Name()))
+									UpdateSchedule(q,schedule,false);
+								else
+									q.stub.deleteScheduleV42(new Integer(scheduleID).intValue());
+								participantHash.put(schedule.getParticipant_Name(),new Integer(schedule.getParticipant_ID()));
+							} catch (RemoteException e) {
+								// ignore participant schedules that have gone missing
+								;
+							}
+						}
+						// Now add a schedule for bb-phantom
+						NewSchedule();
+						schedule.setSchedule_Name(prefix+name);
+						schedule.setParticipant_ID(new Integer(ctx.phantomID).intValue());
+						try {
+							q.stub.createScheduleParticipantV42(schedule);
 						} catch (RemoteException re) {
 							QMWiseException qe=new QMWiseException(re);
 							if(qe.getQMErrorCode() == 1301) {
@@ -389,121 +442,89 @@ public class QMPContentItem {
 							} else
 								throw qe;
 						}
+						// Important, we might well leave some course students without a schedule, catch below...
 					}
-				} else {
-					// We have some participant schedules; approximately right at best no doubt.
-					ArrayList<CourseMembership> allMembershipsList = ctx.crsMembershipLoader.loadByCourseId(ctx.courseIdObject, null, true);
-					ListIterator<CourseMembership> iterator = allMembershipsList.listIterator();
-					Hashtable<String,Integer> participantHash= new Hashtable<String,Integer>();
-					while(iterator.hasNext()) {
-						CourseMembership membership = (CourseMembership) iterator.next();
-						Role userRole=membership.getRole();
-						if (userRole.equals(CourseMembership.Role.STUDENT))
-							participantHash.put(membership.getUser().getUserName(), 0);
-					}
-					String[] scheduleIDs=legacyInfo.getParticipantScheduleIds();
-					for (String scheduleID: scheduleIDs) {
+				}
+				// quickly flag used to remove noisy QMWISe calls during callback processing
+				if (!quickly) {
+					// we need only search for schedules which match the contentId in future
+					schedules=ctx.GroupSchedules(name,contentId);
+					if (schedules.size()>0)
+						schedule=schedules.get(0);
+					else if (individualSchedules && schedules.size()==0 && !ctx.isAdministrator && !assessmentMissing) {
+						// catch from above...
+						// this student has missed out on a synchronization so we correct the problem now
+						NewSchedule();
+						schedule.setSchedule_Name(prefix+name);
+						schedule.setParticipant_ID(new Integer(ctx.userID).intValue());
+						schedule.setParticipant_Name(ctx.user.getUserName());
 						try {
-							schedule=ctx.stub.getScheduleV42(new Integer(scheduleID).intValue());
-							if (participantHash.containsKey(schedule.getParticipant_Name()))
-								UpdateSchedule(schedule,false);
-							else
-								ctx.stub.deleteScheduleV42(new Integer(scheduleID).intValue());
-							participantHash.put(schedule.getParticipant_Name(),new Integer(schedule.getParticipant_ID()));
-						} catch (RemoteException e) {
-							// ignore participant schedules that have gone missing
-							;
+							q.stub.createScheduleParticipantV42(schedule);
+						} catch (RemoteException re) {
+							throw new QMWiseException(re);
 						}
+					} else {
+						// assessment, group or phantom schedule went missing in Perception; presumably by design?
+						// Workaround for accidental deletion: make a copy of the content item!
+						// It is possible that a missing assessment may be restored in future of course
+						ctx.Fail("Assessment Not Found","This assessment is no longer available (no matching schedule?)");
 					}
-					// Now add a schedule for bb-phantom
-					NewSchedule();
-					schedule.setSchedule_Name(prefix+name);
-					schedule.setParticipant_ID(new Integer(ctx.phantomID).intValue());
-					try {
-						ctx.stub.createScheduleParticipantV42(schedule);
-					} catch (RemoteException re) {
-						QMWiseException qe=new QMWiseException(re);
-						if(qe.getQMErrorCode() == 1301) {
-							// the assessment was missing
-							assessmentMissing=true;
-							ctx.Fail("Assessment Not Found","This assessment is no longer available.");
-						} else
-							throw qe;
-					}
-					// Important, we might well leave some course students without a schedule, catch below...
 				}
-			}
-			// quickly flag used to remove noisy QMWISe calls during callback processing
-			if (!quickly) {
-				// we need only search for schedules which match the contentId in future
+			} else if (!quickly) {
 				schedules=ctx.GroupSchedules(name,contentId);
-				if (schedules.size()>0)
+				if (schedules.size()>0) {
 					schedule=schedules.get(0);
-				else if (individualSchedules && schedules.size()==0 && !ctx.isAdministrator && !assessmentMissing) {
-					// catch from above...
-					// this student has missed out on a synchronization so we correct the problem now
-					NewSchedule();
-					schedule.setSchedule_Name(prefix+name);
-					schedule.setParticipant_ID(new Integer(ctx.userID).intValue());
-					schedule.setParticipant_Name(ctx.user.getUserName());
-					try {
-						ctx.stub.createScheduleParticipantV42(schedule);
-					} catch (RemoteException re) {
-						throw new QMWiseException(re);
+					if (!schedule.getSchedule_Name().equals(name) && version==BASIC_SCHEDULE_VERSION)
+						version=MAGIC_SCHEDULE_VERSION;
+					assessmentID=schedule.getAssessment_ID();
+					limitAttempts=schedule.isRestrict_Attempts();
+					if (limitAttempts)
+						maxAttempts=schedule.getMax_Attempts();
+					individualSchedules=(schedule.getParticipant_ID()!=0);
+					accessPeriod=schedule.isRestrict_Times();
+					if (accessPeriod) {
+						startdate=schedule.readSchedule_Starts_asCalendar();
+						enddate=schedule.readSchedule_Stops_asCalendar();
+					} else {
+						SetDefaultAccessPeriod();
 					}
 				} else {
-					// assessment, group or phantom schedule went missing in Perception; presumably by design?
-					// Workaround for accidental deletion: make a copy of the content item!
-					// It is possible that a missing assessment may be restored in future of course
-					ctx.Fail("Assessment Not Found","This assessment is no longer available (no matching schedule?)");
+					// schedules have gone missing in Perception; most likely copied content item
+					// the bad news is that we don't know anything about the item any more
+					// we have to FAIL
+					ctx.Fail("Assessment Not Found","This assessment is no longer available (no matching schedule)");
 				}
 			}
-		} else if (!quickly) {
-			schedules=ctx.GroupSchedules(name,contentId);
-			if (schedules.size()>0) {
-				schedule=schedules.get(0);
-				if (!schedule.getSchedule_Name().equals(name) && version==BASIC_SCHEDULE_VERSION)
-					version=MAGIC_SCHEDULE_VERSION;
-				assessmentID=schedule.getAssessment_ID();
-				limitAttempts=schedule.isRestrict_Attempts();
-				if (limitAttempts)
-					maxAttempts=schedule.getMax_Attempts();
-				individualSchedules=(schedule.getParticipant_ID()!=0);
-				accessPeriod=schedule.isRestrict_Times();
-				if (accessPeriod) {
-					startdate=schedule.readSchedule_Starts_asCalendar();
-					enddate=schedule.readSchedule_Stops_asCalendar();
-				} else {
-					SetDefaultAccessPeriod();
-				}
-			} else {
-				// schedules have gone missing in Perception; most likely copied content item
-				// the bad news is that we don't know anything about the item any more
-				// we have to FAIL
-				ctx.Fail("Assessment Not Found","This assessment is no longer available (no matching schedule)");
-			}
+		} finally {
+			QMWise.close(q);
 		}
 	}
 
 	
 	public void UpdateSchedule(boolean newLimit) throws RemoteException {
-		if (individualSchedules) {
-			// This may not work well for large courses or courses with many assessments...
-			ScheduleV42[] allSchedules = ctx.stub.getScheduleListByGroupV42(new Integer(ctx.groupID).intValue());
-			String matchName = schedule.getSchedule_Name();
-			for(ScheduleV42 iSchedule: allSchedules){
-				if (!matchName.equals(iSchedule.getSchedule_Name()))
-					continue;
-				UpdateSchedule(iSchedule,newLimit);
+		QMWise q=null;
+		try {
+			q=QMWise.connect();
+			if (individualSchedules) {
+				// This may not work well for large courses or courses with many assessments...
+				ScheduleV42[] allSchedules = q.stub.getScheduleListByGroupV42(new Integer(ctx.groupID).intValue());
+				String matchName = schedule.getSchedule_Name();
+				for(ScheduleV42 iSchedule: allSchedules){
+					if (!matchName.equals(iSchedule.getSchedule_Name()))
+						continue;
+					UpdateSchedule(q,iSchedule,newLimit);
+				}
+
+			} else {
+				UpdateSchedule(q,schedule,newLimit);
 			}
-			
-		} else {
-			UpdateSchedule(schedule,newLimit);
+		} finally {
+			QMWise.close(q);
 		}
 	}
 
 	
-	public void UpdateSchedule(ScheduleV42 s, boolean newLimit) throws RemoteException {
+	public void UpdateSchedule(QMWise q, ScheduleV42 s, boolean newLimit) throws RemoteException {
 		boolean update=false;
 		String prefixedName="BB"+contentId.toExternalString()+" "+name;
 		if (!s.getSchedule_Name().equals(prefixedName)) {
@@ -533,31 +554,37 @@ public class QMPContentItem {
 			}
 		}
 		if (update)
-			ctx.stub.setScheduleV42(s);
+			q.stub.setScheduleV42(s);
 	}
 
 	
 	public void DeleteSchedule(StringBuilder sb) throws RemoteException {
-		if (individualSchedules) {
-			// We delete the phantom user's schedule first, once this has gone we can delete
-			// the rest knowing that a parallel synchronization won't be recreating them!
-			String matchName = schedule.getSchedule_Name();
-			int matchID = schedule.getParticipant_ID();
-			ctx.stub.deleteScheduleV42(schedule.getSchedule_ID());
-			// This may not work well for large courses or courses with many assessments...
-			ScheduleV42[] allSchedules = ctx.stub.getScheduleListByGroupV42(new Integer(ctx.groupID).intValue());
-			for(ScheduleV42 iSchedule: allSchedules){
-				if (matchID == iSchedule.getParticipant_ID() || !matchName.equals(iSchedule.getSchedule_Name()))
-					continue;
-				try {
-					ctx.stub.deleteScheduleV42(iSchedule.getSchedule_ID());
-				} catch (RemoteException e) {
-					QMWiseException qe=new QMWiseException(e);
-					sb.append("Failed to delete Perception Schedule for participant "+iSchedule.getParticipant_Name()+"; "+qe.getMessage()+"\n");
+		QMWise q=null;
+		try {
+			q=QMWise.connect();
+			if (individualSchedules) {
+				// We delete the phantom user's schedule first, once this has gone we can delete
+				// the rest knowing that a parallel synchronization won't be recreating them!
+				String matchName = schedule.getSchedule_Name();
+				int matchID = schedule.getParticipant_ID();
+				q.stub.deleteScheduleV42(schedule.getSchedule_ID());
+				// This may not work well for large courses or courses with many assessments...
+				ScheduleV42[] allSchedules = q.stub.getScheduleListByGroupV42(new Integer(ctx.groupID).intValue());
+				for(ScheduleV42 iSchedule: allSchedules){
+					if (matchID == iSchedule.getParticipant_ID() || !matchName.equals(iSchedule.getSchedule_Name()))
+						continue;
+					try {
+						q.stub.deleteScheduleV42(iSchedule.getSchedule_ID());
+					} catch (RemoteException e) {
+						QMWiseException qe=new QMWiseException(e);
+						sb.append("Failed to delete Perception Schedule for participant "+iSchedule.getParticipant_Name()+"; "+qe.getMessage()+"\n");
+					}
 				}
+			} else {
+				q.stub.deleteScheduleV42(schedule.getSchedule_ID());
 			}
-		} else {
-			ctx.stub.deleteScheduleV42(schedule.getSchedule_ID());
+		} finally {
+			QMWise.close(q);
 		}
 	}
 	
@@ -582,8 +609,10 @@ public class QMPContentItem {
 		if (version>=XDATA_VERSION || version==LEGACY_VERSION) {
 			String lineitemName=name;
 			if (version==LEGACY_VERSION) {
+				QMWise q=null;
 				try {
-					Assessment assessment=ctx.stub.getAssessment(assessmentID);
+					q=QMWise.connect();
+					Assessment assessment=q.stub.getAssessment(assessmentID);
 					lineitemName=assessment.getSession_Name();
 				} catch (RemoteException e) {
 					QMWiseException qe=new QMWiseException(e);
@@ -594,6 +623,8 @@ public class QMPContentItem {
 						ctx.Fail("Assessment Not Found","This assessment is no longer available.");
 					} else
 						throw qe;
+				} finally {
+					QMWise.close(q);
 				}
 				if (!CheckDuplicateLineItem(name)) {
 					// We are now in a context where the column names clash, forget the gradebook

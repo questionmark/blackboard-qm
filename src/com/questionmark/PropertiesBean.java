@@ -121,6 +121,7 @@ public class PropertiesBean implements java.io.Serializable {
 					pCache=_props;
 					pCacheTime=_configFile.lastModified();
 					idCache.clear();
+					idCache.put("timestamp",new Long(pCacheTime).toString());
 				} else
 					_props=pCache;
 			}
