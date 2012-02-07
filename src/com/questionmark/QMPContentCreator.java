@@ -33,7 +33,7 @@ public class QMPContentCreator extends QMPCourseContext {
 		try {
 			if (isAdministrator && PlugInUtil.authorizeForCourseControlPanelContent(request,response)) {
 				if (Synchronize()) {				
-					System.out.println("User Synchronized OK!  UserID="+userID);
+					Log("User Synchronized OK!  UserID="+userID+"("+courseUser.getUserName()+")");
 				}
 			} else {
 				Fail("Access Denied", "This page is not available to your course role.");

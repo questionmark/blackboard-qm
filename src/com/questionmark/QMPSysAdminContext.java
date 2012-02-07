@@ -27,15 +27,19 @@ public class QMPSysAdminContext extends QMPContext {
 
 
 	public Version2 Test() {
-		QMWise q=null;
+		/*
+		 * 	Unlike all other methods that use QMWise objects we create one directly
+		 *	rather than use the pool.  This ensures that errors can be reported in
+		 *	the UI - the pool silently swallows failures to connect.
+		 */
 		try {
-			q=QMWise.connect();
+			QMWise q=new QMWise();
+			if (q.failMsg!=null)
+				throw new QMWiseException(q.failMsg);
 			Version2 version=q.getVersion();
 			return version;
 		} catch (QMWiseException e) {
 			Fail("QMWISe Exception",e.getMessage());
-		} finally {
-			QMWise.close(q);
 		}
 		return null;
 	}

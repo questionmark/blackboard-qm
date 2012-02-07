@@ -485,10 +485,9 @@ public class QMPCourseContext extends QMPContext {
 				} catch(RemoteException e) {
 					QMWiseException qe = new QMWiseException(e);
 					if(qe.getQMErrorCode()==4002)
-						System.out.println("Illegal character not handled");
+						Log("Illegal character not handled for user "+courseUser.getUserName());
 					throw qe;
 				}
-
 			}
 		} finally {
 			QMWise.close(q);
@@ -525,7 +524,7 @@ public class QMPCourseContext extends QMPContext {
 			} catch(RemoteException e) {
 				QMWiseException qe = new QMWiseException(e);
 				if(qe.getQMErrorCode()==4002)
-					System.out.println("Illegal character not handled");
+					Log("Illegal character not handled for user "+courseUser.getUserName());
 				throw qe;
 			} finally {
 				QMWise.close(q);
@@ -646,7 +645,7 @@ public class QMPCourseContext extends QMPContext {
 		}
 		if (GetPerceptionRole()!=PERCEPTION_NOBODY) {
 			FindPerceptionUserID();
-			System.out.println("Found userID "+userID);
+			Log("Found userID "+userID+" ("+courseUser.getUserName()+")");
 			if (userID == null) {
 				if (!syncUsers) {
 					FailAccess("This tool is not available to you (no corresponding user in Perception)");
@@ -658,7 +657,7 @@ public class QMPCourseContext extends QMPContext {
 				if (syncUsers)
 					UpdatePerceptionUser();
 				if (!IsGroupMember()) {
-					System.out.println("userID="+userID+" is not a member of group "+groupID);
+					Log("userID="+userID+" is not a member of group "+groupID+" ("+course.getBatchUid()+")");
 					if (!syncMembers) {
 						FailAccess("This tool is not available to you in this course (no group membership in Perception)");
 						return false;
@@ -669,7 +668,7 @@ public class QMPCourseContext extends QMPContext {
 			}
 			if (syncFolders && forceFolder)
 				AddToFolder();
-			System.out.println("userID="+userID+" is (now) a member of group "+groupID);
+			Log("userID="+userID+" is (now) a member of group "+groupID+" ("+course.getBatchUid()+")");
 		}
 		return true;
 	}

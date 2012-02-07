@@ -8,6 +8,7 @@ import org.apache.commons.pool.ObjectPool;
 import org.apache.commons.pool.impl.StackObjectPool;
 
 import java.rmi.RemoteException;
+import java.util.NoSuchElementException;
 import java.net.MalformedURLException;
 import javax.xml.soap.SOAPException;
 
@@ -16,29 +17,23 @@ public class QMWise {
 	public static final ObjectPool pool = new StackObjectPool(new QMWISeFactory());
 	
 	public static QMWise connect() throws QMWiseException {
-		QMWise q=null;
 		try {
-			System.out.println("Pool info: active="+pool.getNumActive()+"; idle="+pool.getNumIdle());
-			q=(QMWise) pool.borrowObject();
+			return (QMWise) pool.borrowObject();
+		} catch (NoSuchElementException e) {
+			throw new QMWiseException("Questionmark Connector Unavailable: connection failure");
 		} catch (Exception e) {
 			// nasty to catch everything, but needs must
+			System.out.println(PropertiesBean.applicationHandle+": "+e.toString()+" (caught while borrowing a QMWise connection from the pool)");
 			throw new QMWiseException(e);
 		}
-		if (q.failMsg==null)
-			return q;
-		else
-			throw new QMWiseException(q.failMsg);
 	}
 
 	public static void close(QMWise q) {
 		if (q!=null) {
 			try {
-				if (q.failMsg!=null ||  !q.timestamp.equals(PropertiesBean.idCache.get("timestamp")))
-					pool.invalidateObject(q);
-				else
-					pool.returnObject(q);
+				pool.returnObject(q);
 			} catch (Exception e) {
-				;
+				System.out.println(PropertiesBean.applicationHandle+": "+e.toString()+" (caught while returning a QMWise connection to the pool)");
 			}
 		}
 	}
@@ -75,6 +70,7 @@ public class QMWise {
 				stub.getHeader("http://questionmark.com/QMWISe/", "Security").addChild(
 						new SOAPHeaderElement("http://questionmark.com/QMWISe/", "Checksum", checksum)
 				);
+			getVersion();
 			}
 		} catch (AxisFault e) {
 			failMsg=e.getMessage();

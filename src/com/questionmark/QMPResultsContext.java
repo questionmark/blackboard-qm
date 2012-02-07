@@ -29,7 +29,7 @@ public class QMPResultsContext extends QMPCourseContext {
 		try {
 			q=QMWise.connect();
 			if (Synchronize()) {
-				System.out.println("User Synchronized OK!  UserID="+userID);
+				Log("User Synchronized OK!  UserID="+userID+"("+courseUser.getUserName()+")");
 				if (isAdministrator) {
 					if (resultID==null) {
 						results = q.stub.getResultListByGroup(course.getBatchUid());

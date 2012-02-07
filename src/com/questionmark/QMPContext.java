@@ -58,6 +58,7 @@ public class QMPContext {
 		// Get our properties object
 		pb = new PropertiesBean();
 		phantomID = PropertiesBean.idCache.get("phantomid");
+		Log("Connection pool: active="+QMWise.pool.getNumActive()+"; idle="+QMWise.pool.getNumIdle());
 		//	return;
 	}
 
@@ -186,7 +187,8 @@ public class QMPContext {
 	
 	
 	public void Log(String msg) {
-		System.out.println(msg);
+		if (pb.getProperty(PropertiesBean.logging_key)!=null)
+			System.out.println(PropertiesBean.applicationHandle+": "+msg);
 	}
 	
 	
