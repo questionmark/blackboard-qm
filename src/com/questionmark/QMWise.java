@@ -14,7 +14,7 @@ import javax.xml.soap.SOAPException;
 
 public class QMWise {
 	
-	public static final ObjectPool pool = new StackObjectPool(new QMWISeFactory());
+	public static final ObjectPool pool = new StackObjectPool(new QMWISeFactory(),10);
 	
 	public static QMWise connect() throws QMWiseException {
 		try {

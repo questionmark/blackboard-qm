@@ -4,9 +4,27 @@ import org.apache.commons.pool.BasePoolableObjectFactory;
 
 public class QMWISeFactory extends BasePoolableObjectFactory {
 
+	static long nMakes=0;
+	static long memMakes=0;
+	
+	public static String MemoryReport () {
+		if (nMakes>0) {
+			return "Average connection usage: "+new Double(memMakes/(nMakes*1024.0)).toString()+" KB";
+		} else {
+			return "Not enough data for connection pool memory report";
+		}
+	}
+	
 	@Override
 	public Object makeObject() throws Exception {
-		return new QMWise();
+		long m=Runtime.getRuntime().freeMemory();
+		QMWise q=new QMWise();
+		m=m-Runtime.getRuntime().freeMemory();
+		if (m>0) {
+			nMakes++;
+			memMakes+=m;
+		}
+		return q;
 	}
 	
 	

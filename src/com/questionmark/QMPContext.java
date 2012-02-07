@@ -59,6 +59,7 @@ public class QMPContext {
 		pb = new PropertiesBean();
 		phantomID = PropertiesBean.idCache.get("phantomid");
 		Log("Connection pool: active="+QMWise.pool.getNumActive()+"; idle="+QMWise.pool.getNumIdle());
+		Log(QMWISeFactory.MemoryReport());
 		//	return;
 	}
 
