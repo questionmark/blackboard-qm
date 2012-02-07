@@ -96,7 +96,7 @@
 				<bbNG:dataCollection>			
 					<bbNG:step title="Enter Information">
 						<bbNG:dataElement isRequired="true" label="Schedule name">
-							<bbNG:textElement name="schedule" isRequired="true" maxLength="50" helpText="Maximum 50 characters allowed"/>
+							<bbNG:textElement name="schedule" isRequired="true" maxLength="30" helpText="Maximum 30 characters allowed"/>
 							<br />
 							The schedule name must be unique if results are to be stored in the Grade Center
 						</bbNG:dataElement>	

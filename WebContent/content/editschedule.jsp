@@ -128,7 +128,7 @@
 			<bbNG:stepGroup active="true" title="Edit Schedule options">		
 				<bbNG:step title="Edit Name" hideNumber="true" instructions="Please enter a new name for this schedule">					
 					<bbNG:dataElement isRequired="true" label="Schedule name">
-						<bbNG:textElement id="new_schedule_name" name="new_schedule_name" isRequired="true" maxLength="50" helpText="Maximum 50 characters allowed"
+						<bbNG:textElement id="new_schedule_name" name="new_schedule_name" isRequired="true" maxLength="30" helpText="Maximum 30 characters allowed"
 							value="<%=StringEscapeUtils.escapeHtml(cc.contentItem.name)%>" />
 					</bbNG:dataElement>												
 					<bbNG:dataElement label="Schedule description">	
