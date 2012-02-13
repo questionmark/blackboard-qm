@@ -1,7 +1,18 @@
+Version 8.0.10
+--------------
+
+Bug fixes:
+[#456] Fixed thread-safety bug which could result in data corruption during very high load
+[#453] Shortened the allowable schedule names to prevent QMWISe errors due to lengthening effect of prefixing
+[#440] Performance fix to reduce QMWISe calls during call-backs.
+[#411] Fixed issue where last attempt could not be resumed from Blackboard (e.g., following PC failure)
+[#396] Fix to settings defaults which were causing a failure when no properties file was present.
+
+
 Version 8.0.9
 -------------
 
-Bug fixe:
+Bug fix:
 Fixed Javascript on Control Panel page that prevented schedule times being set.
 
  
