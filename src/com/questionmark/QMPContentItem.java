@@ -102,6 +102,15 @@ public class QMPContentItem {
 	}
 	
 	
+	public QMPContentItem(QMPCourseContext ctx, String content_id, boolean quickly) throws PersistenceException, QMWiseException, ValidationException {
+		this.ctx=ctx;
+		LoadCourseDocument(content_id);
+		if (!quickly)
+			LoadSchedule();
+		LoadLineitem();
+	}
+	
+	
 	public void SetDefaultAccessPeriod() {
 		startdate.set(Calendar.HOUR_OF_DAY,9);
 		startdate.set(Calendar.MINUTE,0);
@@ -114,7 +123,9 @@ public class QMPContentItem {
 	
 	
 	public void CreateNew() {
+		QMWise q=null;
 		try {
+			q=QMWise.connect();
 			if (!CheckDuplicateLineItem(name)) {
 				ctx.Fail("Duplicate Name","There is already a gradebook column with that name.");
 				return;
@@ -125,7 +136,7 @@ public class QMPContentItem {
 			PersistLineitem();
 			PersistCourseDocument();
 			// must create schedule after persisting document to get Id
-			CreateSchedule();
+			CreateSchedule(q);
 		} catch(RemoteException e) {
 			QMWiseException qe=new QMWiseException(e);
 			ctx.FailQMWISe(qe);
@@ -133,12 +144,16 @@ public class QMPContentItem {
 			ctx.Fail("Unexpected PersistenceException","Error while saving content item: "+e.getMessage());
 		} catch(ValidationException e) {
 			ctx.Fail("Unexpected ValidationException","Error while saving content item: "+e.getMessage());
+		} finally {
+			QMWise.close(q);
 		}
 	}
 
 	
 	public void QuickCreate() {
+		QMWise q=null;
 		try {
+			q=QMWise.connect();
 			if (!CheckDuplicateLineItem(name)) {
 				ctx.Fail("Duplicate Name","There is already a gradebook column with that name.");
 				return;
@@ -147,7 +162,7 @@ public class QMPContentItem {
 			NewLineItem();
 			// skip the course document
 			PersistLineitem();
-			CreateSchedule();
+			CreateSchedule(q);
 		} catch(ValidationException e) {
 			ctx.Fail("Unexpected ValidationException","Error while saving content item: "+e.getMessage());
 		} catch(PersistenceException e) {
@@ -155,7 +170,9 @@ public class QMPContentItem {
 		} catch(RemoteException e) {
 			QMWiseException qe=new QMWiseException(e);
 			ctx.FailQMWISe(qe);
-		}	
+		} finally {
+			QMWise.close(q);
+		}
 	}
 
 	
@@ -245,14 +262,14 @@ public class QMPContentItem {
 	}
 	
 	
-	public void CreateSchedule() throws RemoteException {
+	public void CreateSchedule(QMWise q) throws RemoteException {
 		// just before creating the schedule we add the prefix for the content Id
 		if (contentId!=null) {
 			String prefix="BB"+contentId.toExternalString()+" ";
 			schedule.setSchedule_Name(prefix+name);
 		}
 		@SuppressWarnings("unused")
-		String[] scheduleids = ctx.stub.createScheduleGroupV42(schedule,individualSchedules);
+		String[] scheduleids = q.stub.createScheduleGroupV42(schedule,individualSchedules);
 	}
 
 	
@@ -341,23 +358,29 @@ public class QMPContentItem {
 
 	
 	public void UpdateSchedule(boolean newLimit) throws RemoteException {
-		if (individualSchedules) {
-			// This may not work well for large courses or courses with many assessments...
-			ScheduleV42[] allSchedules = ctx.stub.getScheduleListByGroupV42(new Integer(ctx.groupID).intValue());
-			String matchName = schedule.getSchedule_Name();
-			for(ScheduleV42 iSchedule: allSchedules){
-				if (!matchName.equals(iSchedule.getSchedule_Name()))
-					continue;
-				UpdateSchedule(iSchedule,newLimit);
+		QMWise q=null;
+		try {
+			q=QMWise.connect();
+			if (individualSchedules) {
+				// This may not work well for large courses or courses with many assessments...
+				ScheduleV42[] allSchedules = q.stub.getScheduleListByGroupV42(new Integer(ctx.groupID).intValue());
+				String matchName = schedule.getSchedule_Name();
+				for(ScheduleV42 iSchedule: allSchedules){
+					if (!matchName.equals(iSchedule.getSchedule_Name()))
+						continue;
+					UpdateSchedule(q,iSchedule,newLimit);
+				}
+
+			} else {
+				UpdateSchedule(q,schedule,newLimit);
 			}
-			
-		} else {
-			UpdateSchedule(schedule,newLimit);
+		} finally {
+			QMWise.close(q);
 		}
 	}
 
 	
-	public void UpdateSchedule(ScheduleV42 s, boolean newLimit) throws RemoteException {
+	public void UpdateSchedule(QMWise q, ScheduleV42 s, boolean newLimit) throws RemoteException {
 		boolean update=false;
 		String prefixedName="BB"+contentId.toExternalString()+" "+name;
 		if (!s.getSchedule_Name().equals(prefixedName)) {
@@ -387,31 +410,37 @@ public class QMPContentItem {
 			}
 		}
 		if (update)
-			ctx.stub.setScheduleV42(s);
+			q.stub.setScheduleV42(s);
 	}
 
 	
 	public void DeleteSchedule(StringBuilder sb) throws RemoteException {
-		if (individualSchedules) {
-			// We delete the phantom user's schedule first, once this has gone we can delete
-			// the rest knowing that a parallel synchronization won't be recreating them!
-			String matchName = schedule.getSchedule_Name();
-			int matchID = schedule.getParticipant_ID();
-			ctx.stub.deleteScheduleV42(schedule.getSchedule_ID());
-			// This may not work well for large courses or courses with many assessments...
-			ScheduleV42[] allSchedules = ctx.stub.getScheduleListByGroupV42(new Integer(ctx.groupID).intValue());
-			for(ScheduleV42 iSchedule: allSchedules){
-				if (matchID == iSchedule.getParticipant_ID() || !matchName.equals(iSchedule.getSchedule_Name()))
-					continue;
-				try {
-					ctx.stub.deleteScheduleV42(iSchedule.getSchedule_ID());
-				} catch (RemoteException e) {
-					QMWiseException qe=new QMWiseException(e);
-					sb.append("Failed to delete Perception Schedule for participant "+iSchedule.getParticipant_Name()+"; "+qe.getMessage()+"\n");
+		QMWise q=null;
+		try {
+			q=QMWise.connect();
+			if (individualSchedules) {
+				// We delete the phantom user's schedule first, once this has gone we can delete
+				// the rest knowing that a parallel synchronization won't be recreating them!
+				String matchName = schedule.getSchedule_Name();
+				int matchID = schedule.getParticipant_ID();
+				q.stub.deleteScheduleV42(schedule.getSchedule_ID());
+				// This may not work well for large courses or courses with many assessments...
+				ScheduleV42[] allSchedules = q.stub.getScheduleListByGroupV42(new Integer(ctx.groupID).intValue());
+				for(ScheduleV42 iSchedule: allSchedules){
+					if (matchID == iSchedule.getParticipant_ID() || !matchName.equals(iSchedule.getSchedule_Name()))
+						continue;
+					try {
+						q.stub.deleteScheduleV42(iSchedule.getSchedule_ID());
+					} catch (RemoteException e) {
+						QMWiseException qe=new QMWiseException(e);
+						sb.append("Failed to delete Perception Schedule for participant "+iSchedule.getParticipant_Name()+"; "+qe.getMessage()+"\n");
+					}
 				}
+			} else {
+				q.stub.deleteScheduleV42(schedule.getSchedule_ID());
 			}
-		} else {
-			ctx.stub.deleteScheduleV42(schedule.getSchedule_ID());
+		} finally {
+			QMWise.close(q);
 		}
 	}
 	
