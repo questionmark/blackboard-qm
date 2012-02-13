@@ -38,7 +38,7 @@ public class QMPControlPanel extends QMPCourseContext {
 		linkView=(schedule_name != null);
 		try {
 			if (Synchronize()) {
-				System.out.println("User Synchronized OK!  UserID="+userID);
+				Log("User Synchronized OK!  UserID="+userID+"("+courseUser.getUserName()+")");
 				if (isAdministrator) {
 					GetContentItems();
 					Vector<ScheduleV42> schedules=GroupSchedules(schedule_name);

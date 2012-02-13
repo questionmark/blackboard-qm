@@ -10,11 +10,6 @@ public class QMPSysAdminContext extends QMPContext {
 
 	public QMPSysAdminContext(HttpServletRequest request, Context ctx) {
 		super(request, ctx);
-		if (stub == null) {
-			// ignore errors creating the QMWISe object because we may
-			// not have configured it yet.
-			failTitle=null;
-		}
 		if (! sysAdmin) {
 			Fail("System Administration","Your role is not authorized to view this page");
 		}
@@ -24,7 +19,6 @@ public class QMPSysAdminContext extends QMPContext {
 		if (sysAdmin) {
 			try {
 				pb.setProperties(request);
-				QMWise.reset();
 			} catch(Exception e) {
 				Fail("Unexpected Error","Failed to update settings: "+e.getMessage());
 			}
@@ -33,8 +27,16 @@ public class QMPSysAdminContext extends QMPContext {
 
 
 	public Version2 Test() {
+		/*
+		 * 	Unlike all other methods that use QMWise objects we create one directly
+		 *	rather than use the pool.  This ensures that errors can be reported in
+		 *	the UI - the pool silently swallows failures to connect.
+		 */
 		try {
-			Version2 version=qmwise.getVersion();
+			QMWise q=new QMWise();
+			if (q.failMsg!=null)
+				throw new QMWiseException(q.failMsg);
+			Version2 version=q.getVersion();
 			return version;
 		} catch (QMWiseException e) {
 			Fail("QMWISe Exception",e.getMessage());

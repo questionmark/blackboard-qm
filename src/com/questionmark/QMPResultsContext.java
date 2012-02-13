@@ -25,16 +25,18 @@ public class QMPResultsContext extends QMPCourseContext {
 		if (failTitle!=null)
 			return;
 		resultID=request.getParameter("result_id");
+		QMWise q=null;
 		try {
+			q=QMWise.connect();
 			if (Synchronize()) {
-				System.out.println("User Synchronized OK!  UserID="+userID);
+				Log("User Synchronized OK!  UserID="+userID+"("+courseUser.getUserName()+")");
 				if (isAdministrator) {
 					if (resultID==null) {
-						results = stub.getResultListByGroup(course.getBatchUid());
+						results = q.stub.getResultListByGroup(course.getBatchUid());
 						Arrays.sort(results, new ResultComparator());
 						resultList=Arrays.asList(results);
 					} else {
-						reportLink=stub.getAccessReport(resultID);
+						reportLink=q.stub.getAccessReport(resultID);
 					}
 				} else {
 					Fail("Questionmark Perception","This page has been hidden by the course instructor");
@@ -43,6 +45,8 @@ public class QMPResultsContext extends QMPCourseContext {
 		} catch (RemoteException e) {
 			QMWiseException qe=new QMWiseException(e);
 			FailQMWISe(qe);
+		} finally {
+			QMWise.close(q);
 		}
 	}
 
