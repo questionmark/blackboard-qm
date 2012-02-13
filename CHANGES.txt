@@ -1,3 +1,29 @@
+Version 9.1.11
+--------------
+
+[#456] Fixed thread-safety bug which could result in data corruption during very high load
+[#453] Shortened the allowable schedule names to prevent QMWISe errors due to lengthening effect of prefixing
+
+Version 9.1.10
+-------------
+
+[#440] Performance fix to reduce QMWISe calls during call-backs.
+
+Version 9.1.8
+-------------
+
+[#411] Fixed issue where last attempt could not be resumed from Blackboard (e.g., following PC failure)
+
+Version 9.1.7
+-------------
+
+[#396] Fix to settings defaults which were causing a failure when no properties file was present.
+
+Version 9.1.6
+-------------
+
+Minor release, added PIP debugging information to help diagnose gradebook problems
+
 Version 9.1.5
 -------------
 
