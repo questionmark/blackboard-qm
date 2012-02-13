@@ -30,7 +30,7 @@
 	<%	} else {
 	%>
 
-	<bbUI:receipt type="FAIL" title="<%=qbc.failTitle %>">
+	<bbUI:receipt type="FAIL" title="<%=qbc.failTitle %>" recallUrl="/webapps/blackboard/admin/manage_plugins.jsp">
 		<%=qbc.failMsg %>
 	</bbUI:receipt>
 

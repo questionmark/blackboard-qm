@@ -50,7 +50,7 @@ public class QMPCallbackContext extends QMPCourseContext {
 							request.getParameter("Score_Attained"));
 				} else {
 					// new logic for a known content item
-					QMPContentItem contentItem=new QMPContentItem(this,content_id,null);
+					QMPContentItem contentItem=new QMPContentItem(this,content_id,true);
 					contentItem.UpdateGradebook(scoreMax,request.getParameter("Score_Percentage"),
 							request.getParameter("Score_Attained"));
 				}		

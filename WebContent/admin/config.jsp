@@ -24,6 +24,7 @@ boolean sync_groups = false;
 boolean sync_members = false;
 String syncperiod = "";
 boolean single_signon = false;
+boolean logging = false;
 %>
 
 <bbData:context id="ctx">
@@ -174,6 +175,12 @@ boolean single_signon = false;
 					<input name="perception.singlesignon" id="perception.singlesignon" type="checkbox" value="Yes" <%=single_signon?"checked":"" %>>
 				</bbUI:dataElement>
 				
+				<bbUI:dataElement label="Enable logging" required="false">
+					<% logging = (qbc.pb.getProperty("perception.logging") == null)? false : true; %>
+					<input name="perception.logging" id="perception.logging" type="checkbox" value="Yes" <%=logging?"checked":"" %>>
+					<p><i>Information is logged to, e.g., blackboard/logs/tomcat/stdout-stderr-&lt;date&gt;.log</i></p>
+				</bbUI:dataElement>
+
 			</bbUI:step>
 	
 			<bbUI:stepSubmit title="Submit" number="4" cancelUrl="javaScript:history.go(-1);" />
