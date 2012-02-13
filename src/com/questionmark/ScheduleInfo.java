@@ -49,7 +49,9 @@ public class ScheduleInfo {
 	
 	public void TryOutLink (QMPCourseContext ctx) {
 		Long now = new Date().getTime();
+		QMWise q=null;
 		try {
+			q=QMWise.connect();
 			Long schedule_start = schedule.readSchedule_Starts_asCalendar().getTime().getTime();
 			Long schedule_stop = schedule.readSchedule_Stops_asCalendar().getTime().getTime();
 			if (schedule.isRestrict_Times() && (
@@ -61,7 +63,7 @@ public class ScheduleInfo {
 			} else {
 				active=true;
 			}
-			launchURL = ctx.stub.getAccessAssessment(schedule.getAssessment_ID(),
+			launchURL = q.stub.getAccessAssessment(schedule.getAssessment_ID(),
 					ctx.user.getUserName(),"", //participant details
 					ctx.course.getBatchUid()); //group name
 		} catch (RemoteException e) {
@@ -73,13 +75,17 @@ public class ScheduleInfo {
 			} else {
 				errorMsg="ERROR: Communication error, QMWISE "+qe.getQMErrorCode().toString();
 			}
+		} finally {
+			QMWise.close(q);
 		}
 	}
 
 	
 	public void ScheduleLink (QMPCourseContext ctx) {
 		Long now = new Date().getTime();
+		QMWise q=null;
 		try {
+			q=QMWise.connect();
 			active=true;
 			launchURL = null;
 //			if (schedule.isRestrict_Attempts() && schedule.getMax_Attempts()<1) {
@@ -104,11 +110,11 @@ public class ScheduleInfo {
 						new Parameter("bb_courseid", ctx.course.getBatchUid())
 					};
 				// First step, get the try out link to force a QMWISe error for a missing assessment
-				String dummy = ctx.stub.getAccessAssessment(schedule.getAssessment_ID(),
+				String dummy = q.stub.getAccessAssessment(schedule.getAssessment_ID(),
 						ctx.user.getUserName(),"", //participant details
 						ctx.course.getBatchUid()); //group name
 				// No exception so the launch URL should work...
-				launchURL = ctx.stub.getAccessScheduleNotify(
+				launchURL = q.stub.getAccessScheduleNotify(
 							new Integer(schedule.getSchedule_ID()).toString(),
 							ctx.user.getUserName(),
 							ctx.request.getScheme() + "://" + ctx.request.getServerName() 
@@ -124,6 +130,8 @@ public class ScheduleInfo {
 			} else {
 				errorMsg="ERROR: Communication error, QMWISE "+qe.getQMErrorCode().toString();
 			}
+		} finally {
+			QMWise.close(q);
 		}
 	}
 	

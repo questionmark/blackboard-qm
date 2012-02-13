@@ -34,7 +34,7 @@
 	<%	} else {
 	%>
 
-	<bbNG:receipt type="FAIL" title="<%=qbc.failTitle %>">
+	<bbNG:receipt type="FAIL" title="<%=qbc.failTitle %>" recallUrl="/webapps/blackboard/admin/manage_plugins.jsp">
 		<%=qbc.failMsg %>
 	</bbNG:receipt>
 

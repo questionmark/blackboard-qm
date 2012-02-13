@@ -30,7 +30,7 @@ public class QMPContentView extends QMPCourseContext {
 		content_id=request.getParameter("content_id");
 		try {
 			if (Synchronize()) {
-				System.out.println("User Synchronized OK!  UserID="+userID);
+				Log("User Synchronized OK!  UserID="+userID+"("+courseUser.getUserName()+")");
 				contentItem=new QMPContentItem(this,content_id,null);
 				title=contentItem.name;
 				// can now query this...

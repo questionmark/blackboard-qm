@@ -17,8 +17,8 @@ import blackboard.platform.plugin.PlugInUtil;
 public class PropertiesBean implements java.io.Serializable {
 
 //	private static PropertiesBean propertiesBean;
-	private static String vendorId = "qm";
-	private static String applicationHandle = "qmpp";
+	public static String vendorId = "qm";
+	public static String applicationHandle = "qmpp";
 	private static String propertiesFilename = "qmpp.properties";
 	// constants for getting and setting properties
 	public static final String protocol_key = "perception.protocol";
@@ -36,7 +36,7 @@ public class PropertiesBean implements java.io.Serializable {
 	public static final String accesslink_key = "perception.accesslink";
 	public static final String syncperiod_key = "perception.syncperiod";
 	public static final String singlesignon_key = "perception.singlesignon";
-	
+	public static final String logging_key="perception.logging";
 	private Properties p=null;
 	private static Object pCacheLock=new Object();
 	private static Properties pCache=null;
@@ -84,11 +84,11 @@ public class PropertiesBean implements java.io.Serializable {
 			p.store( fos, "#QMPP Properties File" );
 			fos.close();
 		} catch (PlugInException e) {
-			System.out.println("Unexpected PlugInException: "+e.getMessage());
+			System.out.println(applicationHandle+": Unexpected PlugInException: "+e.getMessage());
 		} catch (FileNotFoundException e) {
-			System.out.println("Can't find properties file"+e.getMessage());
+			System.out.println(applicationHandle+": Can't find properties file"+e.getMessage());
 		} catch (IOException e) {
-			System.out.println("Unexpected IOException: "+e.getMessage());
+			System.out.println(applicationHandle+": Unexpected IOException: "+e.getMessage());
 		}
 	}
 
@@ -96,7 +96,7 @@ public class PropertiesBean implements java.io.Serializable {
 //		if ( propertiesBean == null ) {
 //			propertiesBean = new PropertiesBean();
 //		}
-//		System.out.println( "PropertiesManager getInstance() Initialized" );
+//		System.out.println(applicationHandle+": PropertiesManager getInstance() Initialized" );
 //		return propertiesBean;
 //	}
 
@@ -121,16 +121,17 @@ public class PropertiesBean implements java.io.Serializable {
 					pCache=_props;
 					pCacheTime=_configFile.lastModified();
 					idCache.clear();
+					idCache.put("timestamp",new Long(pCacheTime).toString());
 				} else
 					_props=pCache;
 			}
 		} catch (PlugInException e) {
-			System.out.println("Unexpected PlugInException: "+e.getMessage());
+			System.out.println(applicationHandle+": Unexpected PlugInException: "+e.getMessage());
 		} catch (FileNotFoundException e) {
-			System.out.println("Questionmark Connector: missing properties file, assuming first run");
+			System.out.println(applicationHandle+": Questionmark Connector: missing properties file, assuming first run");
 			SetDefaults(_props);
 		} catch (IOException e) {
-			System.out.println("Unexpected IOException: "+e.getMessage());
+			System.out.println(applicationHandle+": Unexpected IOException: "+e.getMessage());
 		}
 		return _props;
 	}
