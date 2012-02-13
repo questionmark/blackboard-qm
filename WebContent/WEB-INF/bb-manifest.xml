@@ -4,7 +4,7 @@
 		<name value="Questionmark Perception"/>
 		<description value="Plugin to connect Blackboard to the Questionmark Perception assessment platform"/>
 		<handle value="qmpp"/>
-		<version value="8.0.10"/>
+		<version value="8.0.11"/>
 		<requires>
 			<bbversion value="8.0.0"/>
 		</requires>
