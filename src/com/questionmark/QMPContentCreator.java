@@ -143,8 +143,8 @@ public class QMPContentCreator extends QMPCourseContext {
 		if (!ValidateNewForm())
 			return false;
 		String new_schedule_name = request.getParameter("new_schedule_name");
-		if (new_schedule_name.length() == 0 || new_schedule_name.length() > 50) {
-			Fail("Form Validation Error","Schedule name must not be empty or longer than 50 characters");
+		if (new_schedule_name.length() == 0 || new_schedule_name.length() > 30) {
+			Fail("Form Validation Error","Schedule name must not be empty or longer than 30 characters");
 			return false;
 		}
 		return true;
