@@ -127,6 +127,8 @@ public class ScheduleInfo {
 			if(qe.getQMErrorCode() == 1301) {
 				// Assessment not found
 				errorMsg="ERROR: Assessment no longer available";
+			} else if (qe.getQMErrorCode() == 2040) {
+				errorMsg="No more attempts remaining";
 			} else {
 				errorMsg="ERROR: Communication error, QMWISE "+qe.getQMErrorCode().toString();
 			}
