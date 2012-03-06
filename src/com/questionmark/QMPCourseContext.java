@@ -459,10 +459,14 @@ public class QMPCourseContext extends QMPContext {
 				try {
 					//build new user
 					Administrator newuser = new Administrator();
+					String email=courseUser.getEmailAddress();
 					newuser.setAdministrator_ID("0");
 					newuser.setAdministrator_Name(courseUser.getUserName());
 					newuser.setPassword(courseUser.getPassword().substring(0, 20));
 					newuser.setProfile_Name(profile);
+					if (email!=null) {
+						newuser.setEmail(email);
+					}
 					//make new user
 					userID = q.stub.createAdministrator(newuser);
 					AddToGroup();
