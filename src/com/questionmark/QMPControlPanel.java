@@ -44,8 +44,11 @@ public class QMPControlPanel extends QMPCourseContext {
 					Vector<ScheduleV42> schedules=GroupSchedules(schedule_name);
 					FilterContentItemSchedules(schedules);
 					GetScheduleInfo(schedules);
-					// assessmentList=GetAssessments();
-					selectAssessmentList=GetAssessmentTree(null,null);
+					if (pb.getProperty(PropertiesBean.oldassessmentlist_key)!=null) {
+						selectAssessmentList=GetAssessmentList();
+					} else {
+						selectAssessmentList=GetAssessmentTree(null,null);
+					}
 				} else if (schedule_name != null) {
 					// In future, we perhaps should filter content item schedules here
 					panelTitle="Assessment Launch Page";

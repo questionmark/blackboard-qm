@@ -20,7 +20,6 @@ public class QMPContentView extends QMPCourseContext {
 	public String content_id = null;
 	public QMPContentItem contentItem = null;
 	public String parent_id = null;
-	public Assessment[] assessmentList=null;
 	public String title = "Questionmark Perception Schedule";
 	
 	public QMPContentView(HttpServletRequest request, Context ctx) {
@@ -38,7 +37,6 @@ public class QMPContentView extends QMPCourseContext {
 				Vector<ScheduleV42> schedules=GroupSchedules(contentItem.name,contentItem.contentId);
 				if (isAdministrator) {
 					GetScheduleInfo(schedules,contentItem.name);
-					assessmentList=GetAssessments();
 				} else {
 					if (!contentItem.available)
 						Fail("Assessment Not Available","This assessment is not currently available");

@@ -21,7 +21,6 @@ import blackboard.servlet.util.DatePickerUtil;
 
 public class QMPContentCreator extends QMPCourseContext {
 
-	public Assessment[] assessmentList=null;
 	public SelectAssessmentItem[] selectAssessmentList=null;
 	public QMPContentItem contentItem = null;
 	public String title = "Questionmark Perception Schedule";
@@ -50,8 +49,11 @@ public class QMPContentCreator extends QMPCourseContext {
 		try {
 			String parent_id = request.getParameter("content_id");
 			contentItem=new QMPContentItem(this,null,parent_id);
-			assessmentList=GetAssessments();		
-			selectAssessmentList=GetAssessmentTree(null,null);
+			if (pb.getProperty(PropertiesBean.oldassessmentlist_key)!=null) {
+				selectAssessmentList=GetAssessmentList();
+			} else {
+				selectAssessmentList=GetAssessmentTree(null,null);
+			}
 		} catch (PersistenceException e) {
 			Fail("Unexpected PersistenceException",e.getMessage());
 		} catch (ValidationException e) {
@@ -106,9 +108,6 @@ public class QMPContentCreator extends QMPCourseContext {
 			String content_id = request.getParameter("content_id");
 			contentItem=new QMPContentItem(this,content_id,null);
 			title = contentItem.name;
-			// we don't need the assessmentList
-			// assessmentList=GetAssessments();
-			// selectAssessmentList=GetAssessmentTree(null,null);
 			if (contentItem.schedules.size()<1)
 				Fail("Missing Schedule","This schedule cannot be edited as it is missing in Perception");
 		} catch (PersistenceException e) {

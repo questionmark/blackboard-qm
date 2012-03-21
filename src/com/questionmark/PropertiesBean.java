@@ -37,6 +37,7 @@ public class PropertiesBean implements java.io.Serializable {
 	public static final String syncperiod_key = "perception.syncperiod";
 	public static final String singlesignon_key = "perception.singlesignon";
 	public static final String logging_key="perception.logging";
+	public static final String oldassessmentlist_key="perception.oldassessmentlist";	
 	private Properties p=null;
 	private static Object pCacheLock=new Object();
 	private static Properties pCache=null;

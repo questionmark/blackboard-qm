@@ -786,26 +786,49 @@ public class QMPCourseContext extends QMPContext {
 	}
 
 	
-	@SuppressWarnings("unchecked")
-	public Assessment[] GetAssessments() throws QMWiseException {
+//	@SuppressWarnings("unchecked")
+//	public Assessment[] GetAssessments() throws QMWiseException {
+//		QMWise q=null;
+//		try {
+//			q=QMWise.connect();
+//			Assessment[] assessments = null;
+//			if (isAdministrator) {
+//				try {				
+//					assessments = q.stub.getAssessmentListByAdministrator(userID);
+//				} catch (RemoteException e) {
+//					throw new QMWiseException(e);
+//				}			
+//			}
+//			Arrays.sort(assessments, new AssessmentComparator());
+//			return assessments;
+//		} finally {
+//			QMWise.close(q);
+//		}
+//	}
+	
+	
+	public SelectAssessmentItem[] GetAssessmentList() throws QMWiseException {
+		Vector<SelectAssessmentItem> selectItems=new Vector<SelectAssessmentItem>();
+		SelectAssessmentItem[] result=null;
 		QMWise q=null;
 		try {
 			q=QMWise.connect();
 			Assessment[] assessments = null;
-			if (isAdministrator) {
-				try {				
-					assessments = q.stub.getAssessmentListByAdministrator(userID);
-				} catch (RemoteException e) {
-					throw new QMWiseException(e);
-				}			
+			assessments=q.stub.getAssessmentListByAdministrator(userID);
+			for (Assessment item: assessments) {
+				SelectAssessmentItem sItem=new SelectAssessmentItem(item.getSession_Name(),item.getAssessment_ID());
+				selectItems.add(sItem);
 			}
-			Arrays.sort(assessments, new AssessmentComparator());
-			return assessments;
+		} catch (RemoteException e) {
+			throw new QMWiseException(e);
 		} finally {
 			QMWise.close(q);
 		}
+		result=(SelectAssessmentItem[])selectItems.toArray(new SelectAssessmentItem[selectItems.size()]);
+		Arrays.sort(result,new SelectAssessmentItem.SortComparator());
+		return result;
 	}
-	
+
 	
 	public SelectAssessmentItem[] GetAssessmentTree(String folderID, String baseLabel) throws QMWiseException {
 		/*

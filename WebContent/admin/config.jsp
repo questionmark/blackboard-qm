@@ -25,6 +25,7 @@ boolean sync_members = false;
 String syncperiod = "";
 boolean single_signon = false;
 boolean logging = false;
+boolean oldAssessmentList = false;
 %>
 
 
@@ -180,6 +181,12 @@ boolean logging = false;
 					<input name="perception.singlesignon" id="perception.singlesignon" type="checkbox" value="Yes" <%=single_signon?"checked":"" %>>
 				</bbNG:dataElement>
 				
+				<bbNG:dataElement label="Assessment List Compatibility Mode" isRequired="false">
+					<% oldAssessmentList = (qbc.pb.getProperty("perception.oldassessmentlist") == null)? false : true; %>
+					<input name="perception.oldassessmentlist" id="perception.oldassessmentlist" type="checkbox" value="Yes" <%=oldAssessmentList?"checked":"" %>>
+					<bbNG:elementInstructions text="Builds assessment lists compatible with version 9.0.26 and earlier of the connector"/>
+				</bbNG:dataElement>
+
 				<bbNG:dataElement label="Enable logging" isRequired="false">
 					<% logging = (qbc.pb.getProperty("perception.logging") == null)? false : true; %>
 					<input name="perception.logging" id="perception.logging" type="checkbox" value="Yes" <%=logging?"checked":"" %>>
