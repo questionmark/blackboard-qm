@@ -14,7 +14,7 @@ import javax.servlet.http.HttpServletRequest;
 import blackboard.platform.plugin.PlugInException;
 import blackboard.platform.plugin.PlugInUtil;
 
-public class PropertiesBean implements java.io.Serializable {
+public class PropertiesBean  {
 
 //	private static PropertiesBean propertiesBean;
 	public static String vendorId = "qm";
