@@ -7,13 +7,10 @@ import java.util.Vector;
 
 import javax.servlet.http.HttpServletRequest;
 
-import com.questionmark.QMWISe.Assessment;
 import com.questionmark.QMWISe.ScheduleV42;
 
-import blackboard.base.BbList;
 import blackboard.data.content.Content;
 import blackboard.data.navigation.CourseToc;
-import blackboard.data.user.User;
 import blackboard.persist.Id;
 import blackboard.persist.KeyNotFoundException;
 import blackboard.persist.PersistenceException;
@@ -117,8 +114,8 @@ public class QMPControlPanel extends QMPCourseContext {
 		// Thanks to http://forums.edugarage.com/forums/t/2058.aspx
 		CourseTocDbLoader cTocDbLoader = (CourseTocDbLoader)bbPm.getLoader(CourseTocDbLoader.TYPE);
 		ContentDbLoader contentLoader = (ContentDbLoader)bbPm.getLoader(ContentDbLoader.TYPE);
-		List listCourseToc = cTocDbLoader.loadByCourseId(courseIdObject);
-		ListIterator iteratorListCourseToc = listCourseToc.listIterator();
+		List<CourseToc> listCourseToc = cTocDbLoader.loadByCourseId(courseIdObject);
+		ListIterator<CourseToc> iteratorListCourseToc = listCourseToc.listIterator();
 		while (iteratorListCourseToc.hasNext()) // iterate through the course TOC items
 		{
 			CourseToc cToc = (CourseToc) iteratorListCourseToc.next(); // retrieve each TOC item
@@ -127,8 +124,8 @@ public class QMPControlPanel extends QMPCourseContext {
 			{
 		    	// we have determined that the TOC item is content, next we need to load the content object and iterate through it     			
 		    	// load the content tree into an object "content" and iterate through it       
-		    	List listContent = contentLoader.loadListById(cToc.getContentId());
-		    	ListIterator iteratorListContent = listContent.listIterator();        
+		    	List<Content> listContent = contentLoader.loadListById(cToc.getContentId());
+		    	ListIterator<Content> iteratorListContent = listContent.listIterator();        
 		    	while (iteratorListContent.hasNext()) // iterate through the content items in this content object 
 		    	{       
 		    		Content content = (Content) iteratorListContent.next(); // reteive each content item

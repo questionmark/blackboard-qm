@@ -822,13 +822,15 @@ public class QMPContentItem {
 	}
 
 	
-	public Content NewCourseDocument() {
+	public Content NewCourseDocument() throws PersistenceException {
 //		if (parentId == null){
 //			out.println("Stop here parent id is null, parent_id is"	+ parent_id);
 //			return;
 //		}
 		//prepare a ContentDbLoader
-		// ContentDbLoader contentLoader = ContentDbLoader.Default.getInstance();
+		ContentDbLoader contentLoader = ContentDbLoader.Default.getInstance();
+		List<Content> children = contentLoader.loadChildren(parentId);
+		
 		courseDoc = new Content();
 		//title of the content item tied in with the Questionmark Created Scheduled name...
 		courseDoc.setTitle(name);
@@ -850,8 +852,7 @@ public class QMPContentItem {
 		//set course id
 		courseDoc.setCourseId(ctx.courseIdObject); //get the course id from the context of create page.
 		//here we have the option to set the order in which the child appears
-		//courseDoc.setPosition(numberOfChildren);
-		//
+		courseDoc.setPosition(children.size());
 		// Now we add our data to the content item; see http://forums.edugarage.com/forums/p/2167/7161.aspx
 		ExtendedData xData=courseDoc.getExtendedData();
 		xData.setValue("version",new Integer(version).toString());
@@ -1002,6 +1003,20 @@ public class QMPContentItem {
 			courseDoc.setIsAvailable(available);
 			update=true;
 		}
+		if (courseDoc.getPosition()<0) {
+			
+			// fix un-movable content item, will move this item to the bottom of the list
+			ContentDbLoader contentLoader;
+			ctx.Log("Fixing unmovable content item: "+name+"(position "+new Integer(courseDoc.getPosition()).toString()+") in course "+ctx.courseId);
+			try {
+				contentLoader = ContentDbLoader.Default.getInstance();
+				List<Content> children = contentLoader.loadChildren(parentId);
+				courseDoc.setPosition(children.size());
+				update=true;
+			} catch (PersistenceException e) {
+				ctx.Log(e.toString());
+			}
+		}
 		ExtendedData xData=courseDoc.getExtendedData();
 		if (version<XDATA_VERSION) {
 			update=true;
@@ -1029,6 +1044,10 @@ public class QMPContentItem {
 				xData.setValue("version",new Integer(CURRENT_VERSION).toString());
 				update=true;
 			}
+//			if (version==XDATA_VERSION) {
+//				// always save this version, fixes items that won't move
+//				update=true;
+//			}
 			// we can't change assessmentID
 			// we can't change limitAttempts and individualSchedules, but can change maxAttempts
 			if (maxAttempts!=new Integer(xData.getValue("maxAttempts")).intValue()) {
@@ -1063,6 +1082,7 @@ public class QMPContentItem {
 		//first get the persister object instance
 		ContentDbPersister persister = (ContentDbPersister)ctx.bbPm.getPersister( ContentDbPersister.TYPE );
 		//now to persist!
+		courseDoc.validate();
 		persister.persist(courseDoc);
 		if (contentId==null) {
 			// This is the first time we've persisted this content item, record the Id
