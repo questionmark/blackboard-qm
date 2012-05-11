@@ -1,3 +1,18 @@
+Version 9.1.17
+--------------
+
+[#494] Fixed gradebook updating when user selects the FIRST grade option
+
+
+Version 9.1.16
+--------------
+
+[#491] added fix for unmovable content items.
+[#489] minor fix to prevent spurious error in Tomcat logs after unexpected servlet restart 
+[#209] Added an option to revert to old-style assessment lists (9.0.26 compatibility)
+[#360] added auto-population of email field when creating administrators
+
+
 Version 9.1.13
 --------------
 

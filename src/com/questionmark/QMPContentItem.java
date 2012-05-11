@@ -788,6 +788,7 @@ public class QMPContentItem {
 				if (!(gbScore.getGrade().equalsIgnoreCase("-"))) {
 					//This is not the first score coming in so therefore is ignored.
 					ctx.Fail("Perception Callback","ignored a score since it was not the first attempt: FIRST Score option selected");
+					return;
 				}
 			} else if (scoreType.equals("BEST")) {
 				if(new Float(gbScore.getGrade()).floatValue() >= value) {
