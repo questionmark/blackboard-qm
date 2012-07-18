@@ -1,14 +1,4 @@
-<!-- 
-////////////////////////////
-
-// Filename		: content/modify.jsp
-// Description	: Part of Questionmark Perception Connector, this file is
-// 				  responsible for allowing users to pretty much change the content of the form
-//					they created in createscheduleform.jsp and change it to save it and send it back.
-////////////////////////////
--->
-
-                              
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <% /* @ page language="java" contentType="text/html; charset=ISO-8859-1" 
 	import="java.util.*,
 	blackboard.platform.*,

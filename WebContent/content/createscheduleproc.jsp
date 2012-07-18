@@ -1,13 +1,4 @@
-<!-- 
-////////////////////////////
-
-// Filename		: content/createscheduleproc.jsp
-// Description	: 'createproc' for createscheduleform.jsp, does the content 
-//				  item object initialisation and creation of schedule
-				  attached to the content item for use by students and staff.
-////////////////////////////
--->
-
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <%@ page
 	language="java"
 	pageEncoding="UTF-8"

@@ -1,11 +1,4 @@
-<!-- 
-////////////////////////////
-
-// Filename		: content/createscheduleform.jsp
-// Description	: Part of Questionmark Perception Connector, creation of schedule from content item.
-////////////////////////////
--->
-
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <%@ page
 	language="java"
 	pageEncoding="UTF-8"
@@ -37,7 +30,6 @@
 		
 %>
 
-<%@ taglib uri="/bbData" prefix="bbData" %>
 <%@ taglib uri="/bbNG" prefix="bbNG"%>
 
 <bbNG:learningSystemPage ctxId="ctx" title="Questionmark Perception connector" onLoad="disable_set_access()">

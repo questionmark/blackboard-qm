@@ -1,3 +1,9 @@
+Version 9.1.18
+--------------
+
+[#513] Added DOCTYPE to jsp files to cure rendering issues in IE8/9 with new SP8 themes
+
+
 Version 9.1.17
 --------------
 
