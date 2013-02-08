@@ -1,3 +1,9 @@
+Version 9.1.19
+--------------
+
+[#567] Fixed a problem with synchronization that caused StringIndexOutOfBoundsException: String index out of range: 20
+
+
 Version 9.1.18
 --------------
 

@@ -9,6 +9,9 @@ import java.util.Hashtable;
 import java.util.ListIterator;
 import java.util.Vector;
 
+import java.security.SecureRandom;
+import java.math.BigInteger;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.xml.rpc.holders.StringHolder;
 
@@ -48,6 +51,8 @@ public class QMPCourseContext extends QMPContext {
 	public static final int PERCEPTION_PARTICIPANT=1;
 	public static final int PERCEPTION_ADMINISTRATOR=2;
 	
+	// defined as static as can be slow to start
+	protected static SecureRandom random = new SecureRandom(); 
 	public String courseId = null;
 	public Id courseIdObject = null;
 	public CourseSettings courseSettings = null;
@@ -461,8 +466,8 @@ public class QMPCourseContext extends QMPContext {
 					Administrator newuser = new Administrator();
 					String email=courseUser.getEmailAddress();
 					newuser.setAdministrator_ID("0");
-					newuser.setAdministrator_Name(courseUser.getUserName());
-					newuser.setPassword(courseUser.getPassword().substring(0, 20));
+					newuser.setAdministrator_Name(courseUser.getUserName());					
+					newuser.setPassword(QMPCourseContext.RandomString(20));
 					newuser.setProfile_Name(profile);
 					if (email!=null) {
 						newuser.setEmail(email);
@@ -482,7 +487,7 @@ public class QMPCourseContext extends QMPContext {
 					newuser.setFirst_Name(userFirstName);
 					newuser.setLast_Name(userLastName); 							
 					newuser.setParticipant_Name(courseUser.getUserName());
-					newuser.setPassword(courseUser.getPassword().substring(0, 20));
+					newuser.setPassword(QMPCourseContext.RandomString(20));
 					newuser.setPrimary_Email(courseUser.getEmailAddress());
 					userID = q.stub.createParticipant(newuser);
 					AddToGroup();
@@ -979,7 +984,14 @@ public class QMPCourseContext extends QMPContext {
 			msg=msg+"  <a href=\""+StringEscapeUtils.escapeHtml(link)+"\">More information...</a>";
 		FailRaw("Connector Disabled",msg);
 	}
-	
+
+	public static String RandomString(int nChars) {
+		StringBuilder sb = new StringBuilder();
+		for(int i=0;i<nChars;i++) {
+			sb.append(Integer.toString(QMPCourseContext.random.nextInt(32),32));
+		}
+		return sb.toString();
+	}
 
 
 }
