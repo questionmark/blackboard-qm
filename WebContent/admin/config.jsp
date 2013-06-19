@@ -30,11 +30,11 @@ boolean oldAssessmentList = false;
 
 
 <bbNG:learningSystemPage ctxId="ctx"
-	title="Questionmark Perception Connector Settings">
+	title="Questionmark Perception Connector Settings (GF1)">
 	<% QMPSysAdminContext qbc=new QMPSysAdminContext(request,ctx); %>
 	<bbNG:pageHeader>
 		<bbNG:pageTitleBar iconUrl='<%=qbc.path+"/images/qm.gif"%>'
-			title="Questionmark Perception Connector Settings" />
+			title="Questionmark Perception Connector Settings (GF1)" />
 	</bbNG:pageHeader>	
 
 	<%

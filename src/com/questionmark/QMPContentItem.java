@@ -782,6 +782,8 @@ public class QMPContentItem {
 				scoreType="BEST";
 			
 		}
+		//get score persister
+		ScoreDbPersister scoredbpersister = (ScoreDbPersister)ctx.bbPm.getPersister(ScoreDbPersister.TYPE);
 		try {
 			gbScore=scoredbloader.loadByCourseMembershipIdAndLineitemId(ctx.crsMembership.getId(), lineitem.getId());
 			if (scoreType.equals("FIRST")) {
@@ -806,18 +808,17 @@ public class QMPContentItem {
 				// nothing to do
 				;
 			}
-			gbScore.setGrade(new Float(value).toString());
-			gbScore.setDateChanged();
+			// delete the old score from the database
+			scoredbpersister.deleteById(gbScore.getId());
 		} catch (KeyNotFoundException e) {
-			gbScore=new Score();
-			gbScore.setCourseMembershipId(ctx.crsMembership.getId());
-			gbScore.setDateAdded();
-			gbScore.setLineitemId(lineitem.getId());
-			gbScore.setGrade(new Float(value).toString());
+			// nothing to do as Score is not there yet
 		}
+		gbScore=new Score();
+		gbScore.setCourseMembershipId(ctx.crsMembership.getId());
+		gbScore.setDateAdded();
+		gbScore.setLineitemId(lineitem.getId());
+		gbScore.setGrade(new Float(value).toString());
 		gbScore.validate();
-		//get score persister
-		ScoreDbPersister scoredbpersister = (ScoreDbPersister)ctx.bbPm.getPersister(ScoreDbPersister.TYPE);
 		//persist it (write it to the database)
 		scoredbpersister.persist(gbScore);
 	}
