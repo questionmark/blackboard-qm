@@ -32,7 +32,7 @@ public class QMPResultsContext extends QMPCourseContext {
 				Log("User Synchronized OK!  UserID="+userID+"("+courseUser.getUserName()+")");
 				if (isAdministrator) {
 					if (resultID==null) {
-						results = q.stub.getResultListByGroup(course.getBatchUid());
+						results = q.stub.getResultListByGroup(course.getCourseId());
 						Arrays.sort(results, new ResultComparator());
 						resultList=Arrays.asList(results);
 					} else {

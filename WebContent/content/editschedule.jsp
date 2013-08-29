@@ -179,7 +179,7 @@
 						<input type="radio" name="available" value="false" <%=cc.contentItem.available?"":"checked=\"checked\"" %> /> No
 					</bbNG:dataElement>
 				</bbNG:step>
-				<input type="hidden" name="group_name" value="<%=cc.course.getBatchUid()%>"/>
+				<input type="hidden" name="group_name" value="<%=cc.course.getCourseId()%>"/>
 				<input type="hidden" name="content_id" value="<%=cc.contentItem.contentId.toExternalString()%>"/>
 				<input type="hidden" name="parent_id" value="<%=cc.contentItem.parentId.toExternalString()%>"/>
 				<input type="hidden" name="course_id" value="<%=cc.courseId%>" />

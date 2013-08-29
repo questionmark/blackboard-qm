@@ -115,7 +115,7 @@ public class QMPCourseContext extends QMPContext {
 				// a call back - not an authenticated session, uses group name not external id
 				courseId = request.getParameter("bb_courseid");
 				if (courseId!=null) {
-					course = courseLoader.loadByBatchUid(courseId);
+					course = courseLoader.loadByCourseId(courseId);
 					courseIdObject=course.getId();
 					courseId=courseIdObject.toExternalString();
 				}
@@ -276,7 +276,7 @@ public class QMPCourseContext extends QMPContext {
 			QMWise q=null;
 			try {
 				q=QMWise.connect();
-				com.questionmark.QMWISe.Group group = q.stub.getGroupByName(course.getBatchUid());
+				com.questionmark.QMWISe.Group group = q.stub.getGroupByName(course.getCourseId());
 				groupID = group.getGroup_ID();
 				// Check that the phantom user is in the group
 				com.questionmark.QMWISe.Group[] groupList=q.stub.getParticipantGroupList(phantomID);
@@ -318,7 +318,7 @@ public class QMPCourseContext extends QMPContext {
 			q=QMWise.connect();
 			com.questionmark.QMWISe.Group newgroup = new com.questionmark.QMWISe.Group();
 			newgroup.setParent_ID("0");
-			newgroup.setGroup_Name(course.getBatchUid());
+			newgroup.setGroup_Name(course.getCourseId());
 			newgroup.setDescription(course.getTitle());
 			groupID = q.stub.createGroup(newgroup);
 		} catch(RemoteException e) {
@@ -347,7 +347,7 @@ public class QMPCourseContext extends QMPContext {
 				}
 				AssessmentTreeItem[] items=q.stub.getAssessmentTreeByAdministrator(adminID, "0", 0);
 				for (AssessmentTreeItem item: items) {
-					if (item.getType()==0 && item.getName().equalsIgnoreCase(course.getBatchUid())) {
+					if (item.getType()==0 && item.getName().equalsIgnoreCase(course.getCourseId())) {
 						folderID=item.getID();
 						// Cache the folder ID for future synchronization on this course
 						// courseSettings.setProperty("folderid", folderID);
@@ -374,7 +374,7 @@ public class QMPCourseContext extends QMPContext {
 			AssessmentFolder folder = new AssessmentFolder();
 			folder.setParent_ID("0");
 			folder.setID("");
-			folder.setName(course.getBatchUid());
+			folder.setName(course.getCourseId());
 			folder.setDescription(course.getTitle());
 			folderID = q.stub.createAssessmentFolder(folder);
 		} catch(RemoteException e) {
@@ -644,7 +644,7 @@ public class QMPCourseContext extends QMPContext {
 				if (syncUsers)
 					UpdatePerceptionUser();
 				if (!IsGroupMember()) {
-					Log("userID="+userID+" is not a member of group "+groupID+" ("+course.getBatchUid()+")");
+					Log("userID="+userID+" is not a member of group "+groupID+" ("+course.getCourseId()+")");
 					if (!syncMembers) {
 						FailAccess("This tool is not available to you in this course (no group membership in Perception)");
 						return false;
@@ -655,7 +655,7 @@ public class QMPCourseContext extends QMPContext {
 			}
 			if (syncFolders && forceFolder)
 				AddToFolder();
-			Log("userID="+userID+" is (now) a member of group "+groupID+" ("+course.getBatchUid()+")");
+			Log("userID="+userID+" is (now) a member of group "+groupID+" ("+course.getCourseId()+")");
 		}
 		return true;
 	}
@@ -669,7 +669,7 @@ public class QMPCourseContext extends QMPContext {
 		try {
 			q=QMWise.connect();
 			if (isAdministrator) {
-				sb.append("Perception: course " + course.getBatchUid() + ": user synchronization forced\n");
+				sb.append("Perception: course " + course.getCourseId() + ": user synchronization forced\n");
 				try {
 					ArrayList<CourseMembership> allMembershipsList = crsMembershipLoader.loadByCourseId(courseIdObject, null, true);
 					ListIterator<CourseMembership> iterator = allMembershipsList.listIterator();
@@ -764,7 +764,7 @@ public class QMPCourseContext extends QMPContext {
 		} finally {
 			QMWise.close(q);
 		}
-		sb.append("Perception: course " + course.getBatchUid() + ": synchronization complete!\n");
+		sb.append("Perception: course " + course.getCourseId() + ": synchronization complete!\n");
 		return sb.toString();
 	}
 

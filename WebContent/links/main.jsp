@@ -249,7 +249,7 @@
 
 			</bbNG:step> 
 							
-			<input type="hidden" name="group" value="<%=panel.course.getBatchUid()%>" />
+			<input type="hidden" name="group" value="<%=panel.course.getCourseId()%>" />
 			<input type="hidden" name="course_id" value="<%=panel.courseId%>" />
 			<bbNG:stepSubmit title="Submit"/>
 						

@@ -65,7 +65,7 @@ public class ScheduleInfo {
 			}
 			launchURL = q.stub.getAccessAssessment(schedule.getAssessment_ID(),
 					ctx.user.getUserName(),"", //participant details
-					ctx.course.getBatchUid()); //group name
+					ctx.course.getCourseId()); //group name
 		} catch (RemoteException e) {
 			launchURL=null;
 			QMWiseException qe = new QMWiseException(e);
@@ -107,12 +107,12 @@ public class ScheduleInfo {
 						new Parameter("bb_schedulename", nameFix),
 						new Parameter("bb_scheduleid", new Integer(
 							schedule.getSchedule_ID()).toString()),
-						new Parameter("bb_courseid", ctx.course.getBatchUid())
+						new Parameter("bb_courseid", ctx.course.getCourseId())
 					};
 				// First step, get the try out link to force a QMWISe error for a missing assessment
 				String dummy = q.stub.getAccessAssessment(schedule.getAssessment_ID(),
 						ctx.user.getUserName(),"", //participant details
-						ctx.course.getBatchUid()); //group name
+						ctx.course.getCourseId()); //group name
 				// No exception so the launch URL should work...
 				launchURL = q.stub.getAccessScheduleNotify(
 							new Integer(schedule.getSchedule_ID()).toString(),

@@ -155,7 +155,7 @@
 						</bbNG:dataElement>
 					</bbNG:step> 
 									
-					<input type="hidden" name="group" value="<%=cc.course.getBatchUid()%>" />
+					<input type="hidden" name="group" value="<%=cc.course.getCourseId()%>" />
 					<input type="hidden" name="course_id" value="<%=cc.courseId%>" />
 					<input type="hidden" name="parent_id" value="<%=cc.contentItem.parentId.toExternalString()%>"/>	
 					
