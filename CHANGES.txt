@@ -1,3 +1,9 @@
+Version 9.1.20
+--------------
+
+[#578] Added support for all standard Blackboard roles
+[#573] Fixed an issue that prevented sites with unusual batch UId's from using the connector
+
 Version 9.1.19
 --------------
 
