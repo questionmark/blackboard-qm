@@ -39,12 +39,12 @@ import blackboard.platform.plugin.PlugInException;
 public class QMPCourseContext extends QMPContext {
 
 	// constants for Blackboard role
-	public static final int BLACKBOARD_NOBODY=0;
-	public static final int BLACKBOARD_STUDENT=1;
-	public static final int BLACKBOARD_TA=2;
-	public static final String BLACKBOARD_TA_PROFILE="BLACKBOARD TA";
-	public static final int BLACKBOARD_INSTRUCTOR=3;
-	public static final String BLACKBOARD_INSTRUCTOR_PROFILE="BLACKBOARD INSTRUCTOR";
+	public static final String BLACKBOARD_STUDENT="BLACKBOARD STUDENT";
+	public static final String BLACKBOARD_TA="BLACKBOARD TA";
+	public static final String BLACKBOARD_INSTRUCTOR="BLACKBOARD INSTRUCTOR";
+	public static final String BLACKBOARD_CB="BLACKBOARD CB";
+	public static final String BLACKBOARD_GRADER="BLACKBOARD GRADER";	
+	public static final String BLACKBOARD_GUEST="BLACKBOARD GUEST";
 	
 	// constants for Perception role
 	public static final int PERCEPTION_NOBODY=0;
@@ -62,13 +62,14 @@ public class QMPCourseContext extends QMPContext {
 	public String userNameField = null; // if set overrides security checks!
 	public User courseUser = null;
 	public CourseMembership crsMembership = null;
-	public CourseMembership.Role userRole=CourseMembership.Role.GUEST;
+	public CourseMembership.Role userRole=CourseMembership.Role.NONE;
 	public String groupID=null;
 	public String folderID=null;
 	public boolean isAdministrator=false;
 	public boolean profileCheck=true;
-	public boolean taProfile=false;
-	public boolean instructorProfile=false;
+	protected Hashtable<String,Boolean> profileHash = null;
+//	public boolean taProfile=false;
+//	public boolean instructorProfile=false;
 	public String userID=null;
 	Administrator userAdministratorInfo = null;
 	Participant userParticipantInfo = null;
@@ -98,8 +99,8 @@ public class QMPCourseContext extends QMPContext {
 		if (LoadCourseInfo()) {
 			try {
 				SetCourseUser(null);
-				if (GetBlackboardRole()==BLACKBOARD_NOBODY)
-					Fail("Course Role","You do not have permission to see this page.");				
+				if (GetPerceptionRole()==PERCEPTION_NOBODY)
+					Fail("Course Role","You do not have permission to see this page.");
 			} catch (PersistenceException e) {
 				Fail("Unexpected PersistenceException",e.getMessage());
 			}
@@ -125,8 +126,26 @@ public class QMPCourseContext extends QMPContext {
 					courseIdObject = bbPm.generateId(Course.DATA_TYPE, courseId);
 					course = courseLoader.loadById(courseIdObject);
 				}
-			}
+			}			
 			FindPhantomUserId();
+			if (PropertiesBean.idCache.get("profile."+BLACKBOARD_INSTRUCTOR) == null) {
+				QMWise q=null;
+				try {
+					q=QMWise.connect();
+					// Lookup all admin profiles to make it easier
+					// to check they exist later. 
+					// (Bug in QMWise causes createAdministrator call 
+					// with a non-existent profile name to fail with 
+					// a success message.)
+					String[] profiles = q.stub.getProfileNameList();
+					for(int k = 0; k < profiles.length; k++)
+						PropertiesBean.idCache.put("profile."+profiles[k].toUpperCase(), profiles[k]);
+				} catch(RemoteException e) {
+					throw new QMWiseException(e);
+				} finally {
+					QMWise.close(q);
+				}
+			}
 			if(course != null) {
 				// load the courseSettings file...
 				courseSettings = new CourseSettings(courseId);
@@ -207,55 +226,50 @@ public class QMPCourseContext extends QMPContext {
 				crsMembership = newMembership;
 			}
 			userRole=crsMembership.getRole();
-			if (GetBlackboardRole()==BLACKBOARD_NOBODY)
-				userRole=CourseMembership.Role.GUEST;
+			if (GetBlackboardRole()==null)
+				userRole=CourseMembership.Role.NONE;
 			isAdministrator=(GetPerceptionRole()==PERCEPTION_ADMINISTRATOR);
 		} catch (KeyNotFoundException e) {
 			// There is no membership record.
-			userRole=CourseMembership.Role.GUEST;
+			userRole=CourseMembership.Role.NONE;
 			Fail("Course Role","No role found for this user in the course "+e.getMessage());
 		}		
 	}
 	
 	
-	public int GetBlackboardRole()
+	public String GetBlackboardRole()
 	{
 		if (userRole.equals(CourseMembership.Role.INSTRUCTOR))
 			return BLACKBOARD_INSTRUCTOR;
 		else if (userRole.equals(CourseMembership.Role.TEACHING_ASSISTANT))
 			return BLACKBOARD_TA;
+		else if (userRole.equals(CourseMembership.Role.COURSE_BUILDER))
+			return BLACKBOARD_CB;
+		else if (userRole.equals(CourseMembership.Role.GRADER))
+			return BLACKBOARD_GRADER;
+		else if (userRole.equals(CourseMembership.Role.GUEST))
+			return BLACKBOARD_GUEST;
 		else if (userRole.equals(CourseMembership.Role.STUDENT))
 			return BLACKBOARD_STUDENT;
 		else
-			return BLACKBOARD_NOBODY;
+			return null;
 	}
 	
 	
 	public int GetPerceptionRole()
 	{
-		switch (GetBlackboardRole()) {
-		case BLACKBOARD_TA:
-		case BLACKBOARD_INSTRUCTOR:
-			return PERCEPTION_ADMINISTRATOR;
-		case BLACKBOARD_STUDENT:
-			return PERCEPTION_PARTICIPANT;
-		default:
+		String role=GetBlackboardRole();
+		if (role==null)
 			return PERCEPTION_NOBODY;
-		}
+		else if (role.equals(BLACKBOARD_STUDENT))
+			return PERCEPTION_PARTICIPANT;
+		else if (PropertiesBean.idCache.get("profile."+role)==null)
+			return PERCEPTION_NOBODY;
+		else	
+			return PERCEPTION_ADMINISTRATOR;
 	}
 	
 	
-	public String GetPerceptionProfile() {
-		switch (GetBlackboardRole()) {
-		case BLACKBOARD_TA:
-			return BLACKBOARD_TA_PROFILE;
-		case BLACKBOARD_INSTRUCTOR:
-			return BLACKBOARD_INSTRUCTOR_PROFILE;
-		default:
-			return null;
-		}
-	}
-
 	public void FindPerceptionGroupID() throws QMWiseException {
 		//get Perception group id, make it if it doesn't exist yet
 		if (groupID == null) {
@@ -415,51 +429,15 @@ public class QMPCourseContext extends QMPContext {
 	}
 	
 	
-	public void CheckProfiles() throws QMWiseException {
-		if (profileCheck) {
-			QMWise q=null;
-			try {
-				q=QMWise.connect();
-				//make sure admin profiles exist in Perception 
-				//(bug in QMWise causes createAdministrator call 
-				//with a non-existent profile name to fail with 
-				//a success message)
-				String[] profiles = q.stub.getProfileNameList();
-				for(int k = 0; k < profiles.length; k++) {
-					if(profiles[k].equals(BLACKBOARD_TA_PROFILE)) {
-						taProfile=true;
-					} else if (profiles[k].equals(BLACKBOARD_INSTRUCTOR_PROFILE)) {
-						instructorProfile=true;
-					}
-				}
-			} catch(RemoteException e) {
-				throw new QMWiseException(e);
-			} finally {
-				QMWise.close(q);
-			}
-			profileCheck=false;
-		}
-	}
-	
-	
 	public void CreatePerceptionUser() throws QMWiseException {
 		// person doesn't exist -- create them
 		QMWise q=null;
 		try {
 			q=QMWise.connect();
 			if (isAdministrator) {
-				String profile;
-				CheckProfiles();
-				if (GetBlackboardRole()==BLACKBOARD_INSTRUCTOR) {
-					if (! instructorProfile) {
-						throw new QMWiseException("Error creating administrator: the profile BLACKBOARD INSTRUCTOR does not exist in Perception");
-					}
-					profile=BLACKBOARD_INSTRUCTOR_PROFILE;
-				} else { // must be BLACKBOARD_TA
-					if (! taProfile ) {
-						throw new QMWiseException("Error creating administrator: the profile BLACKBOARD TA does not exist in Perception");
-					}
-					profile=BLACKBOARD_TA_PROFILE;
+				String profile=GetBlackboardRole();
+				if (PropertiesBean.idCache.get("profile."+profile)==null) {
+					throw new QMWiseException("Error creating administrator: the profile '"+profile+"' does not exist in Perception");
 				}
 				try {
 					//build new user
